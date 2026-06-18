@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { MapContainer, Marker, Popup, TileLayer, Tooltip, useMap } from "react-leaflet";
+import { MapContainer, Marker, Polyline, Popup, TileLayer, Tooltip, useMap } from "react-leaflet";
 import { divIcon, type LatLngExpression } from "leaflet";
 
 import { formatDistance } from "@/lib/events";
@@ -34,6 +34,9 @@ type EventMapProps = {
   panelClassName?: string;
   mapHeightClassName?: string;
   onEventSelect?: (event: EventWithDistance) => void;
+  userLocation?: Coordinates | null;
+  selectedEvent?: EventWithDistance | null;
+  routeCoords?: [number, number][] | null;
 };
 
 function MapCenterController({ center }: { center: Coordinates }) {
@@ -247,6 +250,9 @@ export function EventMap({
   panelClassName,
   mapHeightClassName,
   onEventSelect,
+  userLocation,
+  selectedEvent,
+  routeCoords,
 }: EventMapProps) {
   const mapCenter = center ?? {
     latitude: I_HUB_LOCATION.latitude,
@@ -479,6 +485,33 @@ export function EventMap({
                   </Popup>
                 </Marker>
               ))}
+
+              {userLocation && selectedEvent ? (
+                <>
+                  <Marker
+                    position={[userLocation.latitude, userLocation.longitude]}
+                    icon={makeMarker("#3b82f6", "Y")}
+                  >
+                    <Tooltip permanent direction="top" offset={[0, -18]} className="border-0 bg-transparent p-0 text-xs font-semibold text-white shadow-none">
+                      Your location
+                    </Tooltip>
+                  </Marker>
+                  {routeCoords ? (
+                    <Polyline
+                      positions={routeCoords}
+                      pathOptions={{ color: "#3b82f6", weight: 4 }}
+                    />
+                  ) : (
+                    <Polyline
+                      positions={[
+                        [userLocation.latitude, userLocation.longitude],
+                        [selectedEvent.latitude, selectedEvent.longitude],
+                      ]}
+                      pathOptions={{ color: "#3b82f6", weight: 3, dashArray: "8 4" }}
+                    />
+                  )}
+                </>
+              ) : null}
             </MapContainer>
           </div>
         </div>
