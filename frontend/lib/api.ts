@@ -6,6 +6,32 @@ async function safeJson<T>(response: Response): Promise<T> {
   return (await response.json()) as T;
 }
 
+export async function uploadAdminImage(file: File, folder = "events"): Promise<string> {
+  if (!apiBaseUrl) {
+    throw new Error("API base URL is not configured");
+  }
+
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("folder", folder);
+
+  const response = await fetch(`${apiBaseUrl}/uploads/image`, {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to upload image");
+  }
+
+  const payload = (await response.json()) as { url?: string };
+  if (!payload.url) {
+    throw new Error("Image upload did not return a URL");
+  }
+
+  return payload.url;
+}
+
 export async function loadEvents(): Promise<EventRecord[]> {
   if (apiBaseUrl) {
     try {
@@ -66,8 +92,13 @@ export async function loginAdmin(email: string, password: string) {
       if (response.ok) {
         return response.json();
       }
-    } catch {
-      // ignored
+
+      const errorBody = await response.text();
+      throw new Error(errorBody || "Unable to sign in");
+    } catch (error) {
+      if (error instanceof Error && error.message !== "Failed to fetch") {
+        throw error;
+      }
     }
   }
 
@@ -101,8 +132,15 @@ export async function createAdminEvent(
       if (response.ok) {
         return response.json();
       }
-    } catch {
-      // ignored
+
+      const errorBody = await response.text();
+      throw new Error(errorBody || "Unable to save event");
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+
+      throw new Error("Unable to save event");
     }
   }
 
@@ -113,4 +151,49 @@ export async function createAdminEvent(
     popularity: 0,
     gallery: [],
   } as EventRecord;
+}
+
+async function adminJsonRequest<T>(path: string, method: "POST" | "PATCH" | "DELETE") {
+  if (!apiBaseUrl) {
+    throw new Error("API base URL is not configured");
+  }
+
+  const token = window.localStorage.getItem("event-discovery-admin-token");
+  const response = await fetch(`${apiBaseUrl}${path}`, {
+    method,
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+
+  if (!response.ok) {
+    const message =
+      response.status === 401 || response.status === 403
+        ? "Your admin session expired. Please sign in again."
+        : (await response.text()) || `Request failed: ${method} ${path}`;
+
+    if (response.status === 401 || response.status === 403) {
+      window.localStorage.removeItem("event-discovery-admin-token");
+    }
+
+    throw new Error(message);
+  }
+
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
+  return (await response.json()) as T;
+}
+
+export async function publishAdminEvent(id: string) {
+  return adminJsonRequest<EventRecord>(`/admin/events/${id}/publish`, "POST");
+}
+
+export async function unpublishAdminEvent(id: string) {
+  return adminJsonRequest<EventRecord>(`/admin/events/${id}/unpublish`, "POST");
+}
+
+export async function deleteAdminEvent(id: string) {
+  return adminJsonRequest<void>(`/admin/events/${id}`, "DELETE");
 }

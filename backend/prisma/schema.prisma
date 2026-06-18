@@ -27,6 +27,8 @@ model Event {
   description String
   category    String
   address     String
+  place       String?
+  floor       String?
   city        String
   latitude    Float
   longitude   Float

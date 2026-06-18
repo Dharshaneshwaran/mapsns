@@ -26,6 +26,8 @@ export interface EventRecord {
     | "Music"
     | "Business";
   address: string;
+  place: string | null;
+  floor: string | null;
   city: string;
   latitude: number;
   longitude: number;

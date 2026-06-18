@@ -22,6 +22,8 @@ export interface EventRecord {
   description: string;
   category: EventCategory;
   address: string;
+  place?: string | null;
+  floor?: string | null;
   city: string;
   latitude: number;
   longitude: number;
@@ -38,4 +40,3 @@ export interface EventRecord {
 export interface EventWithDistance extends EventRecord {
   distanceKm: number;
 }
-

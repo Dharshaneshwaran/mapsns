@@ -39,7 +39,10 @@ export function EventCard({ event }: EventCardProps) {
           <span>Popularity {event.popularity}</span>
         </div>
         <div className="flex items-center justify-between gap-3">
-          <span className="text-sm text-slate-400">{event.address}</span>
+          <span className="text-sm text-slate-400">
+            {event.place ?? event.address}
+            {event.floor ? ` • Floor ${event.floor}` : ""}
+          </span>
           <Link
             href={`/events/${event.id}`}
             className="rounded-full bg-cyan-400 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300"

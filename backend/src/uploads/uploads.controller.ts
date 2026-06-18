@@ -1,4 +1,13 @@
-import { Body, Controller, Post } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Post,
+  UploadedFile,
+  UseInterceptors,
+} from "@nestjs/common";
+import { FileInterceptor } from "@nestjs/platform-express";
+import { memoryStorage } from "multer";
+import type { File as MulterFile } from "multer";
 
 import { UploadsService } from "./uploads.service";
 
@@ -7,13 +16,23 @@ export class UploadsController {
   constructor(private readonly uploadsService: UploadsService) {}
 
   @Post("banner")
-  uploadBanner(@Body() body: { fileName: string }) {
-    return this.uploadsService.uploadBanner(body.fileName);
+  @UseInterceptors(FileInterceptor("file", { storage: memoryStorage() }))
+  uploadBanner(@UploadedFile() file: MulterFile) {
+    return this.uploadsService.uploadBanner(file);
   }
 
   @Post("gallery")
-  uploadGallery(@Body() body: { fileNames: string[] }) {
-    return this.uploadsService.uploadGallery(body.fileNames);
+  @UseInterceptors(FileInterceptor("file", { storage: memoryStorage() }))
+  uploadGallery(@UploadedFile() file: MulterFile) {
+    return this.uploadsService.uploadGallery([file]);
+  }
+
+  @Post("image")
+  @UseInterceptors(FileInterceptor("file", { storage: memoryStorage() }))
+  uploadImage(
+    @UploadedFile() file: MulterFile,
+    @Body() body: { folder?: string },
+  ) {
+    return this.uploadsService.uploadImage(file, body.folder ?? "events");
   }
 }
-

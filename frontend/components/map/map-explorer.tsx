@@ -71,27 +71,27 @@ export function MapExplorer({ fullPage = false }: MapExplorerProps) {
           />
         </div>
 
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/80 via-white/15 to-white/55" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/75 via-white/20 to-white/50" />
 
-        <div className="pointer-events-none absolute inset-x-0 top-0 z-20 p-3 sm:p-4">
+        <div className="pointer-events-none fixed inset-x-0 top-0 z-[1000] p-3 sm:p-4">
           <div className="mx-auto flex max-w-[1600px] flex-col gap-3">
-            <div className="pointer-events-auto flex items-center gap-3 rounded-full border border-slate-200 bg-white/95 px-4 py-3 shadow-xl shadow-slate-300/40 backdrop-blur-md">
-              <span className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-700">
-                ≡
+            <div className="pointer-events-auto flex items-center gap-3 rounded-full border border-slate-200 bg-white px-4 py-3 shadow-[0_18px_45px_rgba(15,23,42,0.18)]">
+              <span className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-sm font-semibold text-slate-700">
+                Menu
               </span>
-              <div className="flex flex-1 items-center gap-3 rounded-full border border-slate-200 bg-white px-4 py-2 shadow-sm">
-                <span className="text-slate-400">⌕</span>
+              <div className="flex flex-1 items-center gap-3 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 shadow-sm">
+                <span className="text-slate-400">Search</span>
                 <input
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
                   placeholder="Search Google Maps"
-                  className="w-full bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400"
+                  className="w-full bg-transparent text-sm text-slate-950 outline-none placeholder:text-slate-400"
                 />
                 <button
                   type="button"
                   onClick={() => void reloadEvents()}
                   disabled={loadingEvents}
-                  className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {loadingEvents ? "..." : "Reload"}
                 </button>
@@ -109,7 +109,7 @@ export function MapExplorer({ fullPage = false }: MapExplorerProps) {
                 (item) => (
                   <span
                     key={item}
-                    className="whitespace-nowrap rounded-full border border-slate-200 bg-white/95 px-4 py-2 text-sm font-medium text-slate-700 shadow-sm backdrop-blur-md"
+                    className="whitespace-nowrap rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-[0_10px_24px_rgba(15,23,42,0.12)]"
                   >
                     {item}
                   </span>
@@ -119,27 +119,25 @@ export function MapExplorer({ fullPage = false }: MapExplorerProps) {
           </div>
         </div>
 
-        <div className="pointer-events-auto absolute left-3 top-28 z-20 flex flex-col gap-3 sm:left-4 sm:top-32">
-          <button className="grid h-12 w-12 place-items-center rounded-2xl border border-slate-200 bg-white text-slate-700 shadow-lg shadow-slate-300/40">
-            ⌖
+        <div className="pointer-events-auto fixed left-3 top-28 z-[1000] flex flex-col gap-3 sm:left-4 sm:top-32">
+          <button className="grid h-12 w-12 place-items-center rounded-2xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 shadow-lg shadow-slate-300/40">
+            Center
           </button>
-          <button className="grid h-12 w-12 place-items-center rounded-2xl border border-slate-200 bg-white text-slate-700 shadow-lg shadow-slate-300/40">
-            ◎
+          <button className="grid h-12 w-12 place-items-center rounded-2xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 shadow-lg shadow-slate-300/40">
+            View
           </button>
-          <button className="grid h-12 w-12 place-items-center rounded-2xl border border-slate-200 bg-white text-slate-700 shadow-lg shadow-slate-300/40">
-            ⟳
+          <button className="grid h-12 w-12 place-items-center rounded-2xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 shadow-lg shadow-slate-300/40">
+            Refresh
           </button>
         </div>
 
-        <div className="pointer-events-auto absolute right-3 bottom-4 z-20 rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-xl shadow-slate-300/40 backdrop-blur-md sm:right-4">
+        <div className="pointer-events-auto fixed right-3 bottom-4 z-[1000] rounded-2xl border border-slate-200 bg-white p-3 shadow-xl shadow-slate-300/40 sm:right-4">
           {loadError ? (
             <p className="max-w-xs rounded-xl border border-rose-400/30 bg-rose-50 px-3 py-2 text-xs text-rose-700">
               {loadError}
             </p>
           ) : (
-            <div className="text-xs text-slate-600">
-              {COLLEGE_NAME} map
-            </div>
+            <div className="text-xs text-slate-600">{COLLEGE_NAME} map</div>
           )}
         </div>
       </div>

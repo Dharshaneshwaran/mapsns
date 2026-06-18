@@ -58,6 +58,8 @@ export function searchEvents(
       event.description,
       event.category,
       event.address,
+      event.place ?? "",
+      event.floor ?? "",
       event.city,
       event.organizer,
     ]

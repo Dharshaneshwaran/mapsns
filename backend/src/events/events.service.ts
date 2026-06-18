@@ -17,17 +17,15 @@ export class EventsService implements OnModuleInit {
       return;
     }
 
-    await this.prisma.$transaction(
-      seededEvents.map((event) => {
-        const { createdAt, updatedAt, ...data } = this.toPrismaEventData(event);
+    const count = await this.prisma.event.count();
+    if (count > 0) {
+      return;
+    }
 
-        return this.prisma.event.upsert({
-          where: { id: event.id },
-          create: this.toPrismaEventData(event),
-          update: data,
-        });
-      }),
-    );
+    await this.prisma.event.createMany({
+      data: seededEvents.map((event) => this.toPrismaEventData(event)),
+      skipDuplicates: true,
+    });
   }
 
   async findAll() {
@@ -82,6 +80,8 @@ export class EventsService implements OnModuleInit {
         description: dto.description,
         category: dto.category,
         address: dto.address,
+        place: dto.place?.trim() ? dto.place.trim() : null,
+        floor: dto.floor?.trim() ? dto.floor.trim() : null,
         city: dto.city,
         latitude: dto.latitude,
         longitude: dto.longitude,
@@ -106,6 +106,8 @@ export class EventsService implements OnModuleInit {
         ...(dto.description ? { description: dto.description } : {}),
         ...(dto.category ? { category: dto.category } : {}),
         ...(dto.address ? { address: dto.address } : {}),
+        ...(dto.place ? { place: dto.place } : {}),
+        ...(dto.floor ? { floor: dto.floor } : {}),
         ...(dto.city ? { city: dto.city } : {}),
         ...(typeof dto.latitude === "number" ? { latitude: dto.latitude } : {}),
         ...(typeof dto.longitude === "number" ? { longitude: dto.longitude } : {}),
@@ -181,6 +183,8 @@ export class EventsService implements OnModuleInit {
       description: event.description,
       category: event.category,
       address: event.address,
+      place: event.place,
+      floor: event.floor,
       city: event.city,
       latitude: event.latitude,
       longitude: event.longitude,

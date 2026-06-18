@@ -4,8 +4,8 @@ import { JwtAuthGuard } from "../common/guards/jwt-auth.guard";
 import { RolesGuard } from "../common/guards/roles.guard";
 import { Roles } from "../common/roles.decorator";
 import { EventsService } from "./events.service";
-import type { CreateEventDto } from "./dto/create-event.dto";
-import type { UpdateEventDto } from "./dto/update-event.dto";
+import { CreateEventDto } from "./dto/create-event.dto";
+import { UpdateEventDto } from "./dto/update-event.dto";
 
 @Controller("admin/events")
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -38,4 +38,3 @@ export class AdminEventsController {
     return this.eventsService.publish(id, false);
   }
 }
-

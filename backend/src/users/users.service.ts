@@ -12,17 +12,22 @@ export class UsersService implements OnModuleInit {
   constructor(private readonly prisma: PrismaService) {}
 
   async onModuleInit() {
-    const count = await this.prisma.user.count();
-    if (count === 0) {
-      await this.prisma.user.createMany({
-        data: seededUsers.map((user) => ({
+    for (const user of seededUsers) {
+      await this.prisma.user.upsert({
+        where: { email: user.email.toLowerCase() },
+        create: {
           id: user.id,
           name: user.name,
-          email: user.email,
+          email: user.email.toLowerCase(),
           password: user.password,
           role: user.role as Role,
           createdAt: new Date(user.createdAt),
-        })),
+        },
+        update: {
+          name: user.name,
+          password: user.password,
+          role: user.role as Role,
+        },
       });
     }
   }
@@ -49,7 +54,11 @@ export class UsersService implements OnModuleInit {
     return this.prisma.user.findUnique({ where: { id } });
   }
 
-  async findByEmail(email: string) {
+  async findByEmail(email?: string) {
+    if (!email) {
+      return null;
+    }
+
     return this.prisma.user.findUnique({
       where: { email: email.toLowerCase() },
     });
@@ -83,4 +92,3 @@ export class UsersService implements OnModuleInit {
     return this.sanitize(user);
   }
 }
-

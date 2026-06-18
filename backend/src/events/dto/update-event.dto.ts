@@ -50,6 +50,14 @@ export class UpdateEventDto {
 
   @IsOptional()
   @IsString()
+  place?: string;
+
+  @IsOptional()
+  @IsString()
+  floor?: string;
+
+  @IsOptional()
+  @IsString()
   city?: string;
 
   @IsOptional()

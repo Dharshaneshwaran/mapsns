@@ -48,6 +48,10 @@ export class AuthService {
   }
 
   async login(dto: LoginDto) {
+    if (!dto?.email || !dto?.password) {
+      throw new BadRequestException("Email and password are required");
+    }
+
     const user = await this.usersService.findByEmail(dto.email);
     if (!user || !comparePassword(dto.password, PASSWORD_SALT, user.password)) {
       throw new UnauthorizedException("Invalid email or password");
@@ -65,4 +69,3 @@ export class AuthService {
     return this.createAuthResponse(this.usersService.sanitize(user));
   }
 }
-

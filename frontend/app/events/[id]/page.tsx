@@ -46,10 +46,12 @@ export default async function EventDetailsPage({ params }: EventPageProps) {
 
               <div className="grid gap-4 sm:grid-cols-2">
                 {[
-                  ["Venue", event.address],
+                  ["Venue", event.place ?? event.address],
+                  ["Floor", event.floor ?? "N/A"],
                   ["City", event.city],
                   ["Organizer", event.organizer],
                   ["Contact", event.contact],
+                  ["Address", event.address],
                 ].map(([label, value]) => (
                   <div key={label} className="rounded-2xl border border-white/10 bg-slate-950/50 p-4">
                     <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
@@ -71,6 +73,9 @@ export default async function EventDetailsPage({ params }: EventPageProps) {
                 </a>
                 <span className="rounded-full border border-white/10 px-5 py-3 text-sm text-slate-300">
                   {new Date(event.startDate).toLocaleString()}
+                </span>
+                <span className="rounded-full border border-white/10 px-5 py-3 text-sm text-slate-300">
+                  Ends {new Date(event.endDate).toLocaleString()}
                 </span>
               </div>
             </div>

@@ -31,12 +31,16 @@ type EventMapProps = {
   title?: string;
   subtitle?: string;
   fullscreen?: boolean;
+  panelClassName?: string;
+  mapHeightClassName?: string;
+  onEventSelect?: (event: EventWithDistance) => void;
 };
 
 function MapCenterController({ center }: { center: Coordinates }) {
   const map = useMap();
 
   useEffect(() => {
+    map.invalidateSize();
     map.setView([center.latitude, center.longitude], map.getZoom(), {
       animate: true,
     });
@@ -77,6 +81,9 @@ export function EventMap({
   title = "Live map",
   subtitle = "Pins update as you search the loaded events.",
   fullscreen = false,
+  panelClassName,
+  mapHeightClassName,
+  onEventSelect,
 }: EventMapProps) {
   const mapCenter = center ?? {
     latitude: I_HUB_LOCATION.latitude,
@@ -85,12 +92,27 @@ export function EventMap({
 
   const selectedLocation = [mapCenter.latitude, mapCenter.longitude] as LatLngExpression;
 
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      // Leaflet needs a resize pass when the container height changes after mount.
+      // Without this, the map can look blank even though the control chrome shows up.
+      window.dispatchEvent(new Event("resize"));
+    }, 50);
+
+    return () => window.clearTimeout(timer);
+  }, [fullscreen, mapHeightClassName]);
+
   return (
     <section
       className={
-        fullscreen
-          ? "h-full w-full overflow-hidden"
-          : "overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 shadow-2xl shadow-cyan-950/20"
+        [
+          fullscreen
+            ? "h-full w-full overflow-hidden"
+            : "overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 shadow-2xl shadow-cyan-950/20",
+          panelClassName ?? "",
+        ]
+          .filter(Boolean)
+          .join(" ")
       }
     >
       {fullscreen ? null : (
@@ -109,11 +131,14 @@ export function EventMap({
         <div
           className={
             fullscreen
-              ? "relative h-[100vh] w-full"
-              : "overflow-hidden rounded-[1.75rem] border border-white/10"
+              ? `relative ${mapHeightClassName ?? "h-[100vh]"} w-full`
+              : [
+                  "overflow-hidden rounded-[1.75rem] border border-white/10",
+                  mapHeightClassName ?? "h-[620px]",
+                ].join(" ")
           }
         >
-          <div className={fullscreen ? "absolute inset-0" : "relative h-[620px]"}>
+          <div className={fullscreen ? "absolute inset-0" : "relative h-full"}>
             <MapContainer
               center={selectedLocation}
               zoom={18}
@@ -253,6 +278,13 @@ export function EventMap({
                   key={event.id}
                   position={[event.latitude, event.longitude]}
                   icon={makeMarker("#67e8f9", "E")}
+                  eventHandlers={
+                    onEventSelect
+                      ? {
+                          click: () => onEventSelect(event),
+                        }
+                      : undefined
+                  }
                 >
                   <Popup>
                     <div className="space-y-2">

@@ -43,6 +43,14 @@ export class CreateEventDto {
   @IsString()
   address!: string;
 
+  @IsOptional()
+  @IsString()
+  place?: string;
+
+  @IsOptional()
+  @IsString()
+  floor?: string;
+
   @IsString()
   city!: string;
 
