@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
-import { MapContainer, Marker, Popup, TileLayer, Tooltip, useMap } from "react-leaflet";
+import { useEffect, useState } from "react";
+import { MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents } from "react-leaflet";
 import { divIcon, type LatLngExpression } from "leaflet";
 
 import { formatDistance } from "@/lib/events";
@@ -49,6 +49,96 @@ function MapCenterController({ center }: { center: Coordinates }) {
   return null;
 }
 
+function MapClickHandler({ onClear }: { onClear: () => void }) {
+  useMapEvents({
+    click: () => {
+      onClear();
+    },
+  });
+  return null;
+}
+
+const MIN_PLACE_ZOOM = 16;
+const MIN_DISTANCE_PX = 38;
+
+type Place = {
+  id: string;
+  position: LatLngExpression;
+  label: string;
+  title: string;
+  description: string;
+  color: string;
+};
+
+function PlacesLayer({
+  markers,
+  selectedMarkerId,
+  setSelectedMarkerId,
+}: {
+  markers: Place[];
+  selectedMarkerId: string | null;
+  setSelectedMarkerId: (id: string | null) => void;
+}) {
+  const map = useMap();
+  const [visibleIds, setVisibleIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!map) return;
+    const update = () => {
+      const zoom = map.getZoom();
+      if (zoom < MIN_PLACE_ZOOM) {
+        // only keep the selected marker visible
+        setVisibleIds(selectedMarkerId ? [selectedMarkerId] : []);
+        return;
+      }
+
+      const chosen: { id: string; point: any }[] = [];
+      for (const m of markers) {
+        // always include selected marker
+        if (selectedMarkerId === m.id) {
+          const p = map.latLngToLayerPoint(m.position as any);
+          chosen.push({ id: m.id, point: p });
+          continue;
+        }
+        const p = map.latLngToLayerPoint(m.position as any);
+        const colliding = chosen.some((c) => c.point.distanceTo(p) < MIN_DISTANCE_PX);
+        if (!colliding) chosen.push({ id: m.id, point: p });
+      }
+      setVisibleIds(chosen.map((c) => c.id));
+    };
+
+    update();
+    map.on("moveend zoomend resize", update);
+    return () => map.off("moveend zoomend resize", update);
+  }, [map, markers, selectedMarkerId]);
+
+  return (
+    <>
+      {markers.map((m) => {
+        const selected = selectedMarkerId === m.id;
+        if (!selected && !visibleIds.includes(m.id)) return null;
+        return (
+          <Marker
+            key={m.id}
+            position={m.position}
+            icon={selected ? makeMarker(m.color, m.label) : makePlaceIcon(m.color, m.title)}
+            eventHandlers={{ click: () => setSelectedMarkerId(m.id) }}
+          >
+            {selected ? (
+              <Popup>
+                <div className="space-y-1">
+                  <div className="font-semibold">{m.title}</div>
+                  <div className="text-sm text-slate-600">{m.description}</div>
+                </div>
+              </Popup>
+            ) : null}
+          </Marker>
+        );
+      })}
+    </>
+  );
+}
+
 function makeMarker(color: string, label: string) {
   return divIcon({
     className: "",
@@ -71,6 +161,27 @@ function makeMarker(color: string, label: string) {
     `,
     iconSize: [28, 28],
     iconAnchor: [14, 24],
+    popupAnchor: [0, -22],
+  });
+}
+
+function makePlaceIcon(color: string, title: string) {
+  return divIcon({
+    className: "",
+    html: `
+      <div style="
+        padding: 4px 8px;
+        border-radius: 8px;
+        background: rgba(255,255,255,0.9);
+        border: 1px solid rgba(0,0,0,0.06);
+        color: ${color};
+        font-size: 12px;
+        font-weight:600;
+        white-space:nowrap;
+      ">${title}</div>
+    `,
+    iconSize: [10, 10],
+    iconAnchor: [10, 6],
     popupAnchor: [0, -22],
   });
 }
@@ -238,6 +349,78 @@ const CAMPUS_MARKERS = [
   },
 ];
 
+const MANUAL_PLACES: Place[] = [
+  {
+    id: "college-center",
+    position: [I_HUB_LOCATION.latitude, I_HUB_LOCATION.longitude] as LatLngExpression,
+    label: "S",
+    title: COLLEGE_NAME,
+    description: "College marker",
+    color: "#22c55e",
+  },
+  {
+    id: "ai-campus",
+    position: [AI_CAMPUS_LOCATION.latitude, AI_CAMPUS_LOCATION.longitude] as LatLngExpression,
+    label: "A",
+    title: AI_CAMPUS_NAME,
+    description: "Separate campus location",
+    color: "#f59e0b",
+  },
+  {
+    id: "spine-center",
+    position: [SPINE_CENTER_LOCATION.latitude, SPINE_CENTER_LOCATION.longitude] as LatLngExpression,
+    label: "C",
+    title: SPINE_CENTER_NAME,
+    description: "Spine center",
+    color: "#a855f7",
+  },
+  {
+    id: "dt-playhouse",
+    position: [DT_PLAYHOUSE_LOCATION.latitude, DT_PLAYHOUSE_LOCATION.longitude] as LatLngExpression,
+    label: "D",
+    title: DT_PLAYHOUSE_NAME,
+    description: "Design thinking playhouse",
+    color: "#ef4444",
+  },
+  {
+    id: "sns-lawn",
+    position: [SNS_LAWN_LOCATION.latitude, SNS_LAWN_LOCATION.longitude] as LatLngExpression,
+    label: "L",
+    title: SNS_LAWN_NAME,
+    description: "Lawn",
+    color: "#14b8a6",
+  },
+  {
+    id: "mech-dept",
+    position: [MECH_DEPT_LOCATION.latitude, MECH_DEPT_LOCATION.longitude] as LatLngExpression,
+    label: "M",
+    title: MECH_DEPT_NAME,
+    description: "Mechanical dept",
+    color: "#f97316",
+  },
+  {
+    id: "cse-dept",
+    position: [CSE_DEPT_LOCATION.latitude, CSE_DEPT_LOCATION.longitude] as LatLngExpression,
+    label: "C",
+    title: CSE_DEPT_NAME,
+    description: "CSE dept",
+    color: "#06b6d4",
+  },
+  {
+    id: "sns-tech",
+    position: [
+      SNS_COLLEGE_OF_TECHNOLOGY_LOCATION.latitude,
+      SNS_COLLEGE_OF_TECHNOLOGY_LOCATION.longitude,
+    ] as LatLngExpression,
+    label: "T",
+    title: SNS_COLLEGE_OF_TECHNOLOGY_NAME,
+    description: "SNS Tech",
+    color: "#84cc16",
+  },
+];
+
+const ALL_PLACES: Place[] = [...MANUAL_PLACES, ...CAMPUS_MARKERS];
+
 export function EventMap({
   center,
   events,
@@ -252,6 +435,8 @@ export function EventMap({
     latitude: I_HUB_LOCATION.latitude,
     longitude: I_HUB_LOCATION.longitude,
   };
+
+  const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(null);
 
   const selectedLocation = [mapCenter.latitude, mapCenter.longitude] as LatLngExpression;
 
@@ -309,146 +494,14 @@ export function EventMap({
               className="h-full w-full"
             >
               <MapCenterController center={mapCenter} />
+              {/* Clear selection when clicking the map background */}
+              {/** Map click handler component */}
+              <MapClickHandler onClear={() => setSelectedMarkerId(null)} />
               <TileLayer
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
-              <Marker
-                position={[mapCenter.latitude, mapCenter.longitude]}
-                icon={makeMarker("#22c55e", "S")}
-              >
-                <Tooltip permanent direction="top" offset={[0, -18]} className="border-0 bg-transparent p-0 text-xs font-semibold text-white shadow-none">
-                  {COLLEGE_NAME}
-                </Tooltip>
-                <Popup>
-                  <div className="space-y-1">
-                    <div className="font-semibold">{COLLEGE_NAME}</div>
-                    <div className="text-sm text-slate-600">College marker</div>
-                  </div>
-                </Popup>
-              </Marker>
-
-              <Marker
-                position={[AI_CAMPUS_LOCATION.latitude, AI_CAMPUS_LOCATION.longitude]}
-                icon={makeMarker("#f59e0b", "A")}
-              >
-                <Tooltip permanent direction="top" offset={[0, -18]} className="border-0 bg-transparent p-0 text-xs font-semibold text-white shadow-none">
-                  {AI_CAMPUS_NAME}
-                </Tooltip>
-                <Popup>
-                  <div className="space-y-1">
-                    <div className="font-semibold">{AI_CAMPUS_NAME}</div>
-                    <div className="text-sm text-slate-600">Separate campus location</div>
-                  </div>
-                </Popup>
-              </Marker>
-
-              <Marker
-                position={[SPINE_CENTER_LOCATION.latitude, SPINE_CENTER_LOCATION.longitude]}
-                icon={makeMarker("#a855f7", "C")}
-              >
-                <Tooltip permanent direction="top" offset={[0, -18]} className="border-0 bg-transparent p-0 text-xs font-semibold text-white shadow-none">
-                  {SPINE_CENTER_NAME}
-                </Tooltip>
-                <Popup>
-                  <div className="space-y-1">
-                    <div className="font-semibold">{SPINE_CENTER_NAME}</div>
-                    <div className="text-sm text-slate-600">Separate campus location</div>
-                  </div>
-                </Popup>
-              </Marker>
-
-              <Marker
-                position={[DT_PLAYHOUSE_LOCATION.latitude, DT_PLAYHOUSE_LOCATION.longitude]}
-                icon={makeMarker("#ef4444", "D")}
-              >
-                <Tooltip permanent direction="top" offset={[0, -18]} className="border-0 bg-transparent p-0 text-xs font-semibold text-white shadow-none">
-                  {DT_PLAYHOUSE_NAME}
-                </Tooltip>
-                <Popup>
-                  <div className="space-y-1">
-                    <div className="font-semibold">{DT_PLAYHOUSE_NAME}</div>
-                    <div className="text-sm text-slate-600">Separate campus location</div>
-                  </div>
-                </Popup>
-              </Marker>
-
-              <Marker
-                position={[SNS_LAWN_LOCATION.latitude, SNS_LAWN_LOCATION.longitude]}
-                icon={makeMarker("#14b8a6", "L")}
-              >
-                <Tooltip permanent direction="top" offset={[0, -18]} className="border-0 bg-transparent p-0 text-xs font-semibold text-white shadow-none">
-                  Lawn
-                </Tooltip>
-                <Popup>
-                  <div className="space-y-1">
-                    <div className="font-semibold">{SNS_LAWN_NAME}</div>
-                    <div className="text-sm text-slate-600">Separate campus location</div>
-                  </div>
-                </Popup>
-              </Marker>
-
-              <Marker
-                position={[MECH_DEPT_LOCATION.latitude, MECH_DEPT_LOCATION.longitude]}
-                icon={makeMarker("#f97316", "M")}
-              >
-                <Tooltip permanent direction="right" offset={[12, 0]} className="border-0 bg-transparent p-0 text-xs font-semibold text-white shadow-none">
-                  Mech
-                </Tooltip>
-                <Popup>
-                  <div className="space-y-1">
-                    <div className="font-semibold">{MECH_DEPT_NAME}</div>
-                    <div className="text-sm text-slate-600">Separate campus location</div>
-                  </div>
-                </Popup>
-              </Marker>
-
-              <Marker
-                position={[CSE_DEPT_LOCATION.latitude, CSE_DEPT_LOCATION.longitude]}
-                icon={makeMarker("#06b6d4", "C")}
-              >
-                <Tooltip permanent direction="left" offset={[-12, 0]} className="border-0 bg-transparent p-0 text-xs font-semibold text-white shadow-none">
-                  CSE
-                </Tooltip>
-                <Popup>
-                  <div className="space-y-1">
-                    <div className="font-semibold">{CSE_DEPT_NAME}</div>
-                    <div className="text-sm text-slate-600">Separate campus location</div>
-                  </div>
-                </Popup>
-              </Marker>
-
-              <Marker
-                position={[
-                  SNS_COLLEGE_OF_TECHNOLOGY_LOCATION.latitude,
-                  SNS_COLLEGE_OF_TECHNOLOGY_LOCATION.longitude,
-                ]}
-                icon={makeMarker("#84cc16", "T")}
-              >
-                <Tooltip permanent direction="bottom" offset={[0, 12]} className="border-0 bg-transparent p-0 text-xs font-semibold text-white shadow-none">
-                  SNS Tech
-                </Tooltip>
-                <Popup>
-                  <div className="space-y-1">
-                    <div className="font-semibold">{SNS_COLLEGE_OF_TECHNOLOGY_NAME}</div>
-                    <div className="text-sm text-slate-600">Separate campus location</div>
-                  </div>
-                </Popup>
-              </Marker>
-
-              {CAMPUS_MARKERS.map((marker) => (
-                <Marker key={marker.id} position={marker.position} icon={makeMarker(marker.color, marker.label)}>
-                  <Tooltip permanent direction="top" offset={[0, -18]} className="border-0 bg-transparent p-0 text-xs font-semibold text-white shadow-none">
-                    {marker.title}
-                  </Tooltip>
-                  <Popup>
-                    <div className="space-y-1">
-                      <div className="font-semibold">{marker.title}</div>
-                      <div className="text-sm text-slate-600">{marker.description}</div>
-                    </div>
-                  </Popup>
-                </Marker>
-              ))}
+              <PlacesLayer markers={ALL_PLACES} selectedMarkerId={selectedMarkerId} setSelectedMarkerId={setSelectedMarkerId} />
 
               {events.map((event) => (
                 <Marker
