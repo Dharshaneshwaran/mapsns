@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { Coordinates } from "@/types/event";
 
@@ -16,6 +16,7 @@ export function useLocation() {
     error: null,
     coordinates: null,
   });
+  const watchId = useRef<number | null>(null);
 
   useEffect(() => {
     if (!("geolocation" in navigator)) {
@@ -27,7 +28,7 @@ export function useLocation() {
     }
   }, []);
 
-  const requestLocation = async (): Promise<Coordinates | null> => {
+  const requestLocation = useCallback(async (): Promise<Coordinates | null> => {
     if (!("geolocation" in navigator)) {
       setState({
         loading: false,
@@ -72,10 +73,63 @@ export function useLocation() {
         },
       );
     });
-  };
+  }, []);
+
+  const startWatching = useCallback(() => {
+    if (!("geolocation" in navigator)) return;
+
+    setState((current) => ({ ...current, loading: true, error: null }));
+
+    watchId.current = navigator.geolocation.watchPosition(
+      (position) => {
+        const coordinates = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        };
+
+        setState({
+          loading: false,
+          error: null,
+          coordinates,
+        });
+      },
+      (error) => {
+        setState({
+          loading: false,
+          error:
+            error.code === error.PERMISSION_DENIED
+              ? "Location permission denied."
+              : "Unable to track your location.",
+          coordinates: null,
+        });
+      },
+      {
+        enableHighAccuracy: true,
+        maximumAge: 5_000,
+        timeout: 10_000,
+      },
+    );
+  }, []);
+
+  const stopWatching = useCallback(() => {
+    if (watchId.current !== null) {
+      navigator.geolocation.clearWatch(watchId.current);
+      watchId.current = null;
+    }
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (watchId.current !== null) {
+        navigator.geolocation.clearWatch(watchId.current);
+      }
+    };
+  }, []);
 
   return {
     ...state,
     requestLocation,
+    startWatching,
+    stopWatching,
   };
 }
