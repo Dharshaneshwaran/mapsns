@@ -80,6 +80,18 @@ export function MapExplorer({ fullPage = false }: MapExplorerProps) {
     [events, location],
   );
 
+  const recentEvents = useMemo(
+    () =>
+      [...upcomingEvents]
+        .sort(
+          (left, right) =>
+            new Date(left.startDate).getTime() - new Date(right.startDate).getTime() ||
+            right.popularity - left.popularity,
+        )
+        .slice(0, 6),
+    [upcomingEvents],
+  );
+
   const nearbyEvents = useMemo(
     () => getNearbyEvents(events, location, COLLEGE_RADIUS_KM, query, "All", "distance"),
     [events, location, query],
@@ -265,32 +277,55 @@ export function MapExplorer({ fullPage = false }: MapExplorerProps) {
             </div>
           </div>
 
-          <div className="border-b border-emerald-100 bg-emerald-50 p-4">
-            <h3 className="text-sm font-semibold text-emerald-900">Directions</h3>
-            <div className="mt-3 space-y-2">
-              <div className="flex items-center gap-3 rounded-lg bg-white p-2.5 text-xs shadow-sm">
+          <div className="border-b border-emerald-100 bg-emerald-50 px-4 py-3">
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-sm font-bold text-emerald-900">Route</h3>
+              {routeDistance ? (
+                <div className="text-right">
+                  <span className="text-lg font-bold text-emerald-700">{routeDistance}</span>
+                  <span className="ml-2 text-xs font-semibold text-emerald-600">{routeDuration}</span>
+                </div>
+              ) : calculatingRoute ? (
+                <span className="text-xs text-slate-400">Calculating...</span>
+              ) : null}
+            </div>
+            {!routeDistance ? (
+              <button
+                onClick={() => {
+                  if (selectedEvent && userLocation) {
+                    calculateRoute(userLocation, selectedEvent as EventWithDistance);
+                  }
+                }}
+                disabled={calculatingRoute}
+                className="w-full rounded-lg bg-emerald-500 py-2 text-xs font-bold text-white transition hover:bg-emerald-600 disabled:opacity-60"
+              >
+                {calculatingRoute ? "Calculating..." : "Show route"}
+              </button>
+            ) : null}
+            <div className="mt-3 space-y-0">
+              <div className="flex items-center gap-3 rounded-t-lg bg-white p-2.5 text-xs shadow-sm">
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-500 text-[10px] font-bold text-white">A</span>
-                <span className="text-slate-600">Your location</span>
-                {userLocation ? (
-                  <span className="ml-auto text-[10px] text-slate-400">
-                    {userLocation.latitude.toFixed(4)}, {userLocation.longitude.toFixed(4)}
-                  </span>
-                ) : null}
+                <div>
+                  <div className="font-medium text-slate-900">Your location</div>
+                  <div className="text-[10px] text-slate-400">
+                    {userLocation
+                      ? `${userLocation.latitude.toFixed(4)}, ${userLocation.longitude.toFixed(4)}`
+                      : ""}
+                  </div>
+                </div>
               </div>
-              <div className="ml-3 border-l-2 border-dashed border-emerald-300 pl-4 text-[10px]">
-                {routeDistance ? (
-                  <span className="text-emerald-600">{routeDistance} &mdash; {routeDuration}</span>
-                ) : (
-                  <span className="text-emerald-600">
-                    {selectedEvent.distanceKm < 1
-                      ? `${(selectedEvent.distanceKm * 1000).toFixed(0)} m`
-                      : `${selectedEvent.distanceKm.toFixed(1)} km`}
+              <div className="ml-3 border-l-2 border-dashed border-emerald-300 py-1.5 pl-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-semibold text-emerald-600">
+                    {routeDistance ?? `${selectedEvent.distanceKm.toFixed(1)} km`}
                   </span>
-                )}
-                {calculatingRoute ? <span className="ml-2 text-slate-400">Calculating...</span> : null}
+                  {calculatingRoute ? (
+                    <span className="text-[10px] text-slate-400 animate-pulse">Updating...</span>
+                  ) : null}
+                </div>
               </div>
-              <div className="flex items-center gap-3 rounded-lg bg-white p-2.5 text-xs shadow-sm">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-[10px] font-bold text-white">B</span>
+              <div className="flex items-center gap-3 rounded-b-lg bg-white p-2.5 text-xs shadow-sm">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">B</span>
                 <div>
                   <div className="font-medium text-slate-900">{selectedEvent.title}</div>
                   <div className="text-slate-500">{selectedEvent.address}</div>
@@ -348,59 +383,52 @@ export function MapExplorer({ fullPage = false }: MapExplorerProps) {
           </div>
         </aside>
 
-        <div className="fixed left-0 right-0 top-0 z-[1000] flex items-center justify-between bg-white/95 px-3 py-2 shadow-sm backdrop-blur sm:hidden">
-          <button onClick={clearRoute} className="text-sm font-medium text-emerald-600">
-            ← Back
+        <div className="fixed left-0 right-0 top-0 z-[1000] bg-white px-4 pb-2 pt-10 shadow-sm sm:hidden">
+          <button onClick={clearRoute} className="flex items-center gap-3">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#374151" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
+            <span className="text-sm font-medium text-slate-700">{selectedEvent.title}</span>
           </button>
-          <div className="flex flex-1 items-center gap-2 px-2">
-            <input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search events"
-              className="h-8 flex-1 rounded-lg border border-slate-200 bg-slate-50 px-2 text-xs text-slate-900 outline-none placeholder:text-slate-400"
-            />
+        </div>
+
+        <div className="fixed bottom-0 left-0 right-0 z-[1000] rounded-t-3xl bg-white px-5 pb-8 pt-4 shadow-2xl sm:hidden">
+          {routeDistance ? (
+            <div className="mb-4 flex items-end gap-2">
+              <span className="text-3xl font-bold text-slate-900">{routeDuration}</span>
+              <span className="mb-1 text-sm text-slate-500">{routeDistance}</span>
+            </div>
+          ) : (
             <button
-              type="button"
               onClick={() => {
                 if (selectedEvent && userLocation) {
                   calculateRoute(userLocation, selectedEvent as EventWithDistance);
                 }
               }}
               disabled={calculatingRoute}
-              className="h-8 rounded-lg bg-emerald-400 px-3 text-xs font-semibold text-slate-950 transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"
+              className="mb-3 w-full rounded-xl bg-emerald-500 py-3 text-sm font-bold text-white transition hover:bg-emerald-600 disabled:opacity-60"
             >
-              {calculatingRoute ? "..." : "Go"}
+              {calculatingRoute ? "Calculating..." : "Get directions"}
             </button>
+          )}
+          <div className="flex items-start gap-3">
+            <div className="flex flex-col items-center gap-1">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white">A</span>
+              <div className="w-0.5 flex-1 bg-blue-300"></div>
+            </div>
+            <div className="pb-1">
+              <div className="text-sm font-medium text-slate-900">Your location</div>
+              <div className="text-xs text-slate-400">
+                {userLocation
+                  ? `${userLocation.latitude.toFixed(4)}, ${userLocation.longitude.toFixed(4)}`
+                  : ""}
+              </div>
+            </div>
           </div>
-          <span className="text-xs font-medium text-emerald-600">
-            {selectedEvent.distanceKm < 1
-              ? `${(selectedEvent.distanceKm * 1000).toFixed(0)} m`
-              : `${selectedEvent.distanceKm.toFixed(1)} km`}
-          </span>
-        </div>
-
-        <div className="fixed bottom-0 left-0 right-0 z-[1000] rounded-t-2xl border-t border-emerald-100 bg-white px-4 pb-6 pt-3 shadow-xl sm:hidden">
-          <div className="mb-2 flex items-center justify-between">
-            <span className="text-xs font-semibold text-emerald-900">Directions</span>
-            {routeDistance ? (
-              <span className="text-xs text-emerald-600">{routeDistance} &mdash; {routeDuration}</span>
-            ) : null}
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-500 text-[8px] font-bold text-white">A</span>
-            <span className="text-xs text-slate-600">Your location</span>
-            <span className="ml-auto text-[9px] text-slate-400">
-              {userLocation
-                ? `${userLocation.latitude.toFixed(4)}, ${userLocation.longitude.toFixed(4)}`
-                : ""}
-            </span>
-          </div>
-          <div className="ml-2.5 border-l-2 border-dashed border-emerald-300 py-1 pl-3 text-[10px] text-emerald-600">
-            {routeDistance ?? `${selectedEvent.distanceKm.toFixed(1)} km`}
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-[8px] font-bold text-white">B</span>
-            <span className="text-xs font-medium text-slate-900">{selectedEvent.title}</span>
+          <div className="flex items-start gap-3 pt-1">
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">B</span>
+            <div>
+              <div className="text-sm font-medium text-slate-900">{selectedEvent.title}</div>
+              <div className="text-xs text-slate-500">{selectedEvent.address}</div>
+            </div>
           </div>
         </div>
 

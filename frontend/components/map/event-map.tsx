@@ -43,10 +43,14 @@ function MapCenterController({ center }: { center: Coordinates }) {
   const map = useMap();
 
   useEffect(() => {
-    map.invalidateSize();
-    map.setView([center.latitude, center.longitude], map.getZoom(), {
-      animate: true,
-    });
+    if (!map) return;
+    const timeout = setTimeout(() => {
+      map.invalidateSize();
+      map.setView([center.latitude, center.longitude], map.getZoom() || 18, {
+        animate: true,
+      });
+    }, 0);
+    return () => clearTimeout(timeout);
   }, [center, map]);
 
   return null;
@@ -112,7 +116,7 @@ function PlacesLayer({
 
     update();
     map.on("moveend zoomend resize", update);
-    return () => map.off("moveend zoomend resize", update);
+    return () => void map.off("moveend zoomend resize", update);
   }, [map, markers, selectedMarkerId]);
 
   return (
@@ -147,24 +151,61 @@ function makeMarker(color: string, label: string) {
     className: "",
     html: `
       <div style="
-        width: 28px;
-        height: 28px;
-        border-radius: 9999px 9999px 9999px 4px;
-        background: ${color};
-        border: 2px solid rgba(255,255,255,0.95);
-        box-shadow: 0 10px 18px rgba(0,0,0,0.24);
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        color:#020617;
-        font-size:8px;
-        font-weight:800;
-        transform: rotate(-45deg);
-      ">${label}</div>
+        position:relative;
+        width:32px; height:40px;
+        display:flex; align-items:center; justify-content:center;
+      ">
+        <svg width="32" height="40" viewBox="0 0 32 40" style="position:absolute;inset:0">
+          <defs>
+            <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.3"/>
+            </filter>
+          </defs>
+          <path d="M16 2C9.4 2 4 7.4 4 14c0 9 12 24 12 24s12-15 12-24c0-6.6-5.4-12-12-12z"
+            fill="${color}" stroke="rgba(255,255,255,0.95)" stroke-width="2" filter="url(#shadow)"/>
+        </svg>
+        <span style="
+          position:relative; z-index:1;
+          color:#fff; font-size:10px; font-weight:800;
+          margin-bottom:4px; line-height:1;
+        ">${label}</span>
+      </div>
     `,
-    iconSize: [28, 28],
-    iconAnchor: [14, 24],
-    popupAnchor: [0, -22],
+    iconSize: [32, 40],
+    iconAnchor: [16, 38],
+    popupAnchor: [0, -38],
+  });
+}
+
+function makeDestMarker(color: string) {
+  return divIcon({
+    className: "",
+    html: `
+      <div style="
+        position:relative;
+        width:36px; height:46px;
+        display:flex; align-items:center; justify-content:center;
+      ">
+        <svg width="36" height="46" viewBox="0 0 36 46" style="position:absolute;inset:0">
+          <defs>
+            <filter id="shadow-dest" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.35"/>
+            </filter>
+          </defs>
+          <path d="M18 2C10.3 2 4 8.3 4 16c0 10.5 14 28 14 28s14-17.5 14-28c0-7.7-6.3-14-14-14z"
+            fill="${color}" stroke="rgba(255,255,255,0.95)" stroke-width="2.5" filter="url(#shadow-dest)"/>
+          <circle cx="18" cy="16" r="5" fill="rgba(255,255,255,0.4)"/>
+        </svg>
+        <span style="
+          position:relative; z-index:1;
+          color:#fff; font-size:13px; font-weight:800;
+          margin-bottom:6px; line-height:1;
+        ">★</span>
+      </div>
+    `,
+    iconSize: [36, 46],
+    iconAnchor: [18, 44],
+    popupAnchor: [0, -44],
   });
 }
 
@@ -493,7 +534,8 @@ export function EventMap({
           }
         >
           <div className={fullscreen ? "absolute inset-0" : "relative h-full"}>
-            <MapContainer
+              <MapContainer
+              key="event-map"
               center={selectedLocation}
               zoom={18}
               scrollWheelZoom
@@ -509,7 +551,7 @@ export function EventMap({
               />
               <PlacesLayer markers={ALL_PLACES} selectedMarkerId={selectedMarkerId} setSelectedMarkerId={setSelectedMarkerId} />
 
-              {events.map((event) => (
+              {events.filter((e) => e.id !== selectedEvent?.id).map((event) => (
                 <Marker
                   key={event.id}
                   position={[event.latitude, event.longitude]}
@@ -539,14 +581,26 @@ export function EventMap({
                 </Marker>
               ))}
 
+              {userLocation ? (
+                <Marker
+                  position={[userLocation.latitude, userLocation.longitude]}
+                  icon={makeMarker("#3b82f6", "Y")}
+                >
+                  <Tooltip permanent direction="top" offset={[0, -18]} className="border-0 bg-transparent p-0 text-xs font-semibold text-white shadow-none">
+                    Your location
+                  </Tooltip>
+                </Marker>
+              ) : null}
+
               {userLocation && selectedEvent ? (
                 <>
                   <Marker
-                    position={[userLocation.latitude, userLocation.longitude]}
-                    icon={makeMarker("#3b82f6", "Y")}
+                    position={[selectedEvent.latitude, selectedEvent.longitude]}
+                    icon={makeDestMarker("#ef4444")}
+                    zIndexOffset={2000}
                   >
                     <Tooltip permanent direction="top" offset={[0, -18]} className="border-0 bg-transparent p-0 text-xs font-semibold text-white shadow-none">
-                      Your location
+                      {selectedEvent.title}
                     </Tooltip>
                   </Marker>
                   {routeCoords ? (
