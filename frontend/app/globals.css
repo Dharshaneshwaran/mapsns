@@ -1,0 +1,62 @@
+@import "leaflet/dist/leaflet.css";
+@import "tailwindcss";
+
+:root {
+  --background: #020617;
+  --foreground: #f8fafc;
+  --muted: #94a3b8;
+  --card: rgba(15, 23, 42, 0.72);
+  --border: rgba(148, 163, 184, 0.15);
+  --accent: #22d3ee;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --font-sans: "Segoe UI", "Helvetica Neue", Helvetica, Arial, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: "SFMono-Regular", "Consolas", "Liberation Mono", "Courier New", monospace;
+}
+
+html[data-theme="light"] {
+  --background: #f8fafc;
+  --foreground: #020617;
+  --muted: #475569;
+  --card: rgba(255, 255, 255, 0.8);
+  --border: rgba(15, 23, 42, 0.1);
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--background);
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  min-height: 100%;
+}
+
+::selection {
+  background: rgba(34, 211, 238, 0.3);
+  color: var(--foreground);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
