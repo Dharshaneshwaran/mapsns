@@ -75,6 +75,169 @@ function makeMarker(color: string, label: string) {
   });
 }
 
+const CAMPUS_MARKERS = [
+  {
+    id: "restroom-1",
+    position: [11.101152121170886, 77.02602375483531] as LatLngExpression,
+    label: "R1",
+    title: "Restroom no. 1",
+    description: "Campus restroom",
+    color: "#ec4899",
+  },
+  {
+    id: "restroom-2",
+    position: [11.103758078932051, 77.0277031814663] as LatLngExpression,
+    label: "R2",
+    title: "Restroom no. 2",
+    description: "Campus restroom",
+    color: "#ec4899",
+  },
+  {
+    id: "boys-restroom",
+    position: [11.100777362138214, 77.02717188070457] as LatLngExpression,
+    label: "BR",
+    title: "Boys restroom",
+    description: "Campus restroom",
+    color: "#ec4899",
+  },
+  {
+    id: "sns-canteen-1",
+    position: [11.100802316817546, 77.02753590666593] as LatLngExpression,
+    label: "C1",
+    title: "SNS Canteen 1",
+    description: "Campus canteen",
+    color: "#f97316",
+  },
+  {
+    id: "abhis-cafe",
+    position: [11.103203577856956, 77.0276775542044] as LatLngExpression,
+    label: "AC",
+    title: "Abhis Cafe",
+    description: "Campus cafe",
+    color: "#f97316",
+  },
+  {
+    id: "cafe-square",
+    position: [11.103314094540458, 77.02698055533851] as LatLngExpression,
+    label: "CS",
+    title: "Cafe Square",
+    description: "Campus cafe",
+    color: "#f97316",
+  },
+  {
+    id: "volleyball-ground",
+    position: [11.103987734890795, 77.0268176570159] as LatLngExpression,
+    label: "VG",
+    title: "Volleyball ground",
+    description: "Campus sports facility",
+    color: "#0ea5e9",
+  },
+  {
+    id: "canteen-2",
+    position: [11.103643571345566, 77.02767208740153] as LatLngExpression,
+    label: "C2",
+    title: "Canteen 2",
+    description: "Campus canteen",
+    color: "#f97316",
+  },
+  {
+    id: "indore-badminton",
+    position: [11.101799190820543, 77.02764767754073] as LatLngExpression,
+    label: "IB",
+    title: "Indore Badminton",
+    description: "Campus sports facility",
+    color: "#0ea5e9",
+  },
+  {
+    id: "cafe",
+    position: [11.102136711150571, 77.02779635577538] as LatLngExpression,
+    label: "CF",
+    title: "Cafe",
+    description: "Campus cafe",
+    color: "#f97316",
+  },
+  {
+    id: "juice-world",
+    position: [11.100699525099818, 77.02733700658891] as LatLngExpression,
+    label: "JW",
+    title: "Juice world",
+    description: "Refreshment spot",
+    color: "#f97316",
+  },
+  {
+    id: "mario",
+    position: [11.10118512056965, 77.02641387005826] as LatLngExpression,
+    label: "M",
+    title: "Mario",
+    description: "Campus landmark",
+    color: "#22c55e",
+  },
+  {
+    id: "boys-hostel",
+    position: [11.101276577920542, 77.02634729771269] as LatLngExpression,
+    label: "BH",
+    title: "Boys hostel",
+    description: "Student housing",
+    color: "#22c55e",
+  },
+  {
+    id: "girls-hostel",
+    position: [11.10118076545699, 77.0278584899574] as LatLngExpression,
+    label: "GH",
+    title: "Girls hostel",
+    description: "Student housing",
+    color: "#22c55e",
+  },
+  {
+    id: "sitting-area",
+    position: [11.103406219600854, 77.02705296457815] as LatLngExpression,
+    label: "SA",
+    title: "Sitting area",
+    description: "Outdoor seating",
+    color: "#22c55e",
+  },
+  {
+    id: "park",
+    position: [11.100560161233052, 77.02619640038648] as LatLngExpression,
+    label: "P",
+    title: "Park",
+    description: "Green space",
+    color: "#22c55e",
+  },
+  {
+    id: "temple",
+    position: [11.10032716211579, 77.02596783533332] as LatLngExpression,
+    label: "T",
+    title: "Temple",
+    description: "Campus temple",
+    color: "#a855f7",
+  },
+  {
+    id: "sitting-place",
+    position: [11.100723478260496, 77.02650485225435] as LatLngExpression,
+    label: "SP",
+    title: "Sitting place",
+    description: "Outdoor seating",
+    color: "#22c55e",
+  },
+  {
+    id: "design-thinking",
+    position: [11.103510741500774, 77.02639833652296] as LatLngExpression,
+    label: "DT",
+    title: "Design thinking",
+    description: "Campus design hub",
+    color: "#a855f7",
+  },
+  {
+    id: "administrative-office",
+    position: [11.10114810211571, 77.02650041412095] as LatLngExpression,
+    label: "AO",
+    title: "Administrative office",
+    description: "Campus administration",
+    color: "#0ea5e9",
+  },
+];
+
 export function EventMap({
   center,
   events,
@@ -272,6 +435,20 @@ export function EventMap({
                   </div>
                 </Popup>
               </Marker>
+
+              {CAMPUS_MARKERS.map((marker) => (
+                <Marker key={marker.id} position={marker.position} icon={makeMarker(marker.color, marker.label)}>
+                  <Tooltip permanent direction="top" offset={[0, -18]} className="border-0 bg-transparent p-0 text-xs font-semibold text-white shadow-none">
+                    {marker.title}
+                  </Tooltip>
+                  <Popup>
+                    <div className="space-y-1">
+                      <div className="font-semibold">{marker.title}</div>
+                      <div className="text-sm text-slate-600">{marker.description}</div>
+                    </div>
+                  </Popup>
+                </Marker>
+              ))}
 
               {events.map((event) => (
                 <Marker
