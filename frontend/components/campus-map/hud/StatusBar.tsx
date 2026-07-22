@@ -7,7 +7,6 @@ import styles from "./hud.module.css";
 
 export function StatusBar() {
   const speed = useMapStore((s) => s.speed);
-  const isRunning = useMapStore((s) => s.isRunning);
   const weather = useMapStore((s) => s.weather);
   const timeOfDay = useMapStore((s) => s.timeOfDay);
   const setTime = useMapStore((s) => s.setTimeOfDay);
@@ -30,7 +29,7 @@ export function StatusBar() {
   }, []);
 
   const isNight = timeOfDay < 7 || timeOfDay > 18.5;
-  const kmh = isRunning ? (speed * 12).toFixed(1) : (speed * 5).toFixed(1);
+  const kmh = (speed * 5).toFixed(1);
 
   return (
     <div className={`${styles.glass} px-3 py-2 flex flex-col gap-1.5 text-xs text-white min-w-[170px]`}>

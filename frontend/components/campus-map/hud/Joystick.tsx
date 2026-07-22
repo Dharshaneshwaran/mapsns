@@ -9,10 +9,12 @@ import styles from "./hud.module.css";
  * map store; the overlay's animation frame consumes it.
  */
 export function Joystick() {
+  const gpsMode = useMapStore((s) => s.gpsMode);
   const baseRef = useRef<HTMLDivElement>(null);
   const [knob, setKnob] = useState({ x: 0, y: 0 });
   const activeRef = useRef(false);
-  const inputRun = useMapStore((s) => s.inputRun);
+
+  if (gpsMode) return null;
 
   const radius = 44;
 
@@ -30,19 +32,14 @@ export function Joystick() {
       dy = (dy / dist) * radius;
     }
     setKnob({ x: dx, y: dy });
-    useMapStore.getState().setInput(dx / radius, dy / radius, useMapStore.getState().inputRun);
+    useMapStore.getState().setInput(dx / radius, dy / radius);
   }, []);
 
   const reset = useCallback(() => {
     setKnob({ x: 0, y: 0 });
-    useMapStore.getState().setInput(0, 0, useMapStore.getState().inputRun);
+    useMapStore.getState().setInput(0, 0);
     activeRef.current = false;
   }, []);
-
-  const toggleRun = () => {
-    const s = useMapStore.getState();
-    s.setInput(s.inputX, s.inputY, !s.inputRun);
-  };
 
   return (
     <div className="relative select-none touch-none">
@@ -81,12 +78,6 @@ export function Joystick() {
         </div>
       </div>
 
-      <button
-        onClick={toggleRun}
-        className={`mt-3 w-full px-3 py-2 rounded-xl text-xs font-bold text-white ${styles.glass} ${inputRun ? styles.neonGreen : ""}`}
-      >
-        {inputRun ? "🏃 RUN" : "🚶 WALK"}
-      </button>
     </div>
   );
 }

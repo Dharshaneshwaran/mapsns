@@ -1,0 +1,22 @@
+{
+  "name": "SNS College 3D Campus",
+  "short_name": "SNS Campus",
+  "description": "Interactive 3D campus map with GPS walking",
+  "start_url": "/campus",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#06b6d4",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/b5a9ba70-fc6c-4ebb-8cd4-8037c1c463c3.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/b5a9ba70-fc6c-4ebb-8cd4-8037c1c463c3.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

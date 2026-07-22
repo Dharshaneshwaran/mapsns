@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { AvatarSprite } from "./AvatarSprite";
-import { MapNPCs } from "./NPCs";
+import { useEffect, useMemo, useRef } from "react";
 import { MapEventMarkers } from "./EventMarkers";
+import { Avatar3D } from "./Avatar3D";
 import { MapNavigationPath } from "./NavigationPath";
 import {
   MAP_BUILDINGS,
@@ -18,18 +17,13 @@ import { useMapStore } from "@/stores/map-store";
 
 /**
  * Transparent overlay drawn on top of the printed map. Handles avatar
- * movement, building clicks, NPCs, event markers and navigation arrows.
+ * movement, building clicks, event markers and navigation arrows.
  *
  * Renders inside the parent's CSS scaling, so we keep the SVG viewBox in
  * sync with the printed map (1024 × 820 units).
  */
 export function InteractiveOverlay() {
   const svgRef = useRef<SVGSVGElement>(null);
-  const px = useMapStore((s) => s.px);
-  const py = useMapStore((s) => s.py);
-  const facing = useMapStore((s) => s.facing);
-  const isRunning = useMapStore((s) => s.isRunning);
-  const speed = useMapStore((s) => s.speed);
   const selected = useMapStore((s) => s.selectedBuilding);
   const nearby = useMapStore((s) => s.nearbyBuilding);
   const navTargetId = useMapStore((s) => s.navigationTargetId);
@@ -51,8 +45,8 @@ export function InteractiveOverlay() {
     const tick = (now: number) => {
       const dt = Math.min((now - last) / 1000, 0.05);
       last = now;
-      const { inputX, inputY, inputRun, px: cx, py: cy } = useMapStore.getState();
-      const maxSpeed = inputRun ? 230 : 130; // SVG units / second
+      const { inputX, inputY, px: cx, py: cy } = useMapStore.getState();
+      const maxSpeed = 130; // SVG units / second
       const targetVX = inputX * maxSpeed;
       const targetVY = inputY * maxSpeed;
       vx += (targetVX - vx) * ax;
@@ -96,7 +90,7 @@ export function InteractiveOverlay() {
       }
 
       const normSpeed = Math.min(1, sp / maxSpeed);
-      setAvatar(nx, ny, curFacing, moving, inputRun && moving, normSpeed);
+      setAvatar(nx, ny, curFacing, moving, normSpeed);
 
       // Detect nearby landmark
       const lm = nearestLandmark(nx, ny, 80);
@@ -124,16 +118,15 @@ export function InteractiveOverlay() {
         x /= m;
         y /= m;
       }
-      const run = keys.has("shift");
       // Only update keyboard input when joystick is idle
       const { inputX: ix, inputY: iy } = useMapStore.getState();
       const joystickActive = (ix !== 0 || iy !== 0) && x === 0 && y === 0;
       if (!joystickActive) {
-        useMapStore.getState().setInput(x, y, run);
+        useMapStore.getState().setInput(x, y);
       }
     };
     const onDown = (e: KeyboardEvent) => {
-      if (["w", "a", "s", "d", "arrowup", "arrowdown", "arrowleft", "arrowright", "shift"].includes(e.key.toLowerCase())) {
+      if (["w", "a", "s", "d", "arrowup", "arrowdown", "arrowleft", "arrowright"].includes(e.key.toLowerCase())) {
         e.preventDefault();
       }
       keys.add(e.key.toLowerCase());
@@ -178,49 +171,40 @@ export function InteractiveOverlay() {
   }, [nearby, selected, navTargetId]);
 
   return (
-    <svg
-      ref={svgRef}
-      viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
-      preserveAspectRatio="xMidYMid meet"
-      className="absolute inset-0 w-full h-full"
-      style={{ touchAction: "none" }}
-      onClick={handleClick}
-    >
-      {/* Highlighted building outlines */}
-      {highlighted.map((b) => (
-        <BuildingHighlight
-          key={b.id}
-          b={b}
-          color={
-            b.id === navTargetId
-              ? "#22d3ee"
-              : b.id === selected
-                ? "#fbbf24"
-                : "#22c55e"
-          }
-        />
-      ))}
+    <>
+      <svg
+        ref={svgRef}
+        viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
+        preserveAspectRatio="xMidYMid meet"
+        className="absolute inset-0 w-full h-full"
+        style={{ touchAction: "none" }}
+        onClick={handleClick}
+      >
+        {/* Highlighted building outlines */}
+        {highlighted.map((b) => (
+          <BuildingHighlight
+            key={b.id}
+            b={b}
+            color={
+              b.id === navTargetId
+                ? "#22d3ee"
+                : b.id === selected
+                  ? "#fbbf24"
+                  : "#22c55e"
+            }
+          />
+        ))}
 
-      {/* Animated event markers */}
-      <MapEventMarkers />
+        {/* Animated event markers */}
+        <MapEventMarkers />
 
-      {/* Navigation arrows */}
-      <MapNavigationPath />
+        {/* Navigation arrows */}
+        <MapNavigationPath />
+      </svg>
 
-      {/* NPC students */}
-      <MapNPCs />
-
-      {/* Player avatar */}
-      <AvatarSprite
-        x={px}
-        y={py}
-        facing={facing}
-        speed={speed}
-        isRunning={isRunning}
-        scale={1.4}
-        glow
-      />
-    </svg>
+      {/* Player avatar (3D) */}
+      <Avatar3D />
+    </>
   );
 }
 

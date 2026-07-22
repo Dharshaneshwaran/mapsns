@@ -29,8 +29,8 @@ export function DemoBridge() {
     lastTeleportRef.current = spotId;
     // Place the avatar a little south of the building so it's visible.
     const [tx, ty] = spot.mapPosition;
-    useMapStore.getState().setAvatar(tx, ty + 16, -Math.PI / 2, false, false, 0);
-    useMapStore.getState().setInput(0, 0, false);
+    useMapStore.getState().setAvatar(tx, ty + 16, -Math.PI / 2, false, 0);
+    useMapStore.getState().setInput(0, 0);
     if (spot.buildingId) useMapStore.getState().setNearbyBuilding(spot.buildingId);
   }, [enabled, spotId]);
 
@@ -55,17 +55,17 @@ export function DemoBridge() {
       const dist = Math.hypot(dx, dy);
       if (dist < 12) {
         // Reached: pause briefly then move to the next.
-        useMapStore.getState().setInput(0, 0, false);
+        useMapStore.getState().setInput(0, 0);
         const id = DEMO_SPOTS[stage]?.buildingId ?? null;
         useMapStore.getState().setNearbyBuilding(id);
         stage = (stage + 1) % tour.length;
         setTimeout(drive, 1200);
         return;
       }
-      // Normalised input toward the next waypoint, running for speed.
+      // Normalised input toward the next waypoint at walking pace.
       const ix = dx / dist;
       const iy = dy / dist;
-      useMapStore.getState().setInput(ix, iy, true);
+      useMapStore.getState().setInput(ix, iy);
       raf = requestAnimationFrame(drive);
     };
     raf = requestAnimationFrame(drive);
@@ -73,7 +73,7 @@ export function DemoBridge() {
     return () => {
       cancelAnimationFrame(raf);
       // Release input on stop.
-      useMapStore.getState().setInput(0, 0, false);
+      useMapStore.getState().setInput(0, 0);
     };
   }, [autoTour, setAutoTour]);
 

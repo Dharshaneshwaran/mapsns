@@ -3,8 +3,18 @@ import type { ReactNode } from "react";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Event Discovery Platform",
-  description: "Discover nearby events with live location, search, map, and admin tools.",
+  title: "SNS College 3D Campus",
+  description: "Interactive 3D campus map with GPS walking – SNS College of Technology",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "SNS Campus",
+  },
+  other: {
+    "mobile-web-app-capable": "yes",
+    "theme-color": "#06b6d4",
+  },
 };
 
 export default function RootLayout({

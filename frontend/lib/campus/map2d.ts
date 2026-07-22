@@ -386,7 +386,7 @@ export const MAP_NPC_ROUTES: NPC2DRoute[] = [
 ];
 
 // ── COORDINATE HELPERS ───────────────────────────────────────────────
-export const MAP_WIDTH = 1024;
+export const MAP_WIDTH = 1200;
 export const MAP_HEIGHT = 820;
 
 /** Closest building under a point (or null). Walkable rectangles are skipped. */

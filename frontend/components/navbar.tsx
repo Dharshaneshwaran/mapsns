@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 const navItems = [
-  { href: "/map", label: "Map" },
+  { href: "/", label: "Home" },
+  { href: "/map", label: "Explore" },
   { href: "/campus", label: "3D Campus" },
   { href: "/#events", label: "Events" },
   { href: "/admin/login", label: "Admin" },

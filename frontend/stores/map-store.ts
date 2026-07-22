@@ -9,13 +9,14 @@ interface MapState {
   /** Facing angle in radians (0 = right / east). */
   facing: number;
   isMoving: boolean;
-  isRunning: boolean;
   speed: number;
 
   // Input
   inputX: number;
   inputY: number;
-  inputRun: boolean;
+
+  // GPS mode – when true, avatar follows phone GPS instead of joystick/keyboard
+  gpsMode: boolean;
 
   // Selection
   selectedBuilding: string | null;
@@ -35,8 +36,9 @@ interface MapState {
   weather: "clear" | "cloudy" | "rainy";
 
   // Actions
-  setAvatar: (px: number, py: number, facing: number, isMoving: boolean, isRunning: boolean, speed: number) => void;
-  setInput: (x: number, y: number, run: boolean) => void;
+  setAvatar: (px: number, py: number, facing: number, isMoving: boolean, speed: number) => void;
+  setInput: (x: number, y: number) => void;
+  setGpsMode: (on: boolean) => void;
   setSelectedBuilding: (id: string | null) => void;
   setNearbyBuilding: (id: string | null) => void;
   setNavigationTarget: (id: string | null) => void;
@@ -54,12 +56,12 @@ export const useMapStore = create<MapState>((set) => ({
   py: 800,
   facing: -Math.PI / 2, // facing north (up)
   isMoving: false,
-  isRunning: false,
   speed: 0,
 
   inputX: 0,
   inputY: 0,
-  inputRun: false,
+
+  gpsMode: false,
 
   selectedBuilding: null,
   nearbyBuilding: null,
@@ -74,9 +76,9 @@ export const useMapStore = create<MapState>((set) => ({
   timeOfDay: 14,
   weather: "clear",
 
-  setAvatar: (px, py, facing, isMoving, isRunning, speed) =>
-    set({ px, py, facing, isMoving, isRunning, speed }),
-  setInput: (x, y, run) => set({ inputX: x, inputY: y, inputRun: run }),
+  setAvatar: (px, py, facing, isMoving, speed) => set({ px, py, facing, isMoving, speed }),
+  setInput: (x, y) => set({ inputX: x, inputY: y }),
+  setGpsMode: (on) => set({ gpsMode: on }),
   setSelectedBuilding: (id) => set({ selectedBuilding: id }),
   setNearbyBuilding: (id) => set({ nearbyBuilding: id }),
   setNavigationTarget: (id) => set({ navigationTargetId: id }),
