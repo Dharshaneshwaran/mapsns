@@ -2,17 +2,25 @@
 
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import dynamic from "next/dynamic";
-import { CampusLocation, CampusCategory, WalkingState, WalkingRoute } from "@/types/campus";
+import { CampusLocation, WalkingState, WalkingRoute } from "@/types/campus";
 import { CAMPUS_LOCATIONS } from "@/data/campusLocations";
 import { haversineDistance, estimateWalkingTime } from "@/lib/googleMaps";
-import { ThemeProvider, useTheme } from "@/context/ThemeContext";
-import ThemeSwitcher from "@/components/campus/ThemeSwitcher";
+import { X, Navigation, Check, MapPin, AlertTriangle } from "lucide-react";
 import CampusSearch from "@/components/campus/CampusSearch";
-import CategoryFilters from "@/components/campus/CategoryFilters";
 import BottomSheet from "@/components/campus/BottomSheet";
-import WalkingRouteIndicator from "@/components/campus/WalkingRouteIndicator";
 
 type Coordinate = { lat: number; lng: number };
+
+function getBearing(from: Coordinate, to: Coordinate): number {
+  const dLng = ((to.lng - from.lng) * Math.PI) / 180;
+  const lat1 = (from.lat * Math.PI) / 180;
+  const lat2 = (to.lat * Math.PI) / 180;
+  const y = Math.sin(dLng) * Math.cos(lat2);
+  const x =
+    Math.cos(lat1) * Math.sin(lat2) -
+    Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
+  return ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360;
+}
 
 function generateWalkingRoute(start: Coordinate, end: Coordinate): Coordinate[] {
   const points: Coordinate[] = [start];
@@ -40,10 +48,10 @@ const SNSCampusMap = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="absolute inset-0 flex items-center justify-center bg-zinc-900">
+      <div className="absolute inset-0 flex items-center justify-center bg-zinc-100">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-          <p className="text-zinc-400 text-sm">Initializing campus map...</p>
+          <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-zinc-500 text-sm">Initializing campus map...</p>
         </div>
       </div>
     ),
@@ -51,30 +59,37 @@ const SNSCampusMap = dynamic(
 );
 
 export default function CampusMapPage() {
-  return (
-    <ThemeProvider>
-      <CampusMapApp />
-    </ThemeProvider>
-  );
+  return <CampusMapApp />;
 }
 
 function CampusMapApp() {
-  const { mode } = useTheme();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [mapInstance, setMapInstance] = useState<any>(null);
-  const [activeCategory, setActiveCategory] = useState<CampusCategory | "all">("all");
   const [selectedLocation, setSelectedLocation] = useState<CampusLocation | null>(null);
   const [activeRoute, setActiveRoute] = useState<WalkingRoute | null>(null);
   const [isWalking, setIsWalking] = useState(false);
   const [walkingPosition, setWalkingPosition] = useState<{ lat: number; lng: number } | null>(null);
-  const [walkingHeading, setWalkingHeading] = useState(0);
+  const [walkingBearing, setWalkingBearing] = useState(0);
   const [walkingState, setWalkingState] = useState<WalkingState>("idle");
   const [locationStatus, setLocationStatus] = useState<"idle" | "requesting" | "denied" | "tracking">("idle");
+  const [userPosition, setUserPosition] = useState<{ lat: number; lng: number } | null>(null);
 
   const watchIdRef = useRef<number | null>(null);
+  const prevPositionRef = useRef<{ lat: number; lng: number } | null>(null);
 
   const handleMapReady = useCallback((map: unknown) => {
     setMapInstance(map);
+  }, []);
+
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserPosition({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+      },
+      () => {},
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
   }, []);
 
   const handleLocationSelect = useCallback((location: CampusLocation) => {
@@ -161,23 +176,34 @@ function CampusMapApp() {
       setIsWalking(true);
       setWalkingState("idle");
       setLocationStatus("tracking");
+      prevPositionRef.current = null;
+      setWalkingBearing(0);
 
       if (navigator.geolocation) {
         let hasMoved = false;
+        let idleTimer: ReturnType<typeof setTimeout> | null = null;
         watchIdRef.current = navigator.geolocation.watchPosition(
           (pos) => {
             const newLat = pos.coords.latitude;
             const newLng = pos.coords.longitude;
 
+            if (prevPositionRef.current) {
+              const heading = getBearing(prevPositionRef.current, { lat: newLat, lng: newLng });
+              setWalkingBearing(heading);
+            }
+            prevPositionRef.current = { lat: newLat, lng: newLng };
+
             setWalkingPosition((prev) => {
               if (prev) {
-                const moved = haversineDistance(prev.lat, prev.lng, newLat, newLng) > 2;
-                if (moved && !hasMoved) {
+                const distMoved = haversineDistance(prev.lat, prev.lng, newLat, newLng);
+                if (distMoved > 5) {
                   hasMoved = true;
                   setWalkingState("walking");
+                  if (idleTimer) clearTimeout(idleTimer);
+                  idleTimer = setTimeout(() => {
+                    setWalkingState("idle");
+                  }, 2000);
                 }
-                const bearing = getBearingFromTo(prev, { lat: newLat, lng: newLng });
-                if (bearing !== null) setWalkingHeading(bearing);
               }
               return { lat: newLat, lng: newLng };
             });
@@ -222,6 +248,18 @@ function CampusMapApp() {
     };
   }, []);
 
+  const staticDistance = useMemo(() => {
+    if (!selectedLocation) return null;
+    const origin = userPosition ?? walkingPosition;
+    if (!origin) return null;
+    return haversineDistance(
+      origin.lat,
+      origin.lng,
+      selectedLocation.position.lat,
+      selectedLocation.position.lng
+    );
+  }, [selectedLocation, userPosition, walkingPosition]);
+
   const distance = useMemo(() => {
     if (!selectedLocation || !walkingPosition) return null;
     return haversineDistance(
@@ -237,16 +275,6 @@ function CampusMapApp() {
     return estimateWalkingTime(distance);
   }, [distance]);
 
-  const staticDistance = useMemo(() => {
-    if (!selectedLocation) return null;
-    return haversineDistance(
-      CAMPUS_LOCATIONS.find((l) => l.id === "main-gate")?.position.lat ?? 11.0998,
-      CAMPUS_LOCATIONS.find((l) => l.id === "main-gate")?.position.lng ?? 77.0273,
-      selectedLocation.position.lat,
-      selectedLocation.position.lng
-    );
-  }, [selectedLocation]);
-
   const formatDistance = (meters: number) => {
     if (meters < 1000) return `${Math.round(meters)} m`;
     return `${(meters / 1000).toFixed(1)} km`;
@@ -259,46 +287,42 @@ function CampusMapApp() {
   };
 
   return (
-    <div className="relative w-full h-screen overflow-hidden">
+    <div className="relative w-full h-screen overflow-hidden bg-zinc-100">
       <SNSCampusMap
-        activeCategory={activeCategory}
         onLocationSelect={handleLocationSelect}
         selectedLocationId={selectedLocation?.id ?? null}
         activeRoute={activeRoute}
-        mapTypeId={mode === "classic" ? "satellite" : "roadmap"}
+        mapTypeId="roadmap"
         walkingPosition={walkingPosition}
+        walkingBearing={walkingBearing}
         isWalking={isWalking}
+        walkingState={walkingState}
         onMapReady={handleMapReady}
       />
 
-      {/* Google Maps style walking navigation bar */}
+      {/* Walking navigation bar - bottom */}
       {isWalking && selectedLocation && walkingPosition && (
-        <div className="absolute top-0 left-0 right-0 z-40 safe-top">
-          <div className="bg-white shadow-lg rounded-b-2xl mx-2 mt-1 overflow-hidden">
+        <div className="absolute bottom-0 left-0 right-0 z-40 p-3 pb-6 safe-bottom">
+          <div className="bg-white shadow-2xl rounded-2xl mx-auto max-w-md overflow-hidden">
             <div className="flex items-center gap-3 px-4 py-3">
               <button
                 onClick={handleStopWalking}
                 className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center shrink-0"
               >
-                <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <X className="w-5 h-5 text-red-500" />
               </button>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-zinc-900 truncate">{selectedLocation.name}</p>
                 <div className="flex items-center gap-2 text-xs text-zinc-500">
                   <span className="font-medium text-blue-600">{formatDistance(distance ?? 0)}</span>
-                  <span>·</span>
+                  <span>&middot;</span>
                   <span>{formatTime(walkingTime ?? 0)}</span>
                 </div>
               </div>
               <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
-                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                </svg>
+                <Navigation className="w-5 h-5 text-blue-600" />
               </div>
             </div>
-            {/* Step indicator */}
             {walkingState === "idle" && (
               <div className="px-4 pb-3">
                 <div className="flex items-center gap-2 text-xs text-zinc-500">
@@ -318,9 +342,7 @@ function CampusMapApp() {
             {walkingState === "arrived" && (
               <div className="px-4 pb-3">
                 <div className="flex items-center gap-2 text-xs text-green-600 font-medium">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
+                  <Check className="w-4 h-4" />
                   <span>You have arrived!</span>
                 </div>
               </div>
@@ -331,13 +353,10 @@ function CampusMapApp() {
 
       {/* Location requesting overlay */}
       {locationStatus === "requesting" && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
           <div className="bg-white rounded-3xl p-8 max-w-sm mx-4 text-center shadow-xl">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center">
-              <svg className="w-8 h-8 text-blue-500 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
+              <MapPin className="w-8 h-8 text-blue-500 animate-pulse" />
             </div>
             <h3 className="text-lg font-bold text-zinc-900 mb-2">Getting your location</h3>
             <p className="text-sm text-zinc-500">Please allow location access when prompted by your browser</p>
@@ -347,12 +366,10 @@ function CampusMapApp() {
 
       {/* Location denied overlay */}
       {locationStatus === "denied" && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
           <div className="bg-white rounded-3xl p-8 max-w-sm mx-4 text-center shadow-xl">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-50 border border-red-100 flex items-center justify-center">
-              <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
-              </svg>
+              <AlertTriangle className="w-8 h-8 text-red-500" />
             </div>
             <h3 className="text-lg font-bold text-zinc-900 mb-2">Location access required</h3>
             <p className="text-sm text-zinc-500 mb-4">Please enable location access in your browser settings to use walking navigation</p>
@@ -375,25 +392,16 @@ function CampusMapApp() {
         </div>
       )}
 
-      {/* Top bar - hidden during walking */}
+      {/* Top bar */}
       {!isWalking && (
-        <div className="absolute top-0 left-0 right-0 z-30 p-3 sm:p-4 pb-0 safe-top">
-          <div className="max-w-md mx-auto flex flex-col gap-2 sm:gap-3">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="flex-1 min-w-0">
-                <CampusSearch onSelectLocation={handleLocationSelect} />
-              </div>
-              <ThemeSwitcher />
-            </div>
-            <CategoryFilters
-              activeCategory={activeCategory}
-              onCategoryChange={setActiveCategory}
-            />
+        <div className="absolute top-0 left-0 right-0 z-30 px-3 pt-3 sm:px-4 sm:pt-4 safe-top">
+          <div className="max-w-lg mx-auto">
+            <CampusSearch onSelectLocation={handleLocationSelect} />
           </div>
         </div>
       )}
 
-      {/* Bottom sheet for selected location */}
+      {/* Bottom sheet */}
       {selectedLocation && !isWalking && (
         <BottomSheet
           location={selectedLocation}
@@ -414,9 +422,7 @@ function CampusMapApp() {
           <div className="bg-white rounded-3xl shadow-2xl max-w-md mx-auto overflow-hidden">
             <div className="p-6 text-center">
               <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-50 border border-green-100 flex items-center justify-center">
-                <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
+                <Check className="w-8 h-8 text-green-500" />
               </div>
               <h3 className="text-lg font-bold text-zinc-900 mb-1">You have arrived!</h3>
               <p className="text-sm text-zinc-500">{selectedLocation.name}</p>
@@ -443,19 +449,4 @@ function CampusMapApp() {
       )}
     </div>
   );
-}
-
-function getBearingFromTo(
-  from: { lat: number; lng: number },
-  to: { lat: number; lng: number }
-): number {
-  const dLng = ((to.lng - from.lng) * Math.PI) / 180;
-  const lat1 = (from.lat * Math.PI) / 180;
-  const lat2 = (to.lat * Math.PI) / 180;
-  const y = Math.sin(dLng) * Math.cos(lat2);
-  const x =
-    Math.cos(lat1) * Math.sin(lat2) -
-    Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
-  const bearing = ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360;
-  return bearing;
 }

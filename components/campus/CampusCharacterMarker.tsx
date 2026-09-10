@@ -22,7 +22,7 @@ export default function CampusCharacterMarker({
   isMoving,
 }: Props) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const markerRef = useRef<any>(null);
+  const overlayRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const frameIndexRef = useRef(0);
   const lastFrameTimeRef = useRef(0);
@@ -30,15 +30,15 @@ export default function CampusCharacterMarker({
   const currentBearingRef = useRef(0);
   const targetBearingRef = useRef(0);
 
-  // Create marker once
   useEffect(() => {
-    if (!map || markerRef.current) return;
+    if (!map || overlayRef.current) return;
 
     const container = document.createElement("div");
     container.style.width = `${CHARACTER_SIZE}px`;
     container.style.height = `${CHARACTER_SIZE}px`;
     container.style.position = "relative";
-    container.style.cursor = "pointer";
+    container.style.transformOrigin = "center center";
+    container.className = "walking-character idle";
     containerRef.current = container;
 
     const img = document.createElement("img");
@@ -51,25 +51,39 @@ export default function CampusCharacterMarker({
     img.draggable = false;
     container.appendChild(img);
 
-    const marker = new google.maps.marker.AdvancedMarkerElement({
-      map,
-      position: position || { lat: 0, lng: 0 },
-      content: container,
-      zIndex: 9999,
-    });
+    const overlay = new google.maps.OverlayView();
+    overlay.onAdd = function () {
+      container.style.position = "absolute";
+      container.style.pointerEvents = "none";
+      this.getPanes()?.overlayMouseTarget.appendChild(container);
+    };
+    overlay.draw = function () {
+      const projection = this.getProjection();
+      const m = this.getMap();
+      if (!projection || !m || !("getBounds" in m)) return;
 
-    markerRef.current = marker;
+      const worldPoint = projection.fromLatLngToDivPixel(
+        new google.maps.LatLng(position?.lat ?? 0, position?.lng ?? 0)
+      );
+      if (!worldPoint) return;
+
+      container.style.left = `${worldPoint.x - CHARACTER_SIZE / 2}px`;
+      container.style.top = `${worldPoint.y - CHARACTER_SIZE / 2}px`;
+    };
+    overlay.onRemove = function () {
+      container.parentNode?.removeChild(container);
+    };
+    overlay.setMap(map);
+    overlayRef.current = overlay;
   }, [map]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Update position
   useEffect(() => {
-    if (!markerRef.current || !position) return;
-    markerRef.current.position = position;
+    if (!overlayRef.current || !position) return;
+    overlayRef.current.draw();
   }, [position]);
 
-  // Animation loop for rotation + walk frames
   useEffect(() => {
-    if (!markerRef.current || !containerRef.current) return;
+    if (!overlayRef.current || !containerRef.current) return;
 
     targetBearingRef.current = bearing;
 
@@ -81,6 +95,8 @@ export default function CampusCharacterMarker({
         cancelAnimationFrame(animFrameRef.current);
         animFrameRef.current = null;
       }
+      containerRef.current.className = "walking-character idle";
+      containerRef.current.style.cursor = "default";
       img.src = IDLE_FRAME;
       const smoothIdle = () => {
         const diff = ((targetBearingRef.current - currentBearingRef.current + 180) % 360) - 180;
@@ -98,6 +114,8 @@ export default function CampusCharacterMarker({
 
     frameIndexRef.current = 0;
     lastFrameTimeRef.current = 0;
+    containerRef.current.className = "walking-character walking";
+    containerRef.current.style.cursor = "pointer";
 
     const animate = (timestamp: number) => {
       if (lastFrameTimeRef.current === 0) lastFrameTimeRef.current = timestamp;
@@ -131,15 +149,14 @@ export default function CampusCharacterMarker({
     };
   }, [isMoving, bearing]);
 
-  // Cleanup
   useEffect(() => {
     return () => {
       if (animFrameRef.current) {
         cancelAnimationFrame(animFrameRef.current);
       }
-      if (markerRef.current) {
-        markerRef.current.map = null;
-        markerRef.current = null;
+      if (overlayRef.current) {
+        overlayRef.current.setMap(null);
+        overlayRef.current = null;
       }
     };
   }, []);

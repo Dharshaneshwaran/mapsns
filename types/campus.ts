@@ -24,12 +24,6 @@ export type CampusLocation = {
   customIcon?: string;
 };
 
-export type CategoryFilter = {
-  id: CampusCategory | "all";
-  label: string;
-  icon: string;
-};
-
 export type WalkPoint = {
   lat: number;
   lng: number;

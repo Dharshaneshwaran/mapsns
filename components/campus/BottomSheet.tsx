@@ -1,6 +1,7 @@
 "use client";
 
 import { CampusLocation } from "@/types/campus";
+import { X, Navigation, ExternalLink, GraduationCap, UtensilsCrossed, Trophy, Home, DoorOpen, BookOpen, Music, Building2, MapPin } from "lucide-react";
 
 type Props = {
   location: CampusLocation;
@@ -62,28 +63,26 @@ export default function BottomSheet({
             onClick={onClose}
             className="close-btn absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center transition-colors"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <X className="w-4 h-4" />
           </button>
 
           <div className="flex items-start gap-3 pr-10">
             <div
-              className="w-12 h-12 rounded-2xl flex items-center justify-center text-xl shrink-0"
+              className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
               style={{
                 backgroundColor: `${categoryColors[location.category]}15`,
                 border: `1.5px solid ${categoryColors[location.category]}30`,
               }}
             >
-              {location.category === "academic" && "🏛️"}
-              {location.category === "food" && "🍽️"}
-              {location.category === "sports" && "⚽"}
-              {location.category === "hostel" && "🏠"}
-              {location.category === "gate" && "🚪"}
-              {location.category === "library" && "📚"}
-              {location.category === "auditorium" && "🎭"}
-              {location.category === "admin" && "🏢"}
-              {location.category === "other" && "📍"}
+              {location.category === "academic" && <GraduationCap className="w-6 h-6" style={{ color: categoryColors[location.category] }} />}
+              {location.category === "food" && <UtensilsCrossed className="w-6 h-6" style={{ color: categoryColors[location.category] }} />}
+              {location.category === "sports" && <Trophy className="w-6 h-6" style={{ color: categoryColors[location.category] }} />}
+              {location.category === "hostel" && <Home className="w-6 h-6" style={{ color: categoryColors[location.category] }} />}
+              {location.category === "gate" && <DoorOpen className="w-6 h-6" style={{ color: categoryColors[location.category] }} />}
+              {location.category === "library" && <BookOpen className="w-6 h-6" style={{ color: categoryColors[location.category] }} />}
+              {location.category === "auditorium" && <Music className="w-6 h-6" style={{ color: categoryColors[location.category] }} />}
+              {location.category === "admin" && <Building2 className="w-6 h-6" style={{ color: categoryColors[location.category] }} />}
+              {location.category === "other" && <MapPin className="w-6 h-6" style={{ color: categoryColors[location.category] }} />}
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="text-base font-bold text-zinc-900 leading-tight">
@@ -133,9 +132,7 @@ export default function BottomSheet({
                 onClick={onStartWalking}
                 className="btn-primary flex-1 text-white font-semibold py-3 rounded-2xl transition-colors flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                </svg>
+                <Navigation className="w-5 h-5" />
                 Start Walking
               </button>
             ) : (
@@ -154,9 +151,7 @@ export default function BottomSheet({
               }}
               className="btn-secondary px-5 font-semibold py-3 rounded-2xl transition-colors flex items-center gap-2"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-              </svg>
+              <ExternalLink className="w-4 h-4" />
               View
             </button>
           </div>

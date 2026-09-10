@@ -1,6 +1,7 @@
-import { CampusLocation, CategoryFilter } from "@/types/campus";
+import { CampusLocation } from "@/types/campus";
+import { isInsideCampus } from "@/data/campusBoundary";
 
-export const CAMPUS_LOCATIONS: CampusLocation[] = [
+const ALL_CAMPUS_LOCATIONS: CampusLocation[] = [
   {
     id: "a-block",
     name: "SNSCT AI Campus A-Block",
@@ -202,11 +203,6 @@ export const CAMPUS_LOCATIONS: CampusLocation[] = [
   },
 ];
 
-export const CATEGORY_FILTERS: CategoryFilter[] = [
-  { id: "all", label: "Explore", icon: "🗺️" },
-  { id: "academic", label: "Blocks", icon: "🏛️" },
-  { id: "food", label: "Food", icon: "🍽️" },
-  { id: "sports", label: "Sports", icon: "⚽" },
-  { id: "hostel", label: "Hostels", icon: "🏠" },
-  { id: "gate", label: "Gates", icon: "🚪" },
-];
+export const CAMPUS_LOCATIONS: CampusLocation[] = ALL_CAMPUS_LOCATIONS.filter(
+  (loc) => isInsideCampus(loc.position.lat, loc.position.lng)
+);

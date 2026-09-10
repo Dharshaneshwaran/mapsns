@@ -13,12 +13,13 @@ export function loadGoogleMapsApi(): Promise<typeof google> {
     if (!apiKey) {
       reject(
         new Error(
-          "Missing VITE_GOOGLE_MAPS_API_KEY in .env.local"
+          "Missing NEXT_PUBLIC_GOOGLE_MAPS_API_KEY in .env.local"
         )
       );
       return;
     }
 
+    // Check if script already exists
     const existingScript = document.querySelector(
       `script[src*="maps.googleapis.com"]`
     );
@@ -27,36 +28,30 @@ export function loadGoogleMapsApi(): Promise<typeof google> {
       return;
     }
 
-    window.__googleMapsCallback = () => {
-      waitForGoogle(resolve, reject);
-    };
-
+    // Use the recommended loading pattern with async
     const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,marker,routes&callback=__googleMapsCallback&v=weekly`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,marker&loading=async&v=weekly`;
     script.async = true;
     script.defer = true;
     script.onerror = () => reject(new Error("Failed to load Google Maps API"));
     document.head.appendChild(script);
+
+    // Poll for google.maps availability
+    waitForGoogle(resolve, reject);
   });
 
   return googleMapsPromise;
-}
-
-declare global {
-  interface Window {
-    __googleMapsCallback?: () => void;
-  }
 }
 
 function waitForGoogle(
   resolve: (value: typeof google) => void,
   reject: (reason: Error) => void
 ) {
-  const maxAttempts = 50;
+  const maxAttempts = 100;
   let attempts = 0;
 
   const check = () => {
-    if (window.google?.maps?.marker?.AdvancedMarkerElement) {
+    if (window.google?.maps) {
       resolve(window.google);
     } else if (attempts < maxAttempts) {
       attempts++;

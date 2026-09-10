@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { CampusLocation } from "@/types/campus";
 import { CAMPUS_LOCATIONS } from "@/data/campusLocations";
+import { Search, X, GraduationCap, UtensilsCrossed, Trophy, Home, DoorOpen, BookOpen, Music, Building2, MapPin } from "lucide-react";
 
 type Props = {
   onSelectLocation: (location: CampusLocation) => void;
@@ -42,19 +43,7 @@ export default function CampusSearch({ onSelectLocation }: Props) {
         className="search-bar flex items-center gap-2 sm:gap-3 rounded-2xl px-3 sm:px-4 py-2.5 sm:py-3 shadow-lg shadow-black/5 cursor-text"
         onClick={() => inputRef.current?.focus()}
       >
-        <svg
-          className="search-icon w-5 h-5 shrink-0"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-          />
-        </svg>
+        <Search className="search-icon w-5 h-5 shrink-0" />
         <input
           ref={inputRef}
           type="text"
@@ -75,9 +64,7 @@ export default function CampusSearch({ onSelectLocation }: Props) {
             }}
             className="clear-btn transition-colors"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <X className="w-4 h-4" />
           </button>
         )}
       </div>
@@ -85,16 +72,16 @@ export default function CampusSearch({ onSelectLocation }: Props) {
       {isOpen && results.length > 0 && (
         <div className="search-dropdown absolute top-full left-0 right-0 mt-2 rounded-2xl shadow-lg shadow-black/10 overflow-hidden z-50">
           {results.map((location) => {
-            const categoryIcons: Record<string, string> = {
-              academic: "🏛️",
-              food: "🍽️",
-              sports: "⚽",
-              hostel: "🏠",
-              gate: "🚪",
-              library: "📚",
-              auditorium: "🎭",
-              admin: "🏢",
-              other: "📍",
+            const categoryIconMap: Record<string, React.ReactNode> = {
+              academic: <GraduationCap className="w-5 h-5 text-blue-500" />,
+              food: <UtensilsCrossed className="w-5 h-5 text-amber-500" />,
+              sports: <Trophy className="w-5 h-5 text-emerald-500" />,
+              hostel: <Home className="w-5 h-5 text-purple-500" />,
+              gate: <DoorOpen className="w-5 h-5 text-red-500" />,
+              library: <BookOpen className="w-5 h-5 text-cyan-500" />,
+              auditorium: <Music className="w-5 h-5 text-pink-500" />,
+              admin: <Building2 className="w-5 h-5 text-slate-500" />,
+              other: <MapPin className="w-5 h-5 text-stone-500" />,
             };
 
             return (
@@ -107,7 +94,7 @@ export default function CampusSearch({ onSelectLocation }: Props) {
                 }}
                 className="w-full flex items-center gap-3 px-4 py-3 hover:bg-zinc-100/80 transition-colors text-left"
               >
-                <span className="text-lg">{categoryIcons[location.category]}</span>
+                {categoryIconMap[location.category]}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-zinc-900 truncate">
                     {location.name}
