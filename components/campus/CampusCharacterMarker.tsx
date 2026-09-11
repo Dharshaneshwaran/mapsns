@@ -29,6 +29,8 @@ export default function CampusCharacterMarker({
   const animFrameRef = useRef<number | null>(null);
   const currentBearingRef = useRef(0);
   const targetBearingRef = useRef(0);
+  const positionRef = useRef(position);
+  positionRef.current = position;
 
   useEffect(() => {
     if (!map || overlayRef.current) return;
@@ -62,8 +64,9 @@ export default function CampusCharacterMarker({
       const m = this.getMap();
       if (!projection || !m || !("getBounds" in m)) return;
 
+      const pos = positionRef.current;
       const worldPoint = projection.fromLatLngToDivPixel(
-        new google.maps.LatLng(position?.lat ?? 0, position?.lng ?? 0)
+        new google.maps.LatLng(pos?.lat ?? 0, pos?.lng ?? 0)
       );
       if (!worldPoint) return;
 
