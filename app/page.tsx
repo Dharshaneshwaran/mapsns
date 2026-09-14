@@ -2,14 +2,35 @@
 
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import dynamic from "next/dynamic";
-import { CampusLocation, WalkingState, WalkingRoute } from "@/types/campus";
+import { CampusLocation, WalkingState, WalkingRoute, TravelMode } from "@/types/campus";
 import { CAMPUS_LOCATIONS } from "@/data/campusLocations";
 import { haversineDistance, estimateWalkingTime } from "@/lib/googleMaps";
-import { X, Navigation, Check, MapPin, AlertTriangle } from "lucide-react";
+import { Check, AlertTriangle, Settings, X, Utensils, BedDouble, Camera, BusFront, CircleParking } from "lucide-react";
 import CampusSearch from "@/components/campus/CampusSearch";
 import BottomSheet from "@/components/campus/BottomSheet";
+import NavigationOverlay from "@/components/campus/NavigationOverlay";
+import RoutePreviewOverlay from "@/components/campus/RoutePreviewOverlay";
+import SettingsDialog, { UserProfile } from "@/components/campus/SettingsDialog";
 
 type Coordinate = { lat: number; lng: number };
+const WALKING_MOVEMENT_THRESHOLD_METERS = 3;
+
+const DEFAULT_PROFILE: UserProfile = {
+  name: "",
+  gender: "male",
+  pointerStyle: "character",
+  mapStyle: "roadmap",
+};
+
+function getSavedProfile(): UserProfile {
+  if (typeof window === "undefined") return DEFAULT_PROFILE;
+  try {
+    const saved = window.localStorage.getItem("sns-campus-profile");
+    return saved ? { ...DEFAULT_PROFILE, ...JSON.parse(saved) } : DEFAULT_PROFILE;
+  } catch {
+    return DEFAULT_PROFILE;
+  }
+}
 
 function getBearing(from: Coordinate, to: Coordinate): number {
   const dLng = ((to.lng - from.lng) * Math.PI) / 180;
@@ -73,9 +94,14 @@ function CampusMapApp() {
   const [walkingState, setWalkingState] = useState<WalkingState>("idle");
   const [locationStatus, setLocationStatus] = useState<"idle" | "requesting" | "denied" | "tracking">("idle");
   const [userPosition, setUserPosition] = useState<{ lat: number; lng: number } | null>(null);
+  const [travelMode, setTravelMode] = useState<TravelMode>("walking");
+  const [isRoutePreview, setIsRoutePreview] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [profile, setProfile] = useState<UserProfile>(getSavedProfile);
 
   const watchIdRef = useRef<number | null>(null);
   const prevPositionRef = useRef<{ lat: number; lng: number } | null>(null);
+  const movementAnchorRef = useRef<{ lat: number; lng: number } | null>(null);
 
   const handleMapReady = useCallback((map: unknown) => {
     setMapInstance(map);
@@ -99,6 +125,7 @@ function CampusMapApp() {
     setWalkingPosition(null);
     setActiveRoute(null);
     setLocationStatus("idle");
+    setIsRoutePreview(false);
   }, []);
 
   const handleArrived = useCallback(() => {
@@ -106,7 +133,7 @@ function CampusMapApp() {
     setWalkingState("arrived");
     setWalkingPosition(null);
     setActiveRoute(null);
-    setSelectedLocation(null);
+    setIsRoutePreview(false);
     setLocationStatus("idle");
     if (watchIdRef.current !== null) {
       navigator.geolocation.clearWatch(watchIdRef.current);
@@ -121,15 +148,17 @@ function CampusMapApp() {
     setActiveRoute(null);
     setSelectedLocation(null);
     setLocationStatus("idle");
+    setIsRoutePreview(false);
     if (watchIdRef.current !== null) {
       navigator.geolocation.clearWatch(watchIdRef.current);
       watchIdRef.current = null;
     }
   }, []);
 
-  const handleStartWalking = useCallback(() => {
+  const handlePrepareRoute = useCallback((mode: TravelMode) => {
     if (!selectedLocation || !mapInstance) return;
 
+    setTravelMode(mode);
     const end = selectedLocation.position;
     setLocationStatus("requesting");
 
@@ -139,16 +168,26 @@ function CampusMapApp() {
       const fallbackPoints = generateWalkingRoute(start, end);
       setActiveRoute({
         id: `route-${selectedLocation.id}`,
-        name: `Walk to ${selectedLocation.name}`,
+        name: `${mode === "walking" ? "Walk" : "Drive"} to ${selectedLocation.name}`,
         from: "current",
         to: selectedLocation.id,
         points: fallbackPoints,
         isPrototype: true,
       });
 
+      // Show the current route UI immediately. The road-aware route replaces
+      // this fallback in the background when it becomes available.
+      setWalkingPosition(start);
+      setIsWalking(false);
+      setIsRoutePreview(true);
+      setWalkingState("idle");
+      setLocationStatus("idle");
+      prevPositionRef.current = null;
+      setWalkingBearing(0);
+
       try {
         const res = await fetch(
-          `https://router.project-osrm.org/route/v1/foot/${start.lng},${start.lat};${end.lng},${end.lat}?overview=full&geometries=geojson`
+          `https://router.project-osrm.org/route/v1/${mode === "vehicle" ? "driving" : "foot"}/${start.lng},${start.lat};${end.lng},${end.lat}?overview=full&geometries=geojson`
         );
         const data = await res.json();
 
@@ -160,7 +199,7 @@ function CampusMapApp() {
           if (coords.length > 0) {
             setActiveRoute({
               id: `route-${selectedLocation.id}`,
-              name: `Walk to ${selectedLocation.name}`,
+              name: `${mode === "walking" ? "Walk" : "Drive"} to ${selectedLocation.name}`,
               from: "current",
               to: selectedLocation.id,
               points: coords,
@@ -171,55 +210,12 @@ function CampusMapApp() {
       } catch {
         // Fallback route already set
       }
-
-      setWalkingPosition(start);
-      setIsWalking(true);
-      setWalkingState("idle");
-      setLocationStatus("tracking");
-      prevPositionRef.current = null;
-      setWalkingBearing(0);
-
-      if (navigator.geolocation) {
-        let hasMoved = false;
-        let idleTimer: ReturnType<typeof setTimeout> | null = null;
-        watchIdRef.current = navigator.geolocation.watchPosition(
-          (pos) => {
-            const newLat = pos.coords.latitude;
-            const newLng = pos.coords.longitude;
-
-            if (prevPositionRef.current) {
-              const heading = getBearing(prevPositionRef.current, { lat: newLat, lng: newLng });
-              setWalkingBearing(heading);
-            }
-            prevPositionRef.current = { lat: newLat, lng: newLng };
-
-            setWalkingPosition((prev) => {
-              if (prev) {
-                const distMoved = haversineDistance(prev.lat, prev.lng, newLat, newLng);
-                if (distMoved > 5) {
-                  hasMoved = true;
-                  setWalkingState("walking");
-                  if (idleTimer) clearTimeout(idleTimer);
-                  idleTimer = setTimeout(() => {
-                    setWalkingState("idle");
-                  }, 2000);
-                }
-              }
-              return { lat: newLat, lng: newLng };
-            });
-
-            const distToDest = haversineDistance(newLat, newLng, end.lat, end.lng);
-            if (distToDest < 20) {
-              handleArrived();
-            }
-          },
-          (err) => {
-            console.error("GPS watch error:", err);
-          },
-          { enableHighAccuracy: true, maximumAge: 0 }
-        );
-      }
     };
+
+    if (userPosition) {
+      void fetchRouteAndTrack(userPosition.lat, userPosition.lng);
+      return;
+    }
 
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -238,15 +234,59 @@ function CampusMapApp() {
       const gate = CAMPUS_LOCATIONS.find((l) => l.id === "main-gate");
       fetchRouteAndTrack(gate?.position.lat ?? 11.0998, gate?.position.lng ?? 77.0273);
     }
-  }, [selectedLocation, mapInstance, handleArrived]);
+  }, [selectedLocation, mapInstance, userPosition]);
+
+  const handleBeginNavigation = useCallback(() => {
+    if (!selectedLocation) return;
+    const gate = CAMPUS_LOCATIONS.find((location) => location.id === "main-gate");
+    const startPosition = walkingPosition ?? userPosition ?? gate?.position;
+    if (startPosition) setWalkingPosition(startPosition);
+    setIsRoutePreview(false);
+    setIsWalking(true);
+    setWalkingState("idle");
+    setLocationStatus("tracking");
+    prevPositionRef.current = null;
+    movementAnchorRef.current = null;
+  }, [selectedLocation, walkingPosition, userPosition]);
 
   useEffect(() => {
+    if (!isWalking || !selectedLocation || !navigator.geolocation) return;
+
+    const end = selectedLocation.position;
+    let idleTimer: ReturnType<typeof setTimeout> | null = null;
+    watchIdRef.current = navigator.geolocation.watchPosition(
+      (pos) => {
+        const nextPosition = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+
+        if (prevPositionRef.current) {
+          setWalkingBearing(getBearing(prevPositionRef.current, nextPosition));
+        }
+
+        if (!movementAnchorRef.current) {
+          movementAnchorRef.current = nextPosition;
+        } else if (haversineDistance(movementAnchorRef.current.lat, movementAnchorRef.current.lng, nextPosition.lat, nextPosition.lng) >= WALKING_MOVEMENT_THRESHOLD_METERS) {
+          movementAnchorRef.current = nextPosition;
+          setWalkingState("walking");
+          if (idleTimer) clearTimeout(idleTimer);
+          idleTimer = setTimeout(() => setWalkingState("idle"), 3500);
+        }
+
+        prevPositionRef.current = nextPosition;
+        setWalkingPosition(nextPosition);
+        if (haversineDistance(nextPosition.lat, nextPosition.lng, end.lat, end.lng) < 20) handleArrived();
+      },
+      (error) => console.error("GPS watch error:", error),
+      { enableHighAccuracy: true, maximumAge: 0 }
+    );
+
     return () => {
+      if (idleTimer) clearTimeout(idleTimer);
       if (watchIdRef.current !== null) {
         navigator.geolocation.clearWatch(watchIdRef.current);
+        watchIdRef.current = null;
       }
     };
-  }, []);
+  }, [isWalking, selectedLocation, handleArrived]);
 
   const staticDistance = useMemo(() => {
     if (!selectedLocation) return null;
@@ -270,139 +310,116 @@ function CampusMapApp() {
     );
   }, [selectedLocation, walkingPosition]);
 
-  const walkingTime = useMemo(() => {
+  const travelTime = useMemo(() => {
     if (distance === null) return null;
-    return estimateWalkingTime(distance);
-  }, [distance]);
-
-  const formatDistance = (meters: number) => {
-    if (meters < 1000) return `${Math.round(meters)} m`;
-    return `${(meters / 1000).toFixed(1)} km`;
-  };
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.ceil(seconds / 60);
-    if (mins < 1) return "1 min";
-    return `${mins} min`;
-  };
+    return travelMode === "walking" ? estimateWalkingTime(distance) : distance / 5.5;
+  }, [distance, travelMode]);
 
   return (
-    <div className="relative w-full h-screen overflow-hidden bg-zinc-100">
+    <main className="campus-map-app relative w-full h-screen overflow-hidden bg-zinc-100">
       <SNSCampusMap
         onLocationSelect={handleLocationSelect}
-        selectedLocationId={selectedLocation?.id ?? null}
+        selectedLocation={selectedLocation}
         activeRoute={activeRoute}
-        mapTypeId="roadmap"
+        mapTypeId={profile.mapStyle}
         walkingPosition={walkingPosition}
         walkingBearing={walkingBearing}
         isWalking={isWalking}
+        isWalkingMode={travelMode === "walking"}
         walkingState={walkingState}
+        pointerStyle={profile.pointerStyle}
         onMapReady={handleMapReady}
       />
 
-      {/* Walking navigation bar - bottom */}
+      {!isWalking && !isRoutePreview && (
+        <div className="desktop-map-chips pointer-events-auto absolute left-[424px] top-[18px] z-30 hidden items-center gap-2 lg:flex">
+          {[
+            { label: "Restaurants", icon: Utensils },
+            { label: "Hotels", icon: BedDouble },
+            { label: "Things to do", icon: Camera },
+            { label: "Transit", icon: BusFront },
+            { label: "Parking", icon: CircleParking },
+          ].map(({ label, icon: Icon }) => (
+            <button key={label} className="flex h-9 items-center gap-1.5 rounded-full border border-[#dadce0] bg-white px-3 text-sm font-medium text-[#3c4043] shadow-sm hover:bg-[#f8f9fa]">
+              <Icon className="h-4 w-4" /> {label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Google Maps-style active navigation UI */}
       {isWalking && selectedLocation && walkingPosition && (
-        <div className="absolute bottom-0 left-0 right-0 z-40 p-3 pb-6 safe-bottom">
-          <div className="bg-white shadow-2xl rounded-2xl mx-auto max-w-md overflow-hidden">
-            <div className="flex items-center gap-3 px-4 py-3">
-              <button
-                onClick={handleStopWalking}
-                className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center shrink-0"
-              >
-                <X className="w-5 h-5 text-red-500" />
-              </button>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-zinc-900 truncate">{selectedLocation.name}</p>
-                <div className="flex items-center gap-2 text-xs text-zinc-500">
-                  <span className="font-medium text-blue-600">{formatDistance(distance ?? 0)}</span>
-                  <span>&middot;</span>
-                  <span>{formatTime(walkingTime ?? 0)}</span>
-                </div>
-              </div>
-              <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
-                <Navigation className="w-5 h-5 text-blue-600" />
-              </div>
-            </div>
-            {walkingState === "idle" && (
-              <div className="px-4 pb-3">
-                <div className="flex items-center gap-2 text-xs text-zinc-500">
-                  <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-                  <span>Getting your location...</span>
-                </div>
-              </div>
-            )}
-            {walkingState === "walking" && (
-              <div className="px-4 pb-3">
-                <div className="flex items-center gap-2 text-xs text-zinc-500">
-                  <div className="w-2 h-2 rounded-full bg-green-500" />
-                  <span>Navigating to {selectedLocation.name}</span>
-                </div>
-              </div>
-            )}
-            {walkingState === "arrived" && (
-              <div className="px-4 pb-3">
-                <div className="flex items-center gap-2 text-xs text-green-600 font-medium">
-                  <Check className="w-4 h-4" />
-                  <span>You have arrived!</span>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+        <NavigationOverlay
+          destination={selectedLocation.name}
+          distance={distance ?? 0}
+          duration={travelTime ?? 0}
+          mode={travelMode}
+          onExit={handleStopWalking}
+        />
       )}
 
-      {/* Location requesting overlay */}
-      {locationStatus === "requesting" && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl p-8 max-w-sm mx-4 text-center shadow-xl">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center">
-              <MapPin className="w-8 h-8 text-blue-500 animate-pulse" />
-            </div>
-            <h3 className="text-lg font-bold text-zinc-900 mb-2">Getting your location</h3>
-            <p className="text-sm text-zinc-500">Please allow location access when prompted by your browser</p>
-          </div>
-        </div>
+      {isRoutePreview && selectedLocation && walkingPosition && (
+        <RoutePreviewOverlay
+          destination={selectedLocation.name}
+          distance={distance ?? 0}
+          duration={travelTime ?? 0}
+          mode={travelMode}
+          onModeChange={handlePrepareRoute}
+          onStart={handleBeginNavigation}
+          onClose={handleStopWalking}
+        />
       )}
 
-      {/* Location denied overlay */}
+      {/* Non-blocking Google-style location notice */}
       {locationStatus === "denied" && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl p-8 max-w-sm mx-4 text-center shadow-xl">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-50 border border-red-100 flex items-center justify-center">
-              <AlertTriangle className="w-8 h-8 text-red-500" />
+        <div className="pointer-events-none absolute bottom-5 left-3 right-3 z-50 flex justify-center safe-bottom sm:bottom-6">
+          <div className="pointer-events-auto flex w-full max-w-md items-center gap-3 rounded-2xl bg-[#202124] px-4 py-3 text-white shadow-xl">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#3c4043]">
+              <AlertTriangle className="h-5 w-5 text-[#fdd663]" />
             </div>
-            <h3 className="text-lg font-bold text-zinc-900 mb-2">Location access required</h3>
-            <p className="text-sm text-zinc-500 mb-4">Please enable location access in your browser settings to use walking navigation</p>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium">Location is turned off</p>
+              <p className="mt-0.5 text-xs text-[#bdc1c6]">Enable location permission to prepare your route.</p>
+            </div>
             <button
               onClick={() => {
                 setLocationStatus("idle");
-                handleStartWalking();
+                handlePrepareRoute(travelMode);
               }}
-              className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 rounded-2xl transition-colors"
+              className="min-h-9 min-w-fit rounded-full px-2 text-sm font-medium text-[#8ab4f8] hover:bg-white/10"
             >
-              Try Again
+              Retry
             </button>
             <button
               onClick={() => setLocationStatus("idle")}
-              className="w-full text-zinc-500 font-semibold py-3 rounded-2xl transition-colors mt-2"
+              aria-label="Dismiss location notice"
+              className="flex h-9 w-9 min-w-9 shrink-0 items-center justify-center rounded-full text-[#bdc1c6] hover:bg-white/10"
             >
-              Cancel
+              <X className="h-4 w-4" />
             </button>
           </div>
         </div>
       )}
 
       {/* Top bar */}
-      {!isWalking && (
-        <div className="absolute top-0 left-0 right-0 z-30 px-3 pt-3 sm:px-4 sm:pt-4 safe-top">
-          <div className="max-w-lg mx-auto">
+      {!isWalking && !isRoutePreview && (
+        <div className="campus-search-panel absolute top-0 left-0 right-0 z-30 px-3 pt-3 sm:px-4 sm:pt-4 safe-top">
+          <div className="campus-search-card max-w-lg mx-auto flex items-start gap-2">
             <CampusSearch onSelectLocation={handleLocationSelect} />
+            <button
+              onClick={() => setShowSettings(true)}
+              aria-label="Open settings"
+              title="Settings"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-zinc-200 bg-white/95 text-zinc-600 shadow-lg backdrop-blur-xl transition-colors hover:bg-white hover:text-blue-600 sm:h-12 sm:w-12"
+            >
+              <Settings className="h-5 w-5" />
+            </button>
           </div>
         </div>
       )}
 
       {/* Bottom sheet */}
-      {selectedLocation && !isWalking && (
+      {selectedLocation && !isWalking && !isRoutePreview && walkingState !== "arrived" && (
         <BottomSheet
           location={selectedLocation}
           distance={staticDistance}
@@ -411,8 +428,19 @@ function CampusMapApp() {
             handleStopWalking();
             setSelectedLocation(null);
           }}
-          onStartWalking={handleStartWalking}
-          isCurrentlyWalking={isWalking}
+          onStartWalking={() => handlePrepareRoute("walking")}
+        />
+      )}
+
+      {showSettings && (
+        <SettingsDialog
+          profile={profile}
+          onClose={() => setShowSettings(false)}
+          onSave={(nextProfile) => {
+            setProfile(nextProfile);
+            window.localStorage.setItem("sns-campus-profile", JSON.stringify(nextProfile));
+            setShowSettings(false);
+          }}
         />
       )}
 
@@ -440,13 +468,13 @@ function CampusMapApp() {
       )}
 
       {/* Bottom hint */}
-      {!selectedLocation && !isWalking && (
+      {!selectedLocation && !isWalking && !isRoutePreview && (
         <div className="absolute bottom-4 sm:bottom-6 left-0 right-0 z-30 flex justify-center safe-bottom">
           <div className="bg-white/90 backdrop-blur-sm text-xs px-4 py-2 rounded-full shadow-lg text-zinc-600">
             Tap a building to explore
           </div>
         </div>
       )}
-    </div>
+    </main>
   );
 }

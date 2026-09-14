@@ -5,7 +5,11 @@ import { useEffect, useRef } from "react";
 const WALK_FRAMES = ["/step_1.png", "/step_3.png", "/step_4.png", "/step_5.png", "/step_6.png"];
 const IDLE_FRAME = "/idel.png";
 const FRAME_DURATION = 150;
-const CHARACTER_SIZE = 100;
+const CHARACTER_SIZE = 112;
+const SPRITE_WIDTH = 125;
+const SPRITE_HEIGHT = 222;
+const SPRITE_LEFT = -6;
+const SPRITE_TOP = -52;
 
 type Props = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -24,13 +28,13 @@ export default function CampusCharacterMarker({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const overlayRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const visualRef = useRef<HTMLDivElement | null>(null);
   const frameIndexRef = useRef(0);
   const lastFrameTimeRef = useRef(0);
   const animFrameRef = useRef<number | null>(null);
   const currentBearingRef = useRef(0);
   const targetBearingRef = useRef(0);
   const positionRef = useRef(position);
-  positionRef.current = position;
 
   useEffect(() => {
     if (!map || overlayRef.current) return;
@@ -39,19 +43,37 @@ export default function CampusCharacterMarker({
     container.style.width = `${CHARACTER_SIZE}px`;
     container.style.height = `${CHARACTER_SIZE}px`;
     container.style.position = "relative";
-    container.style.transformOrigin = "center center";
-    container.className = "walking-character idle";
+    container.style.pointerEvents = "none";
     containerRef.current = container;
+
+    const visual = document.createElement("div");
+    visual.style.width = "100%";
+    visual.style.height = "100%";
+    visual.style.position = "relative";
+    visual.style.overflow = "hidden";
+    visual.style.transformOrigin = "center center";
+    visual.style.filter = "drop-shadow(0 3px 3px rgba(0, 0, 0, 0.28))";
+    visual.className = "walking-character-visual idle";
+    visualRef.current = visual;
+    container.appendChild(visual);
 
     const img = document.createElement("img");
     img.src = IDLE_FRAME;
-    img.style.width = "100%";
-    img.style.height = "100%";
-    img.style.objectFit = "contain";
+    img.style.position = "absolute";
+    img.style.width = `${SPRITE_WIDTH}px`;
+    img.style.height = `${SPRITE_HEIGHT}px`;
+    img.style.maxWidth = "none";
+    img.style.left = `${SPRITE_LEFT}px`;
+    img.style.top = `${SPRITE_TOP}px`;
     img.style.display = "block";
     img.style.imageRendering = "auto";
     img.draggable = false;
-    container.appendChild(img);
+    visual.appendChild(img);
+
+    WALK_FRAMES.forEach((frame) => {
+      const preload = new Image();
+      preload.src = frame;
+    });
 
     const overlay = new google.maps.OverlayView();
     overlay.onAdd = function () {
@@ -78,19 +100,20 @@ export default function CampusCharacterMarker({
     };
     overlay.setMap(map);
     overlayRef.current = overlay;
-  }, [map]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [map]);
 
   useEffect(() => {
+    positionRef.current = position;
     if (!overlayRef.current || !position) return;
     overlayRef.current.draw();
   }, [position]);
 
   useEffect(() => {
-    if (!overlayRef.current || !containerRef.current) return;
+    if (!overlayRef.current || !visualRef.current) return;
 
     targetBearingRef.current = bearing;
 
-    const img = containerRef.current.querySelector("img");
+    const img = visualRef.current.querySelector("img");
     if (!img) return;
 
     if (!isMoving) {
@@ -98,15 +121,14 @@ export default function CampusCharacterMarker({
         cancelAnimationFrame(animFrameRef.current);
         animFrameRef.current = null;
       }
-      containerRef.current.className = "walking-character idle";
-      containerRef.current.style.cursor = "default";
+      visualRef.current.className = "walking-character-visual idle";
       img.src = IDLE_FRAME;
       const smoothIdle = () => {
         const diff = ((targetBearingRef.current - currentBearingRef.current + 180) % 360) - 180;
         if (Math.abs(diff) > 0.5) {
           currentBearingRef.current += diff * 0.15;
-          if (containerRef.current) {
-            containerRef.current.style.transform = `rotate(${currentBearingRef.current}deg)`;
+          if (visualRef.current) {
+            visualRef.current.style.transform = `rotate(${currentBearingRef.current}deg)`;
           }
           animFrameRef.current = requestAnimationFrame(smoothIdle);
         }
@@ -117,8 +139,7 @@ export default function CampusCharacterMarker({
 
     frameIndexRef.current = 0;
     lastFrameTimeRef.current = 0;
-    containerRef.current.className = "walking-character walking";
-    containerRef.current.style.cursor = "pointer";
+    visualRef.current.className = "walking-character-visual walking";
 
     const animate = (timestamp: number) => {
       if (lastFrameTimeRef.current === 0) lastFrameTimeRef.current = timestamp;
@@ -136,8 +157,8 @@ export default function CampusCharacterMarker({
         currentBearingRef.current = targetBearingRef.current;
       }
 
-      if (containerRef.current) {
-        containerRef.current.style.transform = `rotate(${currentBearingRef.current}deg)`;
+      if (visualRef.current) {
+        visualRef.current.style.transform = `rotate(${currentBearingRef.current}deg)`;
       }
 
       animFrameRef.current = requestAnimationFrame(animate);

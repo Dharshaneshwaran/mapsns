@@ -6,29 +6,34 @@ import { CAMPUS_BOUNDARY, CAMPUS_CENTER, isInsideCampus } from "@/data/campusBou
 import { CAMPUS_LOCATIONS } from "@/data/campusLocations";
 import { CampusLocation, WalkingRoute, WalkingState } from "@/types/campus";
 import CampusCharacterMarker from "./CampusCharacterMarker";
+import type { PointerStyle } from "./SettingsDialog";
 
 type Props = {
   onLocationSelect: (location: CampusLocation) => void;
-  selectedLocationId: string | null;
+  selectedLocation: CampusLocation | null;
   activeRoute: WalkingRoute | null;
-  mapTypeId: "satellite" | "roadmap";
+  mapTypeId: "satellite" | "roadmap" | "hybrid";
   walkingPosition: { lat: number; lng: number } | null;
   walkingBearing: number;
   isWalking: boolean;
+  isWalkingMode: boolean;
   walkingState: WalkingState;
+  pointerStyle: PointerStyle;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onMapReady?: (map: any) => void;
 };
 
 export default function SNSCampusMap({
   onLocationSelect,
-  selectedLocationId,
+  selectedLocation,
   activeRoute,
   mapTypeId,
   walkingPosition,
   walkingBearing,
   isWalking,
+  isWalkingMode,
   walkingState,
+  pointerStyle,
   onMapReady,
 }: Props) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -52,10 +57,13 @@ export default function SNSCampusMap({
   const blueDotRef = useRef<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const blueDotPulseRef = useRef<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const selectedMarkerRef = useRef<any>(null);
   const [mapError, setMapError] = useState<string | null>(null);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [mapInstance, setMapInstance] = useState<any>(null);
+  const pointerColor = pointerStyle === "red" ? "#EA4335" : pointerStyle === "green" ? "#34A853" : "#4285F4";
 
   const initMap = useCallback(async () => {
     if (!mapContainerRef.current) return;
@@ -220,6 +228,32 @@ export default function SNSCampusMap({
     markersRef.current.clear();
   }, [isMapLoaded]);
 
+  useEffect(() => {
+    if (!mapRef.current || !isMapLoaded || !window.google) return;
+
+    if (!selectedLocation || isWalking) {
+      selectedMarkerRef.current?.setMap(null);
+      selectedMarkerRef.current = null;
+      return;
+    }
+
+    if (!selectedMarkerRef.current) {
+      selectedMarkerRef.current = new google.maps.Marker({
+        map: mapRef.current,
+        position: selectedLocation.position,
+        title: selectedLocation.name,
+        zIndex: 10000,
+      });
+    } else {
+      selectedMarkerRef.current.setPosition(selectedLocation.position);
+      selectedMarkerRef.current.setTitle(selectedLocation.name);
+      selectedMarkerRef.current.setMap(mapRef.current);
+    }
+
+    mapRef.current.panTo(selectedLocation.position);
+    mapRef.current.setZoom(18);
+  }, [selectedLocation, isWalking, isMapLoaded]);
+
   // Blue dot - Google Maps style
   useEffect(() => {
     if (!mapRef.current || !isMapLoaded) return;
@@ -234,9 +268,9 @@ export default function SNSCampusMap({
           map: mapRef.current,
           center: pos,
           radius: 15,
-          fillColor: "#4285F4",
+          fillColor: pointerColor,
           fillOpacity: 0.15,
-          strokeColor: "#4285F4",
+          strokeColor: pointerColor,
           strokeOpacity: 0.2,
           strokeWeight: 1,
           clickable: false,
@@ -244,6 +278,7 @@ export default function SNSCampusMap({
         blueDotPulseRef.current = pulse;
       } else {
         blueDotPulseRef.current.setCenter(pos);
+        blueDotPulseRef.current.setOptions({ fillColor: pointerColor, strokeColor: pointerColor });
       }
 
       // Blue dot
@@ -252,7 +287,7 @@ export default function SNSCampusMap({
           map: mapRef.current,
           center: pos,
           radius: 7,
-          fillColor: "#4285F4",
+          fillColor: pointerColor,
           fillOpacity: 1,
           strokeColor: "#ffffff",
           strokeOpacity: 1,
@@ -265,6 +300,7 @@ export default function SNSCampusMap({
         mapRef.current.setZoom(18);
       } else {
         blueDotRef.current.setCenter(pos);
+        blueDotRef.current.setOptions({ fillColor: pointerColor });
       }
 
       // Auto-pan map to follow user
@@ -280,7 +316,7 @@ export default function SNSCampusMap({
         blueDotPulseRef.current = null;
       }
     }
-  }, [walkingPosition, isWalking, isMapLoaded]);
+  }, [walkingPosition, isWalking, isMapLoaded, pointerColor]);
 
   // Update route polyline - Google Maps style blue line
   useEffect(() => {
@@ -302,7 +338,7 @@ export default function SNSCampusMap({
       const shadowPolyline = new google.maps.Polyline({
         path: activeRoute.points.map((p) => new google.maps.LatLng(p.lat, p.lng)),
         geodesic: true,
-        strokeColor: "#1A73E8",
+        strokeColor: "#4B2ECC",
         strokeOpacity: 0.4,
         strokeWeight: 10,
         map: mapRef.current,
@@ -313,7 +349,7 @@ export default function SNSCampusMap({
       const polyline = new google.maps.Polyline({
         path: activeRoute.points.map((p) => new google.maps.LatLng(p.lat, p.lng)),
         geodesic: true,
-        strokeColor: "#4285F4",
+        strokeColor: "#5B35E5",
         strokeOpacity: 1,
         strokeWeight: 6,
         map: mapRef.current,
@@ -322,7 +358,7 @@ export default function SNSCampusMap({
           icon: {
             path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
             scale: 3,
-            fillColor: "#4285F4",
+            fillColor: "#5B35E5",
             fillOpacity: 1,
             strokeColor: "#ffffff",
             strokeWeight: 1,
@@ -378,6 +414,7 @@ export default function SNSCampusMap({
     const polyline = routePolylineRef.current;
     const blueDot = blueDotRef.current;
     const blueDotPulse = blueDotPulseRef.current;
+    const selectedMarker = selectedMarkerRef.current;
     return () => {
       markers.forEach((marker: { map: null }) => { marker.map = null; });
       heritageOverlay?.setMap(null);
@@ -392,6 +429,7 @@ export default function SNSCampusMap({
       }
       blueDot?.setMap(null);
       blueDotPulse?.setMap(null);
+      selectedMarker?.setMap(null);
     };
   }, []);
 
@@ -408,9 +446,9 @@ export default function SNSCampusMap({
   }
 
   return (
-    <div className="relative w-full h-full">
+    <div className="campus-map-canvas relative w-full h-full">
       <div ref={mapContainerRef} className="absolute inset-0" />
-      {isWalking && walkingPosition && mapInstance && (
+      {isWalking && isWalkingMode && walkingPosition && mapInstance && pointerStyle === "character" && (
         <CampusCharacterMarker
           map={mapInstance}
           position={walkingPosition}

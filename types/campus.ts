@@ -40,6 +40,8 @@ export type WalkingRoute = {
 
 export type WalkingState = "idle" | "walking" | "turning" | "arrived";
 
+export type TravelMode = "walking" | "vehicle";
+
 export type BottomSheetState = {
   isOpen: boolean;
   location: CampusLocation | null;
