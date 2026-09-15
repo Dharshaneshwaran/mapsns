@@ -1,5 +1,5 @@
 {
-  "revision": "ffb4ed11-c845-4349-a63b-bfa02d486b39",
+  "revision": "a9a9dd1b-e213-4633-b287-7a995d57b23d",
   "images": [
     {
       "id": "9caa12d8-dfcb-4c32-b265-9f33e5c069d6",
@@ -38,10 +38,10 @@
       "id": "79999ce7-d83c-4eeb-b811-c61d0d7fb451",
       "name": "ChatGPT_Image_Sep_12__2026__09_23_36_PM-removebg-preview",
       "src": "/uploads/map-images/8f5b50c8ed91c1db2ee532d54a541a6362b505d2eafabcf611e25d3a064ef5ca.png",
-      "lat": 11.104018944837959,
-      "lng": 77.02778286819037,
-      "width": 0.00043866683911174834,
-      "height": 0.00030207386898412574,
+      "lat": 11.103987360886622,
+      "lng": 77.0277571188856,
+      "width": 0.000494456917591108,
+      "height": 0.00048736642190653085,
       "rotation": 0,
       "opacity": 1
     },
@@ -153,6 +153,17 @@
       "width": 0.00034700358442212986,
       "height": 0.0004536765439665373,
       "rotation": 57.48905287602082,
+      "opacity": 1
+    },
+    {
+      "id": "a4b04246-3348-4ce1-b521-d6b4f3e5490b",
+      "name": "ChatGPT Image Sep 15, 2026, 03_32_16 PM",
+      "src": "/uploads/map-images/15ee30aefd4e93c3cae803c6a2bd8edbdc8c7f0a51b84d54ee0e72c51a776a2e.png",
+      "lat": 11.102638976055092,
+      "lng": 77.02789944124163,
+      "width": 0.0009922111296031624,
+      "height": 0.0007461113567161683,
+      "rotation": 270.08988636797153,
       "opacity": 1
     }
   ]
