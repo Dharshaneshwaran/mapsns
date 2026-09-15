@@ -44,5 +44,3 @@ next-env.d.ts
 /.map-data/
 /test-results/
 /backups/
-/public/uploads/map-images/*
-!/public/uploads/map-images/.gitkeep
