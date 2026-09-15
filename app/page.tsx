@@ -11,6 +11,8 @@ import BottomSheet from "@/components/campus/BottomSheet";
 import NavigationOverlay from "@/components/campus/NavigationOverlay";
 import RoutePreviewOverlay from "@/components/campus/RoutePreviewOverlay";
 import SettingsDialog, { UserProfile } from "@/components/campus/SettingsDialog";
+import ExplorePanel from "@/components/campus/ExplorePanel";
+import { CAMPUS_CENTER } from "@/data/campusBoundary";
 
 type Coordinate = { lat: number; lng: number };
 const WALKING_MOVEMENT_THRESHOLD_METERS = 3;
@@ -108,6 +110,9 @@ function CampusMapApp() {
   }, []);
 
   useEffect(() => {
+    const place = CAMPUS_LOCATIONS.find((item) => item.id === new URLSearchParams(window.location.search).get("place"));
+    // Shared links open the selected destination after hydration.
+    if (place) queueMicrotask(() => setSelectedLocation(place));
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
       (pos) => {
@@ -335,9 +340,9 @@ function CampusMapApp() {
         <div className="desktop-map-chips pointer-events-auto absolute left-[424px] top-[18px] z-30 hidden items-center gap-2 lg:flex">
           {[
             { label: "Registration Office", locationId: "admin-building", icon: Building2 },
-            { label: "Place 1", locationId: "heritage-courtyard", icon: MapPin },
-            { label: "Place 2", locationId: "temple", icon: MapPin },
-            { label: "Place 3", locationId: "ihub", icon: MapPin },
+            { label: "Heritage Courtyard", locationId: "heritage-courtyard", icon: MapPin },
+            { label: "SNS Lawn", locationId: "temple", icon: MapPin },
+            { label: "Innovation Hub", locationId: "ihub", icon: MapPin },
           ].map(({ label, locationId, icon: Icon }) => (
             <button
               key={label}
@@ -362,6 +367,8 @@ function CampusMapApp() {
           duration={travelTime ?? 0}
           mode={travelMode}
           onExit={handleStopWalking}
+          onRecenter={() => mapInstance?.panTo(walkingPosition)}
+          onOverview={() => { setIsWalking(false); setIsRoutePreview(true); }}
         />
       )}
 
@@ -374,6 +381,8 @@ function CampusMapApp() {
           onModeChange={handlePrepareRoute}
           onStart={handleBeginNavigation}
           onClose={handleStopWalking}
+          onLayers={() => setShowSettings(true)}
+          location={selectedLocation}
         />
       )}
 
@@ -428,6 +437,7 @@ function CampusMapApp() {
       {/* Bottom sheet */}
       {selectedLocation && !isWalking && !isRoutePreview && walkingState !== "arrived" && (
         <BottomSheet
+          key={selectedLocation.id}
           location={selectedLocation}
           distance={staticDistance}
           walkingTime={staticDistance !== null ? estimateWalkingTime(staticDistance) : null}
@@ -438,6 +448,13 @@ function CampusMapApp() {
           onStartWalking={() => handlePrepareRoute("walking")}
         />
       )}
+
+      {!selectedLocation && !isWalking && !isRoutePreview && <ExplorePanel onSelect={handleLocationSelect} />}
+      {!isWalking && !isRoutePreview && <div className="campus-map-tools">
+        <button title="Change map layers" onClick={() => setShowSettings(true)}>Layers</button>
+        <button title="Show the whole campus" disabled={!mapInstance} onClick={() => { mapInstance?.panTo(CAMPUS_CENTER); mapInstance?.setZoom(17); }}>Campus</button>
+        <button title="Find my location" disabled={!mapInstance} onClick={() => { if (!navigator.geolocation) { setLocationStatus("denied"); return; } navigator.geolocation.getCurrentPosition((position) => { const point = { lat: position.coords.latitude, lng: position.coords.longitude }; setUserPosition(point); mapInstance?.panTo(point); mapInstance?.setZoom(18); }, () => setLocationStatus("denied"), { enableHighAccuracy: true, timeout: 10000 }); }}>My location</button>
+      </div>}
 
       {showSettings && (
         <SettingsDialog

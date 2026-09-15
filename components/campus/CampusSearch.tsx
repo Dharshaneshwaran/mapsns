@@ -58,6 +58,7 @@ export default function CampusSearch({ onSelectLocation }: Props) {
         />
         {query && (
           <button
+            aria-label="Clear search"
             onClick={() => {
               setQuery("");
               inputRef.current?.focus();

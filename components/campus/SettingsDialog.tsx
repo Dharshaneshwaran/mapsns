@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Settings, UserRound, X } from "lucide-react";
+import { Map, Satellite, UserRound, X } from "lucide-react";
 
 export type Gender = "male" | "female";
 export type PointerStyle = "character" | "blue" | "red" | "green";
@@ -31,15 +31,16 @@ export default function SettingsDialog({ profile, onSave, onClose }: Props) {
   const [draft, setDraft] = useState(profile);
 
   return (
-    <div className="absolute inset-0 z-[60] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="settings-title">
-      <div className="w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl">
+    <div className="absolute inset-0 z-[60] flex items-end justify-center bg-zinc-900/35 sm:items-center sm:p-6" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+      <div className="w-full max-w-md max-h-[90dvh] overflow-y-auto rounded-t-3xl border border-zinc-200 bg-white p-5 pb-[max(20px,env(safe-area-inset-bottom))] text-[#202124] shadow-2xl sm:rounded-3xl sm:p-6">
         <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-50 text-blue-600">
-            <Settings className="h-5 w-5" />
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-teal-50 text-teal-700">
+            <UserRound className="h-6 w-6" />
           </div>
           <div className="flex-1">
-            <h2 id="settings-title" className="font-bold text-zinc-900">Profile settings</h2>
-            <p className="text-xs text-zinc-500">Personalize your campus pointer</p>
+            <p className="mb-1 text-[10px] font-semibold uppercase tracking-[.18em] text-teal-700">SNS Campus</p>
+            <h2 id="settings-title" className="text-xl font-semibold tracking-tight text-zinc-900">Profile settings</h2>
+            <p className="mt-1 text-xs text-zinc-500">Make the campus map your own</p>
           </div>
           <button onClick={onClose} aria-label="Close settings" className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-100 text-zinc-600 hover:bg-zinc-200">
             <X className="h-4 w-4" />
@@ -47,7 +48,7 @@ export default function SettingsDialog({ profile, onSave, onClose }: Props) {
         </div>
 
         <label className="mt-6 block text-sm font-semibold text-zinc-700" htmlFor="profile-name">Your name</label>
-        <div className="mt-2 flex items-center gap-2 rounded-2xl border border-zinc-200 px-3">
+        <div className="mt-2 flex items-center gap-2 rounded-xl border border-zinc-200 bg-zinc-50 px-3 focus-within:border-teal-600 focus-within:ring-2 focus-within:ring-teal-100">
           <UserRound className="h-5 w-5 text-zinc-400" />
           <input
             id="profile-name"
@@ -64,9 +65,10 @@ export default function SettingsDialog({ profile, onSave, onClose }: Props) {
             {(["male", "female"] as const).map((gender) => (
               <button
                 key={gender}
+                aria-pressed={draft.gender === gender}
                 type="button"
                 onClick={() => setDraft({ ...draft, gender })}
-                className={`rounded-2xl border px-4 py-3 text-sm font-medium capitalize ${draft.gender === gender ? "border-blue-500 bg-blue-50 text-blue-700" : "border-zinc-200 text-zinc-600 hover:bg-zinc-50"}`}
+                className={`rounded-xl border px-4 py-3 text-sm font-medium capitalize ${draft.gender === gender ? "border-teal-600 bg-teal-50 text-teal-800" : "border-zinc-200 text-zinc-600 hover:bg-zinc-50"}`}
               >
                 {gender}
               </button>
@@ -80,11 +82,12 @@ export default function SettingsDialog({ profile, onSave, onClose }: Props) {
             {POINTERS.map((pointer) => (
               <button
                 key={pointer.value}
+                aria-pressed={draft.pointerStyle === pointer.value}
                 type="button"
                 onClick={() => setDraft({ ...draft, pointerStyle: pointer.value })}
-                className={`flex items-center gap-2 rounded-2xl border px-3 py-3 text-sm font-medium ${draft.pointerStyle === pointer.value ? "border-blue-500 bg-blue-50 text-blue-700" : "border-zinc-200 text-zinc-600 hover:bg-zinc-50"}`}
+                className={`flex items-center gap-2 rounded-xl border px-3 py-3 text-sm font-medium ${draft.pointerStyle === pointer.value ? "border-teal-600 bg-teal-50 text-teal-800" : "border-zinc-200 text-zinc-600 hover:bg-zinc-50"}`}
               >
-                <span className="h-4 w-4 rounded-full border-2 border-white shadow" style={{ backgroundColor: pointer.color }} />
+                {pointer.value === "character" ? <UserRound className="h-5 w-5 text-teal-700" /> : <span className="h-5 w-5 rounded-full border-[3px] border-white shadow" style={{ backgroundColor: pointer.color }} />}
                 {pointer.label}
               </button>
             ))}
@@ -96,24 +99,26 @@ export default function SettingsDialog({ profile, onSave, onClose }: Props) {
           <div className="mt-2 grid grid-cols-2 gap-2">
             <button
               type="button"
+              aria-pressed={draft.mapStyle === "roadmap"}
               onClick={() => setDraft({ ...draft, mapStyle: "roadmap" })}
-              className={`rounded-2xl border px-4 py-3 text-sm font-medium ${draft.mapStyle === "roadmap" ? "border-blue-500 bg-blue-50 text-blue-700" : "border-zinc-200 text-zinc-600 hover:bg-zinc-50"}`}
+              className={`rounded-xl border px-4 py-3 text-sm font-medium ${draft.mapStyle === "roadmap" ? "border-teal-600 bg-teal-50 text-teal-800" : "border-zinc-200 text-zinc-600 hover:bg-zinc-50"}`}
             >
-              Standard
+              <Map className="mx-auto mb-2 h-6 w-6" />Standard
             </button>
             <button
               type="button"
+              aria-pressed={draft.mapStyle === "hybrid"}
               onClick={() => setDraft({ ...draft, mapStyle: "hybrid" })}
-              className={`rounded-2xl border px-4 py-3 text-sm font-medium ${draft.mapStyle === "hybrid" ? "border-blue-500 bg-blue-50 text-blue-700" : "border-zinc-200 text-zinc-600 hover:bg-zinc-50"}`}
+              className={`rounded-xl border px-4 py-3 text-sm font-medium ${draft.mapStyle === "hybrid" ? "border-teal-600 bg-teal-50 text-teal-800" : "border-zinc-200 text-zinc-600 hover:bg-zinc-50"}`}
             >
-              Satellite
+              <Satellite className="mx-auto mb-2 h-6 w-6" />Satellite
             </button>
           </div>
         </fieldset>
 
         <button
           onClick={() => onSave({ ...draft, name: draft.name.trim() })}
-          className="mt-6 w-full rounded-full bg-blue-600 py-3 font-semibold text-white transition-colors hover:bg-blue-700"
+          className="mt-6 w-full rounded-full bg-teal-700 py-3 text-sm font-medium text-white transition-colors hover:bg-teal-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700"
         >
           Save settings
         </button>

@@ -72,7 +72,7 @@ export default function SNSCampusMap({
       const map = new google.maps.Map(mapContainerRef.current, {
         center: CAMPUS_CENTER,
         zoom: 17,
-        mapTypeId: mapTypeId,
+        mapTypeId: "roadmap",
         mapTypeControl: false,
         streetViewControl: false,
         fullscreenControl: false,
@@ -119,7 +119,7 @@ export default function SNSCampusMap({
       setMapError(err instanceof Error ? err.message : "Failed to initialize Google Maps");
       return false;
     }
-  }, [onMapReady, mapTypeId]);
+  }, [onMapReady]);
 
   useEffect(() => {
     let cancelled = false;
@@ -134,7 +134,7 @@ export default function SNSCampusMap({
   useEffect(() => {
     if (!mapRef.current) return;
     mapRef.current.setMapTypeId(mapTypeId);
-  }, [mapTypeId]);
+  }, [mapTypeId, isMapLoaded]);
 
   useEffect(() => {
     if (!mapRef.current || !isMapLoaded) return;

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { ArrowUp, CarFront, Footprints, ListTree, Navigation, Search, Volume2, VolumeX } from "lucide-react";
+
+import { ArrowUp, CarFront, Footprints, ListTree, Navigation } from "lucide-react";
 import type { TravelMode } from "@/types/campus";
 
 type Props = {
@@ -10,10 +10,11 @@ type Props = {
   duration: number;
   mode: TravelMode;
   onExit: () => void;
+  onRecenter: () => void;
+  onOverview: () => void;
 };
 
-export default function NavigationOverlay({ destination, distance, duration, mode, onExit }: Props) {
-  const [muted, setMuted] = useState(false);
+export default function NavigationOverlay({ destination, distance, duration, mode, onExit, onRecenter, onOverview }: Props) {
   const minutes = Math.max(1, Math.ceil(duration / 60));
   const distanceLabel = distance < 1000 ? `${Math.round(distance)} m` : `${(distance / 1000).toFixed(1)} km`;
 
@@ -28,16 +29,11 @@ export default function NavigationOverlay({ destination, distance, duration, mod
           </div>
           <div className="rounded-lg bg-[#fdd663] px-2 py-1 text-sm font-bold text-[#5f4b00]">SNS</div>
         </div>
-        <div className="w-fit rounded-tr-2xl bg-[#00676b] px-4 py-2 text-sm font-medium">Then ↱</div>
       </div>
 
       <div className="pointer-events-auto absolute right-3 top-[42%] flex -translate-y-1/2 flex-col gap-2.5">
-        <button aria-label="Compass" className="navigation-round-control"><Navigation className="h-6 w-6 fill-[#d93025] text-[#202124]" /></button>
-        <button aria-label="Search along route" className="navigation-round-control"><Search className="h-6 w-6" /></button>
-        <button onClick={() => setMuted((value) => !value)} aria-label={muted ? "Unmute navigation" : "Mute navigation"} className="navigation-round-control">
-          {muted ? <VolumeX className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
-        </button>
-        <button aria-label="Route overview" className="navigation-round-control"><ListTree className="h-6 w-6" /></button>
+        <button onClick={onRecenter} aria-label="Recenter on my location" className="navigation-round-control"><Navigation className="h-6 w-6 fill-[#d93025] text-[#202124]" /></button>
+        <button onClick={onOverview} aria-label="Route overview" className="navigation-round-control"><ListTree className="h-6 w-6" /></button>
       </div>
 
       <div className="navigation-status pointer-events-auto absolute bottom-0 left-0 right-0 flex min-h-[112px] items-center gap-3 bg-[#101112] px-3 pb-[max(14px,var(--sab))] pt-3 text-white sm:left-4 sm:right-auto sm:bottom-4 sm:w-[420px] sm:rounded-[22px] sm:pb-3">
