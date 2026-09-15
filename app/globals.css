@@ -315,6 +315,12 @@ body {
     margin-left: 404px;
   }
 
+  .campus-map-app.navigation-active .campus-map-canvas,
+  .campus-map-app.route-preview-active .campus-map-canvas {
+    width: 100%;
+    margin-left: 0;
+  }
+
   .campus-search-panel {
     right: auto;
     z-index: 50;
@@ -360,6 +366,6 @@ body {
   .route-preview-sheet,
   .navigation-instruction,
   .navigation-status {
-    width: 388px;
+    width: clamp(388px, 25vw, 460px);
   }
 }

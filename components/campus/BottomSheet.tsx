@@ -38,6 +38,7 @@ const categoryLabels: Record<string, string> = {
 export default function BottomSheet({ location, distance, walkingTime, onClose, onStartWalking }: Props) {
   const formatDistance = (meters: number) => meters < 1000 ? `${Math.round(meters)} m` : `${(meters / 1000).toFixed(1)} km`;
   const minutes = walkingTime === null ? null : Math.max(1, Math.ceil(walkingTime / 60));
+  const placeImage = location.customIcon ?? "/place-placeholder.svg";
 
   return (
     <aside className="location-details-panel absolute bottom-0 left-0 right-0 z-40 safe-bottom" aria-label={`${location.name} details`}>
@@ -47,7 +48,7 @@ export default function BottomSheet({ location, distance, walkingTime, onClose, 
         </div>
 
         <div className="desktop-place-hero relative hidden h-56 w-full lg:block">
-          <Image src="/heritage_building.png" alt={`${location.name} campus view`} fill priority sizes="404px" className="object-cover" />
+          <Image src={placeImage} alt={`${location.name} campus view`} fill priority sizes="404px" className="object-contain p-4" />
         </div>
 
         <div className="px-5 pb-5">
@@ -111,9 +112,9 @@ export default function BottomSheet({ location, distance, walkingTime, onClose, 
           )}
 
           <div className="mt-3 grid h-28 grid-cols-3 gap-1.5 overflow-hidden rounded-2xl">
-            <div className="relative"><Image src="/heritage_building.png" alt="Campus building" fill sizes="140px" className="object-cover" /></div>
-            <div className="relative"><Image src="/ihub.png" alt="SNS Innovation Hub" fill sizes="140px" className="object-cover" /></div>
-            <div className="relative"><Image src="/admin_building.png" alt="Administration building" fill sizes="140px" className="object-cover" /></div>
+            <div className="relative bg-[#f1f3f4]"><Image src={placeImage} alt={location.name} fill sizes="140px" className="object-contain p-2" /></div>
+            <div className="relative bg-[#f1f3f4]"><Image src="/place-placeholder.svg" alt="Additional place image placeholder" fill sizes="140px" className="object-contain p-5" /></div>
+            <div className="relative bg-[#f1f3f4]"><Image src="/place-placeholder.svg" alt="Additional place image placeholder" fill sizes="140px" className="object-contain p-5" /></div>
           </div>
 
           <div className="mobile-sidebar-ad mt-4 flex items-center gap-3 rounded-2xl border border-[#dadce0] bg-white p-3 lg:hidden">

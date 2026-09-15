@@ -2,10 +2,11 @@
 
 import { useEffect, useRef, useCallback, useState } from "react";
 import { loadGoogleMapsApi } from "@/lib/googleMaps";
-import { CAMPUS_BOUNDARY, CAMPUS_CENTER, isInsideCampus } from "@/data/campusBoundary";
+import { CAMPUS_BOUNDARY, CAMPUS_CENTER } from "@/data/campusBoundary";
 import { CAMPUS_LOCATIONS } from "@/data/campusLocations";
 import { CampusLocation, WalkingRoute, WalkingState } from "@/types/campus";
 import CampusCharacterMarker from "./CampusCharacterMarker";
+import PublishedMapImages from "./PublishedMapImages";
 import type { PointerStyle } from "./SettingsDialog";
 
 type Props = {
@@ -43,14 +44,6 @@ export default function SNSCampusMap({
   const boundaryRef = useRef<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const markersRef = useRef<Map<string, any>>(new Map());
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const heritageOverlayRef = useRef<any>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const adminOverlayRef = useRef<any>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const heritageBuildingOverlayRef = useRef<any>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const ihubOverlayRef = useRef<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const routePolylineRef = useRef<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -119,85 +112,6 @@ export default function SNSCampusMap({
       boundary.setMap(map);
       boundaryRef.current = boundary;
 
-      // Create heritage building using GroundOverlay
-      const heritageLocation = CAMPUS_LOCATIONS.find((loc) => loc.id === "temple");
-      if (heritageLocation && heritageLocation.customIcon && isInsideCampus(heritageLocation.position.lat, heritageLocation.position.lng)) {
-        const lat = heritageLocation.position.lat;
-        const lng = heritageLocation.position.lng;
-        const latSize = 0.0006;
-        const lngSize = latSize / Math.cos((lat * Math.PI) / 180);
-        const overlayBounds = {
-          north: lat + latSize / 2,
-          south: lat - latSize / 2,
-          east: lng + lngSize / 2,
-          west: lng - lngSize / 2,
-        };
-        const groundOverlay = new google.maps.GroundOverlay(
-          heritageLocation.customIcon,
-          overlayBounds,
-          { map, opacity: 0.9, clickable: true }
-        );
-        groundOverlay.addListener("click", () => {
-          onLocationSelect(heritageLocation);
-          map.panTo(heritageLocation.position);
-          map.setZoom(18);
-        });
-        heritageOverlayRef.current = groundOverlay;
-      }
-
-      // Admin building
-      const adminBuildingBounds = {
-        north: 11.10009421400155 + 0.00038,
-        south: 11.10009421400155 - 0.00038,
-        east: 77.02664133529711 + 0.00038,
-        west: 77.02664133529711 - 0.00038,
-      };
-      const adminBuildingLocation = CAMPUS_LOCATIONS.find((loc) => loc.id === "admin-building");
-      if (adminBuildingLocation && isInsideCampus(adminBuildingLocation.position.lat, adminBuildingLocation.position.lng)) {
-        const adminOverlay = new google.maps.GroundOverlay("/admin_building.png", adminBuildingBounds, { map, opacity: 0.9, clickable: true });
-        adminOverlay.addListener("click", () => {
-          onLocationSelect(adminBuildingLocation);
-          map.panTo(adminBuildingLocation.position);
-          map.setZoom(18);
-        });
-        adminOverlayRef.current = adminOverlay;
-      }
-
-      // Heritage courtyard
-      const heritageBuildingBounds = {
-        north: 11.101011353839342 + 0.0004,
-        south: 11.101011353839342 - 0.0004,
-        east: 77.0275747454194 + 0.0005,
-        west: 77.0275747454194 - 0.0005,
-      };
-      const heritageBuildingLocation = CAMPUS_LOCATIONS.find((loc) => loc.id === "heritage-courtyard");
-      if (heritageBuildingLocation && isInsideCampus(heritageBuildingLocation.position.lat, heritageBuildingLocation.position.lng)) {
-        const heritageBuildingOverlay = new google.maps.GroundOverlay("/heritage_building.png", heritageBuildingBounds, { map, opacity: 0.9, clickable: true });
-        heritageBuildingOverlay.addListener("click", () => {
-          onLocationSelect(heritageBuildingLocation);
-          map.panTo(heritageBuildingLocation.position);
-          map.setZoom(18);
-        });
-        heritageBuildingOverlayRef.current = heritageBuildingOverlay;
-      }
-
-      // iHub
-      const ihubBounds = {
-        north: 11.100081 + 0.00025,
-        south: 11.100081 - 0.00025,
-        east: 77.027381 + 0.00025,
-        west: 77.027381 - 0.00025,
-      };
-      const ihubLocation = CAMPUS_LOCATIONS.find((loc) => loc.id === "ihub");
-      if (ihubLocation && isInsideCampus(ihubLocation.position.lat, ihubLocation.position.lng)) {
-        const ihubOverlay = new google.maps.GroundOverlay("/ihub.png", ihubBounds, { map, opacity: 0.9, clickable: true });
-        ihubOverlay.addListener("click", () => {
-          onLocationSelect(ihubLocation);
-          map.panTo(ihubLocation.position);
-          map.setZoom(18);
-        });
-        ihubOverlayRef.current = ihubOverlay;
-      }
 
       onMapReady?.(map);
       return true;
@@ -205,7 +119,7 @@ export default function SNSCampusMap({
       setMapError(err instanceof Error ? err.message : "Failed to initialize Google Maps");
       return false;
     }
-  }, [onMapReady, mapTypeId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [onMapReady, mapTypeId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -406,10 +320,6 @@ export default function SNSCampusMap({
   // Cleanup
   useEffect(() => {
     const markers = markersRef.current;
-    const heritageOverlay = heritageOverlayRef.current;
-    const adminOverlay = adminOverlayRef.current;
-    const heritageBuildingOverlay = heritageBuildingOverlayRef.current;
-    const ihubOverlay = ihubOverlayRef.current;
     const boundary = boundaryRef.current;
     const polyline = routePolylineRef.current;
     const blueDot = blueDotRef.current;
@@ -417,10 +327,6 @@ export default function SNSCampusMap({
     const selectedMarker = selectedMarkerRef.current;
     return () => {
       markers.forEach((marker: { map: null }) => { marker.map = null; });
-      heritageOverlay?.setMap(null);
-      adminOverlay?.setMap(null);
-      heritageBuildingOverlay?.setMap(null);
-      ihubOverlay?.setMap(null);
       boundary?.setMap(null);
       if (polyline) {
         polyline.shadow?.setMap(null);
@@ -448,6 +354,10 @@ export default function SNSCampusMap({
   return (
     <div className="campus-map-canvas relative w-full h-full">
       <div ref={mapContainerRef} className="absolute inset-0" />
+      {mapInstance && <PublishedMapImages map={mapInstance} onClick={(image) => {
+        const location = CAMPUS_LOCATIONS.find((item) => item.id === image.locationId);
+        if (location) onLocationSelect(location);
+      }} />}
       {isWalking && isWalkingMode && walkingPosition && mapInstance && pointerStyle === "character" && (
         <CampusCharacterMarker
           map={mapInstance}

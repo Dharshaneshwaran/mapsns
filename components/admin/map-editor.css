@@ -1,0 +1,38 @@
+.map-image-overlay {
+  position: absolute;
+  transform-origin: center;
+  touch-action: none;
+  user-select: none;
+}
+.map-image-overlay > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: fill;
+  pointer-events: none;
+}
+.map-image-overlay .map-image-handle {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  min-height: 16px;
+  padding: 0;
+  border: 2px solid #008b92;
+  border-radius: 3px;
+  background: white;
+  transform: translate(-50%, -50%);
+  cursor: nwse-resize;
+  touch-action: none;
+}
+.map-image-overlay .map-image-rotate {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  color: #00676e;
+  font-size: 20px;
+  line-height: 20px;
+  cursor: grab;
+}
+.map-image-overlay .map-image-handle[hidden] { display: none; }

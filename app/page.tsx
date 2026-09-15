@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import { CampusLocation, WalkingState, WalkingRoute, TravelMode } from "@/types/campus";
 import { CAMPUS_LOCATIONS } from "@/data/campusLocations";
 import { haversineDistance, estimateWalkingTime } from "@/lib/googleMaps";
-import { Check, AlertTriangle, Settings, X, Utensils, BedDouble, Camera, BusFront, CircleParking } from "lucide-react";
+import { Check, AlertTriangle, Settings, X, Building2, MapPin } from "lucide-react";
 import CampusSearch from "@/components/campus/CampusSearch";
 import BottomSheet from "@/components/campus/BottomSheet";
 import NavigationOverlay from "@/components/campus/NavigationOverlay";
@@ -316,7 +316,7 @@ function CampusMapApp() {
   }, [distance, travelMode]);
 
   return (
-    <main className="campus-map-app relative w-full h-screen overflow-hidden bg-zinc-100">
+    <main className={`campus-map-app relative h-screen w-full overflow-hidden bg-zinc-100 ${isWalking ? "navigation-active" : ""} ${isRoutePreview ? "route-preview-active" : ""}`}>
       <SNSCampusMap
         onLocationSelect={handleLocationSelect}
         selectedLocation={selectedLocation}
@@ -334,13 +334,20 @@ function CampusMapApp() {
       {!isWalking && !isRoutePreview && (
         <div className="desktop-map-chips pointer-events-auto absolute left-[424px] top-[18px] z-30 hidden items-center gap-2 lg:flex">
           {[
-            { label: "Restaurants", icon: Utensils },
-            { label: "Hotels", icon: BedDouble },
-            { label: "Things to do", icon: Camera },
-            { label: "Transit", icon: BusFront },
-            { label: "Parking", icon: CircleParking },
-          ].map(({ label, icon: Icon }) => (
-            <button key={label} className="flex h-9 items-center gap-1.5 rounded-full border border-[#dadce0] bg-white px-3 text-sm font-medium text-[#3c4043] shadow-sm hover:bg-[#f8f9fa]">
+            { label: "Registration Office", locationId: "admin-building", icon: Building2 },
+            { label: "Place 1", locationId: "heritage-courtyard", icon: MapPin },
+            { label: "Place 2", locationId: "temple", icon: MapPin },
+            { label: "Place 3", locationId: "ihub", icon: MapPin },
+          ].map(({ label, locationId, icon: Icon }) => (
+            <button
+              key={label}
+              type="button"
+              onClick={() => {
+                const location = CAMPUS_LOCATIONS.find((item) => item.id === locationId);
+                if (location) handleLocationSelect(location);
+              }}
+              className="flex h-9 items-center gap-1.5 rounded-full border border-[#dadce0] bg-white px-3 text-sm font-medium text-[#3c4043] shadow-sm transition hover:bg-[#f8f9fa] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#008b92]"
+            >
               <Icon className="h-4 w-4" /> {label}
             </button>
           ))}

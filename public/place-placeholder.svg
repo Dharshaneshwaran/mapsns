@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-labelledby="title description">
+  <title id="title">Place image placeholder</title>
+  <desc id="description">A campus building placeholder with a location pin</desc>
+  <rect width="640" height="360" fill="#f1f3f4"/>
+  <rect x="155" y="160" width="330" height="130" rx="12" fill="#dfe5ea"/>
+  <path d="M130 170 320 70l190 100Z" fill="#c7d1d9"/>
+  <rect x="205" y="200" width="52" height="90" rx="6" fill="#b5c2cc"/>
+  <rect x="294" y="200" width="52" height="90" rx="6" fill="#b5c2cc"/>
+  <rect x="383" y="200" width="52" height="90" rx="6" fill="#b5c2cc"/>
+  <path d="M320 86c-37 0-67 30-67 67 0 50 67 121 67 121s67-71 67-121c0-37-30-67-67-67Z" fill="#008b92"/>
+  <circle cx="320" cy="153" r="24" fill="#fff"/>
+</svg>

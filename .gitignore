@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Published map image data (back up separately from source code)
+/.map-data/
+/test-results/
