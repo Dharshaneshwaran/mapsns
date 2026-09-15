@@ -77,6 +77,10 @@ export default function CampusCharacterMarker({
     });
 
     const overlay = new google.maps.OverlayView();
+    const updateRotation = () => {
+      visual.style.transform = `rotate(${currentBearingRef.current - (map.getHeading() || 0)}deg)`;
+    };
+    const headingListener = map.addListener("heading_changed", updateRotation);
     overlay.onAdd = function () {
       container.style.position = "absolute";
       container.style.pointerEvents = "none";
@@ -101,7 +105,7 @@ export default function CampusCharacterMarker({
     };
     overlay.setMap(map);
     overlayRef.current = overlay;
-    return () => { overlay.setMap(null); overlayRef.current = null; };
+    return () => { headingListener.remove(); overlay.setMap(null); overlayRef.current = null; };
   }, [map]);
 
   useEffect(() => {
@@ -153,7 +157,7 @@ export default function CampusCharacterMarker({
       }
 
       if (visualRef.current) {
-        visualRef.current.style.transform = `rotate(${currentBearingRef.current}deg)`;
+        visualRef.current.style.transform = `rotate(${currentBearingRef.current - (map.getHeading() || 0)}deg)`;
       }
 
       animFrameRef.current = requestAnimationFrame(animate);

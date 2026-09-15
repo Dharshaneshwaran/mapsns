@@ -73,6 +73,10 @@ export default function SNSCampusMap({
         center: CAMPUS_CENTER,
         zoom: 17,
         mapTypeId: "roadmap",
+        renderingType: google.maps.RenderingType.VECTOR,
+        headingInteractionEnabled: true,
+        tiltInteractionEnabled: false,
+        tilt: 0,
         mapTypeControl: false,
         streetViewControl: false,
         fullscreenControl: false,
@@ -295,6 +299,8 @@ export default function SNSCampusMap({
 
       routePolylineRef.current = { shadow: shadowPolyline, main: polyline, border: borderPolyline };
 
+      // Keep the close navigation camera when starting or updating a route.
+      if (isWalking) return;
       // Fit bounds to route, but constrain to campus area
       const routeBounds = new google.maps.LatLngBounds();
       activeRoute.points.forEach((p) => routeBounds.extend(new google.maps.LatLng(p.lat, p.lng)));
@@ -316,6 +322,25 @@ export default function SNSCampusMap({
       }
     }
   }, [activeRoute, isMapLoaded, isWalking]);
+
+  useEffect(() => {
+    if (!mapInstance || !isWalking || !walkingPosition) return;
+    const heading = mapInstance.getHeading() || 0;
+    const delta = ((walkingBearing - heading + 540) % 360) - 180;
+    let frame = 0;
+    const start = performance.now();
+    const animate = (now: number) => {
+      const progress = Math.min(1, (now - start) / 450);
+      mapInstance.moveCamera({ center: walkingPosition, heading: heading + delta * progress, tilt: 0 });
+      if (progress < 1) frame = requestAnimationFrame(animate);
+    };
+    frame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(frame);
+  }, [mapInstance, isWalking, walkingPosition, walkingBearing]);
+
+  useEffect(() => {
+    if (mapInstance && isWalking) mapInstance.setZoom(20);
+  }, [mapInstance, isWalking]);
 
   // Cleanup
   useEffect(() => {

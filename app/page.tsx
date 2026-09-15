@@ -13,6 +13,7 @@ import RoutePreviewOverlay from "@/components/campus/RoutePreviewOverlay";
 import SettingsDialog, { UserProfile } from "@/components/campus/SettingsDialog";
 import ExplorePanel from "@/components/campus/ExplorePanel";
 import { CAMPUS_CENTER } from "@/data/campusBoundary";
+import { routeDeviation } from "@/lib/routeDeviation";
 
 type Coordinate = { lat: number; lng: number };
 const WALKING_MOVEMENT_THRESHOLD_METERS = 3;
@@ -104,6 +105,9 @@ function CampusMapApp() {
   const watchIdRef = useRef<number | null>(null);
   const prevPositionRef = useRef<{ lat: number; lng: number } | null>(null);
   const movementAnchorRef = useRef<{ lat: number; lng: number } | null>(null);
+  const routeRef = useRef(activeRoute);
+  const [rerouteMessage, setRerouteMessage] = useState("");
+  useEffect(() => { routeRef.current = activeRoute; }, [activeRoute]);
 
   const handleMapReady = useCallback((map: unknown) => {
     setMapInstance(map);
@@ -259,6 +263,31 @@ function CampusMapApp() {
 
     const end = selectedLocation.position;
     let idleTimer: ReturnType<typeof setTimeout> | null = null;
+    let lastReroute = 0;
+    let deviationCount = 0;
+    let request: AbortController | null = null;
+    let disposed = false;
+    const reroute = async (start: Coordinate, heading: number | null) => {
+      lastReroute = Date.now();
+      const controller = new AbortController();
+      request = controller;
+      const timeout = setTimeout(() => controller.abort(), 12000);
+      setRerouteMessage("Updating your route…");
+      try {
+        const base = `https://router.project-osrm.org/route/v1/${travelMode === "vehicle" ? "driving" : "foot"}/${start.lng},${start.lat};${end.lng},${end.lat}?overview=full&geometries=geojson`;
+        const response = await fetch(base + (heading !== null ? `&bearings=${Math.round((heading + 360) % 360)},90;` : ""), { signal: controller.signal });
+        if (!response.ok) throw new Error("Route request failed");
+        const data = await response.json();
+        const coordinates = data.routes?.[0]?.geometry?.coordinates;
+        if (data.code !== "Ok" || !Array.isArray(coordinates) || coordinates.length < 2 || !coordinates.every((point: unknown) => Array.isArray(point) && point.length >= 2 && Number.isFinite(point[0]) && Number.isFinite(point[1]))) throw new Error("No route found");
+        if (disposed) return;
+        const updated: WalkingRoute = { id: `route-${selectedLocation.id}`, name: `Route to ${selectedLocation.name}`, from: "current", to: selectedLocation.id, points: coordinates.map((point: number[]) => ({ lat: point[1], lng: point[0] })), isPrototype: false };
+        routeRef.current = updated;
+        setActiveRoute(updated);
+        setRerouteMessage("Route updated for your current direction.");
+      } catch { if (!disposed) setRerouteMessage("Could not update route. Keeping the previous route and retrying as you move."); }
+      finally { clearTimeout(timeout); request = null; }
+    };
     watchIdRef.current = navigator.geolocation.watchPosition(
       (pos) => {
         const nextPosition = { lat: pos.coords.latitude, lng: pos.coords.longitude };
@@ -286,20 +315,30 @@ function CampusMapApp() {
 
         prevPositionRef.current = nextPosition;
         setWalkingPosition(nextPosition);
-        if (haversineDistance(nextPosition.lat, nextPosition.lng, end.lat, end.lng) < 20) handleArrived();
+        if (haversineDistance(nextPosition.lat, nextPosition.lng, end.lat, end.lng) < 20) { disposed = true; request?.abort(); handleArrived(); return; }
+        const heading = pos.coords.heading !== null && Number.isFinite(pos.coords.heading) ? pos.coords.heading : anchor && displacement >= 3 ? getBearing(anchor, nextPosition) : null;
+        const route = routeRef.current;
+        if (moving && route) {
+          const deviation = routeDeviation(nextPosition, route.points, heading);
+          const offRoute = deviation.distance > Math.max(15, pos.coords.accuracy * 1.5);
+          deviationCount = offRoute || deviation.wrongWay ? deviationCount + 1 : 0;
+          if (deviationCount >= 2 && !request && Date.now() - lastReroute > 10000) { deviationCount = 0; void reroute(nextPosition, heading); }
+        } else deviationCount = 0;
       },
       (error) => console.error("GPS watch error:", error),
       { enableHighAccuracy: true, maximumAge: 0 }
     );
 
     return () => {
+      disposed = true;
+      request?.abort();
       if (idleTimer) clearTimeout(idleTimer);
       if (watchIdRef.current !== null) {
         navigator.geolocation.clearWatch(watchIdRef.current);
         watchIdRef.current = null;
       }
     };
-  }, [isWalking, selectedLocation, handleArrived]);
+  }, [isWalking, selectedLocation, handleArrived, travelMode]);
 
   const staticDistance = useMemo(() => {
     if (!selectedLocation) return null;
@@ -368,6 +407,7 @@ function CampusMapApp() {
       )}
 
       {/* Google Maps-style active navigation UI */}
+      {isWalking && rerouteMessage && <p role="status" className="absolute left-4 right-4 top-28 z-50 rounded-xl bg-white px-4 py-3 text-sm text-teal-800 shadow-lg sm:right-auto sm:max-w-md">{rerouteMessage}</p>}
       {isWalking && selectedLocation && walkingPosition && (
         <NavigationOverlay
           destination={selectedLocation.name}
@@ -375,7 +415,7 @@ function CampusMapApp() {
           duration={travelTime ?? 0}
           mode={travelMode}
           onExit={handleStopWalking}
-          onRecenter={() => mapInstance?.panTo(walkingPosition)}
+          onRecenter={() => { mapInstance?.moveCamera({ center: walkingPosition, zoom: 20, heading: walkingBearing, tilt: 0 }); }}
           onOverview={() => { setIsWalking(false); setIsRoutePreview(true); }}
         />
       )}
