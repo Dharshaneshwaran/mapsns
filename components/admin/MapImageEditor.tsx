@@ -173,6 +173,8 @@ export default function MapImageEditor() {
           </div>
           {selected ? <fieldset disabled={busy || loading} className="space-y-3 border-t border-zinc-200 pt-3">
             <label className="block text-xs font-medium">Image name<input className="mt-1 w-full rounded border border-zinc-300 p-2 text-sm" value={selected.name} maxLength={120} onChange={(event) => change({ ...selected, name: event.target.value })} /></label>
+            <label className="flex gap-2 text-xs"><input type="checkbox" checked={!!selected.locationId} onChange={(event) => change({ ...selected, locationId: event.target.checked ? selected.id : undefined })} />Make this image a searchable destination</label>
+            {selected.locationId && <p className="text-xs text-zinc-500">The image centre is the destination. Position it at a walkable entrance before publishing.</p>}
             <div className="grid grid-cols-2 gap-2">
               {([['width', 'Width'], ['height', 'Height']] as const).map(([key, label]) => <label key={key} className="text-xs font-medium">{label} (m)<input type="number" min="2" max="2000" step="1" className="mt-1 w-full rounded border border-zinc-300 p-2 text-sm" value={Math.round(selected[key] * 111320 * (key === "width" ? Math.cos(selected.lat * Math.PI / 180) : 1))} onChange={(event) => { if (event.target.value !== "") change({ ...selected, [key]: Math.max(0.00001, Math.min(0.02, Number(event.target.value) / (111320 * (key === "width" ? Math.cos(selected.lat * Math.PI / 180) : 1)))) }); }} /></label>)}
             </div>

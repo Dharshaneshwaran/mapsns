@@ -32,8 +32,6 @@ function durationLabel(seconds: number) {
 
 export default function RoutePreviewOverlay({ destination, distance, duration, mode, onModeChange, onStart, onClose, onLayers, location }: Props) {
   const distanceLabel = distance < 1000 ? `${Math.round(distance)} m` : `${(distance / 1000).toFixed(1)} km`;
-  const walkingDuration = distance / 1.4;
-  const vehicleDuration = distance / 5.5;
 
   return (
     <div className="pointer-events-none absolute inset-0 z-40 text-[#202124]">
@@ -62,17 +60,18 @@ export default function RoutePreviewOverlay({ destination, distance, duration, m
         </div>
 
         <div className="grid grid-cols-2 border-b border-[#dadce0] px-2">
-          <button onClick={() => onModeChange("walking")} className={`route-mode-tab ${mode === "walking" ? "active" : ""}`}><PersonStanding className="h-[18px] w-[18px]" /><span>Walk · {durationLabel(walkingDuration)}</span></button>
-          <button onClick={() => onModeChange("vehicle")} className={`route-mode-tab ${mode === "vehicle" ? "active" : ""}`}><CarFront className="h-[18px] w-[18px]" /><span>Vehicle · {durationLabel(vehicleDuration)}</span></button>
+          <button onClick={() => onModeChange("walking")} className={`route-mode-tab ${mode === "walking" ? "active" : ""}`}><PersonStanding className="h-[18px] w-[18px]" /><span>Walk</span></button>
+          <button onClick={() => onModeChange("vehicle")} className={`route-mode-tab ${mode === "vehicle" ? "active" : ""}`}><CarFront className="h-[18px] w-[18px]" /><span>Vehicle</span></button>
         </div>
 
         <div className="px-5 pb-[max(18px,var(--sab))] pt-3">
           <div className="flex items-start gap-4">
             <p className="shrink-0 whitespace-nowrap text-[20px] font-medium leading-6 text-[#188038]">{durationLabel(duration)}</p>
             <div className="min-w-0 flex-1 text-xs leading-4 text-[#5f6368]">
-              <p><span className="font-medium text-[#202124]">Estimated journey</span> · Based on distance</p>
+              <p><span className="font-medium text-[#202124]">Estimated journey</span> · Route estimate</p>
               <p>{distanceLabel}</p>
               <p className="mt-1">Check the marked route before starting.</p>
+              <p className="mt-1">Route: <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap contributors</a> · <a href="https://www.openstreetmap.org/fixthemap" target="_blank" rel="noreferrer">Fix the map</a></p>
             </div>
           </div>
           <div className="mt-4 flex flex-wrap gap-2 scrollbar-hide">

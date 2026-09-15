@@ -98,6 +98,24 @@ test("deleting an overlay is persisted without restoring default images", async 
 });
 
 test("admin and public pages render", async () => {
-  assert.match(await (await fetch(`${base}/admin`)).text(), /Campus image editor/);
+  assert.equal((await fetch(`${base}/admin`)).status, 401);
+  const auth = `Basic ${Buffer.from(`admin:${key}`).toString("base64")}`;
+  assert.match(await (await fetch(`${base}/admin`, { headers: { Authorization: auth } })).text(), /Campus image editor/);
   assert.equal((await fetch(base)).status, 200);
+});
+
+test("all publishing endpoints reject anonymous writes", async () => {
+  for (const endpoint of ["ads", "landing", "map-images"]) {
+    assert.equal((await fetch(`${base}/api/${endpoint}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: "{}" })).status, 401);
+  }
+});
+
+test("browser sign-in credentials can publish landing settings", async () => {
+  const response = await fetch(`${base}/api/landing`);
+  const draft = await response.json();
+  draft.heading = "Test campus sidebar";
+  const auth = `Basic ${Buffer.from(`admin:${key}`).toString("base64")}`;
+  const updated = await fetch(`${base}/api/landing`, { method: "PUT", headers: { Authorization: auth, "Content-Type": "application/json" }, body: JSON.stringify(draft) });
+  assert.equal(updated.status, 200, await updated.clone().text());
+  assert.equal((await (await fetch(`${base}/api/landing`)).json()).heading, draft.heading);
 });

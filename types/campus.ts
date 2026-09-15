@@ -36,6 +36,8 @@ export type WalkingRoute = {
   to: string;
   points: WalkPoint[];
   isPrototype: boolean;
+  distanceMeters?: number;
+  durationSeconds?: number;
 };
 
 export type WalkingState = "idle" | "walking" | "turning" | "arrived";

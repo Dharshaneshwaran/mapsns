@@ -1,13 +1,14 @@
 "use client";
 import { useEffect, useState } from "react";
 import { MapPin, Bookmark } from "lucide-react";
-import { CAMPUS_LOCATIONS } from "@/data/campusLocations";
+import { useCampusPlaces } from "@/components/campus/useCampusPlaces";
 import type { CampusLocation } from "@/types/campus";
 import { DEFAULT_LANDING } from "@/lib/landing";
 import SlidePanel from "./SlidePanel";
 import CampusAd from "./CampusAd";
 import { useSavedPlaces } from "./PlaceActions";
 export default function ExplorePanel({ onSelect }: { onSelect: (location: CampusLocation) => void }) {
+  const CAMPUS_LOCATIONS = useCampusPlaces();
   const [config, setConfig] = useState(DEFAULT_LANDING);
   useEffect(() => {
     const controller = new AbortController();

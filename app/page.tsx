@@ -13,6 +13,8 @@ import RoutePreviewOverlay from "@/components/campus/RoutePreviewOverlay";
 import SettingsDialog, { UserProfile } from "@/components/campus/SettingsDialog";
 import ExplorePanel from "@/components/campus/ExplorePanel";
 import { CAMPUS_CENTER } from "@/data/campusBoundary";
+import { requestRoute } from "@/lib/requestRoute";
+import { publishedPlaces } from "@/lib/publishedPlaces";
 import { routeDeviation } from "@/lib/routeDeviation";
 
 type Coordinate = { lat: number; lng: number };
@@ -44,27 +46,6 @@ function getBearing(from: Coordinate, to: Coordinate): number {
     Math.cos(lat1) * Math.sin(lat2) -
     Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
   return ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360;
-}
-
-function generateWalkingRoute(start: Coordinate, end: Coordinate): Coordinate[] {
-  const points: Coordinate[] = [start];
-  const dLat = end.lat - start.lat;
-  const dLng = end.lng - start.lng;
-  const distance = Math.sqrt(dLat * dLat + dLng * dLng);
-  const numSteps = Math.max(6, Math.min(20, Math.floor(distance * 3000)));
-
-  for (let i = 1; i < numSteps; i++) {
-    const t = i / numSteps;
-    const wobbleLat = Math.sin(t * Math.PI * 3) * 0.00005;
-    const wobbleLng = Math.cos(t * Math.PI * 2.5) * 0.00005;
-    points.push({
-      lat: start.lat + dLat * t + wobbleLat,
-      lng: start.lng + dLng * t + wobbleLng,
-    });
-  }
-
-  points.push(end);
-  return points;
 }
 
 const SNSCampusMap = dynamic(
@@ -105,6 +86,10 @@ function CampusMapApp() {
   const watchIdRef = useRef<number | null>(null);
   const prevPositionRef = useRef<{ lat: number; lng: number } | null>(null);
   const movementAnchorRef = useRef<{ lat: number; lng: number } | null>(null);
+  const previewRequest = useRef<AbortController | null>(null);
+  const [routeError, setRouteError] = useState("");
+  const [routeLoading, setRouteLoading] = useState(false);
+  useEffect(() => () => previewRequest.current?.abort(), []);
   const routeRef = useRef(activeRoute);
   const [rerouteMessage, setRerouteMessage] = useState("");
   useEffect(() => { routeRef.current = activeRoute; }, [activeRoute]);
@@ -117,6 +102,12 @@ function CampusMapApp() {
     const place = CAMPUS_LOCATIONS.find((item) => item.id === new URLSearchParams(window.location.search).get("place"));
     // Shared links open the selected destination after hydration.
     if (place) queueMicrotask(() => setSelectedLocation(place));
+    if (!place && new URLSearchParams(window.location.search).has("place")) {
+      void fetch("/api/map-images").then((response) => response.json()).then((data) => {
+        const shared = publishedPlaces(data.images).find((item) => item.id === new URLSearchParams(window.location.search).get("place"));
+        if (shared) setSelectedLocation(shared);
+      }).catch(() => {});
+    }
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
       (pos) => {
@@ -128,6 +119,7 @@ function CampusMapApp() {
   }, []);
 
   const handleLocationSelect = useCallback((location: CampusLocation) => {
+    previewRequest.current?.abort(); setRouteLoading(false); setRouteError("");
     setSelectedLocation(location);
     setWalkingState("idle");
     setIsWalking(false);
@@ -151,6 +143,7 @@ function CampusMapApp() {
   }, []);
 
   const handleStopWalking = useCallback(() => {
+    previewRequest.current?.abort(); setRouteLoading(false); setRouteError("");
     setIsWalking(false);
     setWalkingState("idle");
     setWalkingPosition(null);
@@ -167,86 +160,33 @@ function CampusMapApp() {
   const handlePrepareRoute = useCallback((mode: TravelMode) => {
     if (!selectedLocation || !mapInstance) return;
 
-    setTravelMode(mode);
+    previewRequest.current?.abort();
+    const controller = new AbortController(); previewRequest.current = controller;
+    setTravelMode(mode); setRouteError(""); setRouteLoading(true); setActiveRoute(null); setIsRoutePreview(false);
     const end = selectedLocation.position;
-    setLocationStatus("requesting");
-
-    const fetchRouteAndTrack = async (lat: number, lng: number) => {
-      const start = { lat, lng };
-
-      const fallbackPoints = generateWalkingRoute(start, end);
-      setActiveRoute({
-        id: `route-${selectedLocation.id}`,
-        name: `${mode === "walking" ? "Walk" : "Drive"} to ${selectedLocation.name}`,
-        from: "current",
-        to: selectedLocation.id,
-        points: fallbackPoints,
-        isPrototype: true,
-      });
-
-      // Show the current route UI immediately. The road-aware route replaces
-      // this fallback in the background when it becomes available.
-      setWalkingPosition(start);
-      setIsWalking(false);
-      setIsRoutePreview(true);
-      setWalkingState("idle");
-      setLocationStatus("idle");
-      prevPositionRef.current = null;
-      setWalkingBearing(0);
-
+    void (async () => {
+      const timeout = setTimeout(() => controller.abort(), 20000);
       try {
-        const res = await fetch(
-          `https://router.project-osrm.org/route/v1/${mode === "vehicle" ? "driving" : "foot"}/${start.lng},${start.lat};${end.lng},${end.lat}?overview=full&geometries=geojson`
-        );
-        const data = await res.json();
-
-        if (data.code === "Ok" && data.routes?.[0]) {
-          const coords = data.routes[0].geometry.coordinates.map(
-            (c: [number, number]) => ({ lat: c[1], lng: c[0] })
-          );
-
-          if (coords.length > 0) {
-            setActiveRoute({
-              id: `route-${selectedLocation.id}`,
-              name: `${mode === "walking" ? "Walk" : "Drive"} to ${selectedLocation.name}`,
-              from: "current",
-              to: selectedLocation.id,
-              points: coords,
-              isPrototype: false,
-            });
-          }
-        }
-      } catch {
-        // Fallback route already set
+        if (!navigator.geolocation) throw new Error("Your browser does not support location.");
+        const fix = await new Promise<GeolocationPosition>((resolve, reject) => navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 8000, maximumAge: 3000 }));
+        controller.signal.throwIfAborted();
+        const start = { lat: fix.coords.latitude, lng: fix.coords.longitude };
+        const route = await requestRoute(start, end, mode, controller.signal);
+        controller.signal.throwIfAborted();
+        setUserPosition(start); setWalkingPosition(start);
+        setActiveRoute({ ...route, id: `route-${selectedLocation.id}`, name: `Route to ${selectedLocation.name}`, from: "current", to: selectedLocation.id, isPrototype: false });
+        setIsWalking(false); setIsRoutePreview(true); setWalkingState("idle"); setRerouteMessage("");
+      } catch (error) {
+        if (previewRequest.current === controller) setRouteError(controller.signal.aborted ? "Route request timed out. Please retry." : error instanceof Error ? error.message : "Enable location permission and try again.");
+      } finally {
+        clearTimeout(timeout);
+        if (previewRequest.current === controller) setRouteLoading(false);
       }
-    };
-
-    if (userPosition) {
-      void fetchRouteAndTrack(userPosition.lat, userPosition.lng);
-      return;
-    }
-
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => fetchRouteAndTrack(pos.coords.latitude, pos.coords.longitude),
-        (err) => {
-          if (err.code === 1 || err.code === 2) {
-            setLocationStatus("denied");
-            return;
-          }
-          const gate = CAMPUS_LOCATIONS.find((l) => l.id === "main-gate");
-          fetchRouteAndTrack(gate?.position.lat ?? 11.0998, gate?.position.lng ?? 77.0273);
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-      );
-    } else {
-      const gate = CAMPUS_LOCATIONS.find((l) => l.id === "main-gate");
-      fetchRouteAndTrack(gate?.position.lat ?? 11.0998, gate?.position.lng ?? 77.0273);
-    }
-  }, [selectedLocation, mapInstance, userPosition]);
+    })();
+  }, [selectedLocation, mapInstance]);
 
   const handleBeginNavigation = useCallback(() => {
-    if (!selectedLocation) return;
+    if (!selectedLocation || !activeRoute || routeLoading) return;
     const gate = CAMPUS_LOCATIONS.find((location) => location.id === "main-gate");
     const startPosition = walkingPosition ?? userPosition ?? gate?.position;
     if (startPosition) setWalkingPosition(startPosition);
@@ -256,7 +196,7 @@ function CampusMapApp() {
     setLocationStatus("tracking");
     prevPositionRef.current = null;
     movementAnchorRef.current = null;
-  }, [selectedLocation, walkingPosition, userPosition]);
+  }, [selectedLocation, walkingPosition, userPosition, activeRoute, routeLoading]);
 
   useEffect(() => {
     if (!isWalking || !selectedLocation || !navigator.geolocation) return;
@@ -274,14 +214,9 @@ function CampusMapApp() {
       const timeout = setTimeout(() => controller.abort(), 12000);
       setRerouteMessage("Updating your route…");
       try {
-        const base = `https://router.project-osrm.org/route/v1/${travelMode === "vehicle" ? "driving" : "foot"}/${start.lng},${start.lat};${end.lng},${end.lat}?overview=full&geometries=geojson`;
-        const response = await fetch(base + (heading !== null ? `&bearings=${Math.round((heading + 360) % 360)},90;` : ""), { signal: controller.signal });
-        if (!response.ok) throw new Error("Route request failed");
-        const data = await response.json();
-        const coordinates = data.routes?.[0]?.geometry?.coordinates;
-        if (data.code !== "Ok" || !Array.isArray(coordinates) || coordinates.length < 2 || !coordinates.every((point: unknown) => Array.isArray(point) && point.length >= 2 && Number.isFinite(point[0]) && Number.isFinite(point[1]))) throw new Error("No route found");
+        const result = await requestRoute(start, end, travelMode, controller.signal, heading);
         if (disposed) return;
-        const updated: WalkingRoute = { id: `route-${selectedLocation.id}`, name: `Route to ${selectedLocation.name}`, from: "current", to: selectedLocation.id, points: coordinates.map((point: number[]) => ({ lat: point[1], lng: point[0] })), isPrototype: false };
+        const updated: WalkingRoute = { ...result, id: `route-${selectedLocation.id}`, name: `Route to ${selectedLocation.name}`, from: "current", to: selectedLocation.id, isPrototype: false };
         routeRef.current = updated;
         setActiveRoute(updated);
         setRerouteMessage("Route updated for your current direction.");
@@ -352,20 +287,9 @@ function CampusMapApp() {
     );
   }, [selectedLocation, userPosition, walkingPosition]);
 
-  const distance = useMemo(() => {
-    if (!selectedLocation || !walkingPosition) return null;
-    return haversineDistance(
-      walkingPosition.lat,
-      walkingPosition.lng,
-      selectedLocation.position.lat,
-      selectedLocation.position.lng
-    );
-  }, [selectedLocation, walkingPosition]);
-
-  const travelTime = useMemo(() => {
-    if (distance === null) return null;
-    return travelMode === "walking" ? estimateWalkingTime(distance) : distance / 5.5;
-  }, [distance, travelMode]);
+  const remainingFraction = activeRoute && walkingPosition && isWalking ? routeDeviation(walkingPosition, activeRoute.points, null).remainingFraction : 1;
+  const distance = activeRoute?.distanceMeters !== undefined ? activeRoute.distanceMeters * remainingFraction : null;
+  const travelTime = activeRoute?.durationSeconds !== undefined ? activeRoute.durationSeconds * remainingFraction : null;
 
   return (
     <main className={`campus-map-app relative h-screen w-full overflow-hidden bg-zinc-100 ${isWalking ? "navigation-active" : ""} ${isRoutePreview ? "route-preview-active" : ""}`}>
@@ -406,6 +330,7 @@ function CampusMapApp() {
         </div>
       )}
 
+      {(routeLoading || routeError) && <div role="status" className="absolute left-3 right-3 top-20 z-50 rounded-xl bg-white p-4 text-sm shadow-lg sm:left-auto sm:max-w-sm">{routeLoading ? "Finding a mapped route…" : routeError}{routeError && <button className="ml-3 font-semibold text-teal-700" onClick={() => handlePrepareRoute(travelMode)}>Retry</button>}</div>}
       {/* Google Maps-style active navigation UI */}
       {isWalking && rerouteMessage && <p role="status" className="absolute left-4 right-4 top-28 z-50 rounded-xl bg-white px-4 py-3 text-sm text-teal-800 shadow-lg sm:right-auto sm:max-w-md">{rerouteMessage}</p>}
       {isWalking && selectedLocation && walkingPosition && (

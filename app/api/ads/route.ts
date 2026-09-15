@@ -1,3 +1,4 @@
+import { adminWriteAccess } from "@/lib/adminAuth";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { DEFAULT_ADS, type AdPlacement, type AdsConfig } from "@/lib/ads";
@@ -37,11 +38,8 @@ export async function GET() {
 }
 
 export async function PUT(request: Request) {
-  const hostname = new URL(request.url).hostname;
-  if (hostname !== "admin.localhost" && process.env.NODE_ENV !== "development") {
-    return Response.json({ error: "Admin host required" }, { status: 403 });
-  }
-
+  const denied = adminWriteAccess(request);
+  if (denied) return denied;
   const current = await readAds();
   const input = (await request.json()) as Partial<AdsConfig>;
   const next: AdsConfig = {

@@ -1,8 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
-import { CAMPUS_LOCATIONS } from "@/data/campusLocations";
+import { useCampusPlaces } from "@/components/campus/useCampusPlaces";
 import { type LandingConfig } from "@/lib/landing";
 export default function LandingEditor() {
+  const CAMPUS_LOCATIONS = useCampusPlaces();
   const [draft, setDraft] = useState<LandingConfig | null>(null);
   const [message, setMessage] = useState(""); const [error, setError] = useState(""); const [busy, setBusy] = useState(false); const [token, setToken] = useState("");
   useEffect(() => { let active = true; void fetch("/api/landing", { cache: "no-store" }).then(async (response) => { if (!response.ok) throw new Error("Could not load sidebar settings. Refresh to retry."); return response.json(); }).then((data) => { if (active) setDraft(data); }).catch((error) => { if (active) setError(error.message); }); return () => { active = false; }; }, []);

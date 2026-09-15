@@ -1,8 +1,10 @@
+import { adminWriteAccess } from "@/lib/adminAuth";
 import { readFile, mkdir, writeFile, rename } from "node:fs/promises";
 import path from "node:path";
-import { randomUUID, timingSafeEqual } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import { DEFAULT_LANDING, type LandingConfig } from "@/lib/landing";
-import { CAMPUS_LOCATIONS } from "@/data/campusLocations";
+import { publishedPlaces } from "@/lib/publishedPlaces";
+import { readMapImages } from "@/lib/mapImageStore";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 const directory = process.env.MAP_IMAGES_DATA_DIR || path.join(process.cwd(), ".map-data");
@@ -19,20 +21,16 @@ export async function GET() {
   catch { return Response.json({ error: "Could not load sidebar settings." }, { status: 500 }); }
 }
 export async function PUT(request: Request) {
-  const origin = request.headers.get("origin");
-  if (origin && new URL(origin).host !== request.headers.get("host")) return Response.json({ error: "Publish from this site." }, { status: 403 });
-  const token = process.env.ADMIN_MAP_TOKEN;
-  if (token) {
-    const expected = Buffer.from(`Bearer ${token}`), actual = Buffer.from(request.headers.get("authorization") || "");
-    if (actual.length !== expected.length || !timingSafeEqual(actual, expected)) return Response.json({ error: "Enter the correct admin publish key." }, { status: 401 });
-  } else if (process.env.NODE_ENV !== "development" || !["localhost", "admin.localhost", "127.0.0.1", "[::1]"].includes(new URL(request.url).hostname)) return Response.json({ error: "Configure ADMIN_MAP_TOKEN to publish." }, { status: 403 });
+  const denied = adminWriteAccess(request);
+  if (denied) return denied;
   let next: LandingConfig;
+  const availablePlaces = publishedPlaces((await readMapImages()).images);
   try {
     const body = await request.text();
     if (body.length > 16000) throw new Error("Sidebar content is too large.");
     const input = JSON.parse(body);
     const text = (value: unknown, max: number) => { if (typeof value !== "string" || value.length > max) throw new Error("Invalid or oversized text field."); return value.trim(); };
-    if (!Array.isArray(input.placeIds) || input.placeIds.length > CAMPUS_LOCATIONS.length || input.placeIds.some((id: unknown) => !CAMPUS_LOCATIONS.some((place) => place.id === id))) throw new Error("Invalid featured places.");
+    if (!Array.isArray(input.placeIds) || input.placeIds.length > availablePlaces.length || input.placeIds.some((id: unknown) => !availablePlaces.some((place) => place.id === id))) throw new Error("Invalid featured places.");
     const ad = input.ad;
     if (!ad || typeof ad.enabled !== "boolean") throw new Error("Invalid advertisement.");
     next = { brand: text(input.brand, 80), heading: text(input.heading, 120), description: text(input.description, 400), sectionTitle: text(input.sectionTitle, 80), placeIds: [...new Set<string>(input.placeIds)], ad: { enabled: ad.enabled, eyebrow: text(ad.eyebrow, 50), title: text(ad.title, 100), description: text(ad.description, 280), imageUrl: text(ad.imageUrl, 500), linkUrl: text(ad.linkUrl, 500), buttonLabel: text(ad.buttonLabel, 40) } };

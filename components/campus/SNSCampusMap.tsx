@@ -3,10 +3,10 @@
 import { useEffect, useRef, useCallback, useState } from "react";
 import { loadGoogleMapsApi } from "@/lib/googleMaps";
 import { CAMPUS_BOUNDARY, CAMPUS_CENTER } from "@/data/campusBoundary";
-import { CAMPUS_LOCATIONS } from "@/data/campusLocations";
 import { CampusLocation, WalkingRoute, WalkingState } from "@/types/campus";
 import CampusCharacterMarker from "./CampusCharacterMarker";
 import PublishedMapImages from "./PublishedMapImages";
+import { publishedPlaces } from "@/lib/publishedPlaces";
 import type { PointerStyle } from "./SettingsDialog";
 
 type Props = {
@@ -380,7 +380,7 @@ export default function SNSCampusMap({
     <div className="campus-map-canvas relative w-full h-full">
       <div ref={mapContainerRef} className="absolute inset-0" />
       {mapInstance && <PublishedMapImages map={mapInstance} onClick={(image) => {
-        const location = CAMPUS_LOCATIONS.find((item) => item.id === image.locationId);
+        const location = publishedPlaces([image]).find((item) => item.id === image.locationId);
         if (location) onLocationSelect(location);
       }} />}
       {isWalking && isWalkingMode && walkingPosition && mapInstance && pointerStyle === "character" && (

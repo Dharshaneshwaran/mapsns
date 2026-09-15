@@ -1,4 +1,4 @@
-import { timingSafeEqual } from "node:crypto";
+import { adminWriteAccess } from "@/lib/adminAuth";
 import { MapConflict, readMapImages, saveMapImages } from "@/lib/mapImageStore";
 import { MAX_MAP_DOCUMENT_BYTES, validateMapDocument } from "@/lib/mapImageValidation";
 
@@ -18,16 +18,8 @@ export async function GET(request: Request) {
 }
 
 export async function PUT(request: Request) {
-  const origin = request.headers.get("origin");
-  if (origin && new URL(origin).host !== request.headers.get("host")) return Response.json({ error: "Publish from the admin panel on this site." }, { status: 403 });
-  const token = process.env.ADMIN_MAP_TOKEN;
-  if (token) {
-    const supplied = Buffer.from(request.headers.get("authorization") || "");
-    const expected = Buffer.from(`Bearer ${token}`);
-    if (supplied.length !== expected.length || !timingSafeEqual(supplied, expected)) return Response.json({ error: "Enter the correct admin publish key." }, { status: 401 });
-  } else if (process.env.NODE_ENV === "production" || !["localhost", "admin.localhost", "127.0.0.1", "[::1]"].includes(new URL(request.url).hostname)) {
-    return Response.json({ error: "Set ADMIN_MAP_TOKEN on the server to enable publishing." }, { status: 403 });
-  }
+  const denied = adminWriteAccess(request);
+  if (denied) return denied;
   if (!request.headers.get("content-type")?.includes("application/json")) return Response.json({ error: "Expected JSON." }, { status: 415 });
   const reader = request.body?.getReader();
   if (!reader) return Response.json({ error: "Missing map data." }, { status: 400 });

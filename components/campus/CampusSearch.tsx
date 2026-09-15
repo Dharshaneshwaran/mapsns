@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { CampusLocation } from "@/types/campus";
-import { CAMPUS_LOCATIONS } from "@/data/campusLocations";
+import { useCampusPlaces } from "@/components/campus/useCampusPlaces";
 import { Search, X, GraduationCap, UtensilsCrossed, Trophy, Home, DoorOpen, BookOpen, Music, Building2, MapPin } from "lucide-react";
 
 type Props = {
@@ -10,6 +10,7 @@ type Props = {
 };
 
 export default function CampusSearch({ onSelectLocation }: Props) {
+  const CAMPUS_LOCATIONS = useCampusPlaces();
   const [query, setQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
