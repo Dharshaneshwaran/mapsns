@@ -8,9 +8,9 @@ Select an image and drag to move it. The four corner handles stretch width and h
 
 ## Storage and deployment
 
-The default storage is `.map-data/images.json`, outside version control. Uploaded images are embedded in the document, so backing up this file includes images, coordinates, dimensions, rotation and opacity. The initial four images reference existing public assets. Limits: 5 MB per upload, 20 MB per complete document, 100 images.
+Uploaded files are stored in `public/uploads/map-images/<sha256>.<png|jpeg|webp>`. Content-based filenames prevent collisions and reuse identical uploads. `.map-data/images.json` stores readable, formatted metadata: image ID, name, public URL, latitude, longitude, width, height, rotation, opacity and optional location ID. Back up both directories. Files are written when you click Save / Publish; drafts stay in the browser until then. Removed overlays retain their files for recovery. Limits: 5 MB per upload, 20 MB per publish request, 100 images.
 
-This implementation requires a Node server with a persistent writable disk. Set `MAP_IMAGES_DATA_DIR` to an absolute persistent directory when deploying. All public and admin traffic must use the same storage. Ephemeral/serverless storage (including a default Vercel deployment) is not suitable; use a persistent server or replace the store with shared database/object storage before deploying there.
+This implementation requires a Node server with a persistent writable disk. Preserve both `.map-data/` and `public/uploads/map-images/` across deployments. Optional `MAP_IMAGES_DATA_DIR` and `MAP_IMAGES_UPLOAD_DIR` settings override these directories for persistent volumes or isolated tests. All public and admin traffic must use the same storage. An upload-serving route makes newly saved files accessible without rebuilding. Ephemeral/serverless storage (including a default Vercel deployment) is not suitable.
 
 Publishing uses an exclusive lock, revision checks and an atomic file replacement. A stale editor cannot silently overwrite another publish. If the server crashes during publishing and leaves `publish.lock` in the data directory, stop the server, verify no publisher is active and remove that lock before restarting. The last complete `images.json` remains intact.
 

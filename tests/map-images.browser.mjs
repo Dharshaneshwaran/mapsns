@@ -10,7 +10,7 @@ const { chromium } = await import(process.env.PLAYWRIGHT_MODULE ? pathToFileURL(
 const directory = await mkdtemp(path.join(tmpdir(), "sns-map-browser-test-"));
 const base = "http://localhost:3218";
 const key = "browser-map-test-key";
-const server = spawn(process.execPath, ["node_modules/next/dist/bin/next", "start", "-p", "3218"], { cwd: process.cwd(), env: { ...process.env, ADMIN_MAP_TOKEN: key, MAP_IMAGES_DATA_DIR: directory }, stdio: "ignore", windowsHide: true });
+const server = spawn(process.execPath, ["node_modules/next/dist/bin/next", "start", "-p", "3218"], { cwd: process.cwd(), env: { ...process.env, ADMIN_MAP_TOKEN: key, MAP_IMAGES_DATA_DIR: directory, MAP_IMAGES_UPLOAD_DIR: path.join(directory, "uploads") }, stdio: "ignore", windowsHide: true });
 let browser;
 let page;
 try {

@@ -3,6 +3,11 @@ import type { MapImage, MapImageDocument } from "../types/mapImage";
 export const MAX_MAP_DOCUMENT_BYTES = 20 * 1024 * 1024;
 export const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const builtInSources = new Set(["/vatta_mandalam.png", "/admin_building.png", "/heritage_building.png", "/ihub.png"]);
+export const MAP_IMAGE_FILENAME = /^[a-f0-9]{64}\.(png|jpeg|webp)$/;
+
+export function isStoredMapImage(src: string): boolean {
+  return src.startsWith("/uploads/map-images/") && MAP_IMAGE_FILENAME.test(src.slice("/uploads/map-images/".length));
+}
 
 export function validateMapDocument(input: unknown): MapImageDocument {
   if (!input || typeof input !== "object") throw new Error("Invalid map document.");
@@ -16,7 +21,7 @@ export function validateMapDocument(input: unknown): MapImageDocument {
     ids.add(image.id);
     if (typeof image.name !== "string" || !image.name.trim() || image.name.length > 120) throw new Error("Each image needs a name (maximum 120 characters).");
     if (typeof image.src !== "string") throw new Error("Missing image data.");
-    if (!builtInSources.has(image.src)) {
+    if (!builtInSources.has(image.src) && !isStoredMapImage(image.src)) {
       const match = /^data:image\/(png|jpeg|webp);base64,([A-Za-z0-9+/]+={0,2})$/.exec(image.src);
       if (!match || match[2].length > Math.ceil(MAX_IMAGE_BYTES / 3) * 4) throw new Error("Use a PNG, JPEG or WebP image up to 5 MB.");
       const bytes = Buffer.from(match[2], "base64");

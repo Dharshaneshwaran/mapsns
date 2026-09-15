@@ -18,7 +18,7 @@ const png = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCA
 
 before(async () => {
   directory = await mkdtemp(path.join(tmpdir(), "sns-map-images-test-"));
-  server = spawn(process.execPath, ["node_modules/next/dist/bin/next", "start", "-p", String(port)], { cwd: process.cwd(), env: { ...process.env, ADMIN_MAP_TOKEN: key, MAP_IMAGES_DATA_DIR: directory }, stdio: ["ignore", "pipe", "pipe"], windowsHide: true });
+  server = spawn(process.execPath, ["node_modules/next/dist/bin/next", "start", "-p", String(port)], { cwd: process.cwd(), env: { ...process.env, ADMIN_MAP_TOKEN: key, MAP_IMAGES_DATA_DIR: directory, MAP_IMAGES_UPLOAD_DIR: path.join(directory, "uploads") }, stdio: ["ignore", "pipe", "pipe"], windowsHide: true });
   server.stdout.on("data", (chunk) => { output += chunk; });
   server.stderr.on("data", (chunk) => { output += chunk; });
   for (let attempt = 0; attempt < 100; attempt++) {
@@ -66,7 +66,15 @@ test("publish persists uploaded pixels, movement, independent stretch and rotati
   assert.notEqual(saved.revision, original.revision);
   const publicDocument = await (await fetch(`${base}/api/map-images`)).json();
   assert.deepEqual(publicDocument, saved);
-  assert.deepEqual(publicDocument.images.at(-1), draft.images.at(-1));
+  const storedImage = publicDocument.images.at(-1);
+  assert.match(storedImage.src, /^\/uploads\/map-images\/[a-f0-9]{64}\.png$/);
+  assert.deepEqual({ ...storedImage, src: png }, draft.images.at(-1));
+  const uploadedBytes = Buffer.from(png.split(",")[1], "base64");
+  assert.deepEqual(await readFile(path.join(directory, "uploads", path.basename(storedImage.src))), uploadedBytes);
+  const imageResponse = await fetch(`${base}${storedImage.src}`);
+  assert.equal(imageResponse.status, 200);
+  assert.equal(imageResponse.headers.get("content-type"), "image/png");
+  assert.deepEqual(Buffer.from(await imageResponse.arrayBuffer()), uploadedBytes);
   assert.deepEqual(JSON.parse(await readFile(path.join(directory, "images.json"), "utf8")), saved);
 });
 
