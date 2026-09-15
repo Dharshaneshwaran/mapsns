@@ -1,0 +1,159 @@
+{
+  "revision": "ffb4ed11-c845-4349-a63b-bfa02d486b39",
+  "images": [
+    {
+      "id": "9caa12d8-dfcb-4c32-b265-9f33e5c069d6",
+      "name": "861bb4fd-74b0-46b3-bfd1-6e36bdc46dfd-removebg-preview",
+      "src": "/uploads/map-images/bed4e0cc298113eb765b754b372be9927dca1e5d751ceb6f2141fce3abf7fae5.png",
+      "lat": 11.100110115834134,
+      "lng": 77.02675103814924,
+      "width": 0.001077977560663051,
+      "height": 0.0005104049405046926,
+      "rotation": 1.8655503568205063,
+      "opacity": 1
+    },
+    {
+      "id": "fcbf85ec-e8d8-4135-ae84-87c02582f69e",
+      "name": "e9a7e3ec-aa2f-41c9-9526-0d0d9e7138e0-removebg-preview-removebg-preview (1)",
+      "src": "/uploads/map-images/b7e1881292e995d3442f08498f3427877cd31199f16a8257c02bb1cdbeb5fe82.png",
+      "lat": 11.100751487023379,
+      "lng": 77.0265450379525,
+      "width": 0.00041945795189224236,
+      "height": 0.0003602411377671846,
+      "rotation": 0,
+      "opacity": 1
+    },
+    {
+      "id": "547b960f-4ad2-4ed2-b9b0-c3b305e248b7",
+      "name": "WhatsApp_Image_2026-09-12_at_7.44.13_PM-removebg-preview",
+      "src": "/uploads/map-images/a24fd17d0f8cad9f20468e03aa882b5b08d9018cad4a741f72e0111c835f5d59.png",
+      "lat": 11.103599404401642,
+      "lng": 77.02725500961176,
+      "width": 0.0008061158342981412,
+      "height": 0.0003768086471920032,
+      "rotation": 75.6688365035642,
+      "opacity": 1
+    },
+    {
+      "id": "79999ce7-d83c-4eeb-b811-c61d0d7fb451",
+      "name": "ChatGPT_Image_Sep_12__2026__09_23_36_PM-removebg-preview",
+      "src": "/uploads/map-images/8f5b50c8ed91c1db2ee532d54a541a6362b505d2eafabcf611e25d3a064ef5ca.png",
+      "lat": 11.104018944837959,
+      "lng": 77.02778286819037,
+      "width": 0.00043866683911174834,
+      "height": 0.00030207386898412574,
+      "rotation": 0,
+      "opacity": 1
+    },
+    {
+      "id": "8bcc1bfe-69c9-4f9e-8b65-a8cbe7554b9e",
+      "name": "WhatsApp_Image_2026-09-12_at_7.43.54_PM-removebg-preview",
+      "src": "/uploads/map-images/34affe2d07967d48b1e0f4c45839f13788ab376dc5c850a08055389e27aab32f.png",
+      "lat": 11.103998415482833,
+      "lng": 77.02642567046976,
+      "width": 0.0003833636918166916,
+      "height": 0.00039742933181674995,
+      "rotation": 54.513522118874334,
+      "opacity": 1
+    },
+    {
+      "id": "bc069885-e90b-4855-b601-eeba4b34e3a2",
+      "name": "ChatGPT Image Sep 12, 2026, 08_50_45 PM",
+      "src": "/uploads/map-images/6a541a4b4c0b1259d00d1de2ea3f9fe575616cb566147e49f9758fb38b0bad46.png",
+      "lat": 11.103441292969189,
+      "lng": 77.026926634931,
+      "width": 0.000659277580287797,
+      "height": 0.0007257032398859238,
+      "rotation": 88.09421209728657,
+      "opacity": 1
+    },
+    {
+      "id": "e35386a1-ac4a-4faa-b497-1fc1b27bfd83",
+      "name": "WhatsApp_Image_2026-09-15_at_2.49.27_PM-removebg-preview",
+      "src": "/uploads/map-images/1a587b4f135c879c8010c5fbd6de978d97447acd9768ee725e640d30e7f6713b.png",
+      "lat": 11.101219626213846,
+      "lng": 77.02653910308507,
+      "width": 0.00036390791411562397,
+      "height": 0.00027259360590714353,
+      "rotation": 0,
+      "opacity": 1
+    },
+    {
+      "id": "2bf078ef-6fe3-4578-9743-a21447ff28da",
+      "name": "WhatsApp_Image_2026-09-15_at_2.57.57_PM-removebg-preview",
+      "src": "/uploads/map-images/e416ab94ff125a9b6d89516a4b75568a93b75194b8f7a161a5a126d6dceabc82.png",
+      "lat": 11.101355438524013,
+      "lng": 77.02610243953112,
+      "width": 0.0005303145844370845,
+      "height": 0.00031512470613970326,
+      "rotation": 268.7522282386619,
+      "opacity": 1
+    },
+    {
+      "id": "07d078c2-1acc-487d-be43-3e6243b59af4",
+      "name": "WhatsApp_Image_2026-09-15_at_2.49.27_PM__1_-removebg-preview",
+      "src": "/uploads/map-images/2c5a9b87f78f72f0a9abb02ff6ff363263ba2df1a37a630d77b7e34e07910d6b.png",
+      "lat": 11.10000415616054,
+      "lng": 77.02613891771287,
+      "width": 0.0002578966206605382,
+      "height": 0.0003231278591344143,
+      "rotation": 0,
+      "opacity": 1
+    },
+    {
+      "id": "d9908599-5e06-4806-b73c-4a3910c22b64",
+      "name": "WhatsApp_Image_2026-09-15_at_3.02.47_PM-removebg-preview",
+      "src": "/uploads/map-images/3227c334e0d9890d818e29491ca2e556579ee0817ce377ee9332832e69818bb7.png",
+      "lat": 11.100089171110856,
+      "lng": 77.0273713924278,
+      "width": 0.00023230989104238938,
+      "height": 0.0001736280945795145,
+      "rotation": 0,
+      "opacity": 1
+    },
+    {
+      "id": "87220244-5908-4268-a922-69256b3d196a",
+      "name": "ChatGPT_Image_Sep_15__2026__03_15_18_PM-removebg-preview",
+      "src": "/uploads/map-images/39c92e828ef16cc2437a5e322555754de95c5a9728658a0472b581f9baffb029.png",
+      "lat": 11.100921772483286,
+      "lng": 77.02626854855808,
+      "width": 0.00022550393568701552,
+      "height": 0.00011949211953677729,
+      "rotation": 0,
+      "opacity": 1
+    },
+    {
+      "id": "1133b886-1dee-4f39-9e62-9e90609e9a4b",
+      "name": "ChatGPT Image Sep 15, 2026, 03_07_17 PM",
+      "src": "/uploads/map-images/efedc3b82a2fcd33074abae186ce9d73373ee2f77f0f9da27de4109b05b02b13.png",
+      "lat": 11.100711909521081,
+      "lng": 77.02709493159597,
+      "width": 0.0007318447288228337,
+      "height": 0.00024386315930353437,
+      "rotation": 87.31351210439573,
+      "opacity": 1
+    },
+    {
+      "id": "e622bbcf-7dc1-4857-a6a9-2fb8f9dbe9d8",
+      "name": "ChatGPT_Image_Sep_15__2026__03_24_11_PM-removebg-preview",
+      "src": "/uploads/map-images/971b578001af00465e59018195e5e9826fb1295bd67d470fc6f08bf8231e0fbe.png",
+      "lat": 11.10048526834058,
+      "lng": 77.02624492941396,
+      "width": 0.0003308541740998514,
+      "height": 0.0002557477050030231,
+      "rotation": 0,
+      "opacity": 1
+    },
+    {
+      "id": "cd98ed41-27f1-4f4c-958c-31c075547686",
+      "name": "WhatsApp_Image_2026-09-12_at_7.43.39_PM-removebg-preview",
+      "src": "/uploads/map-images/5aa50ed15cf886a98912a5ab8e48f6a650be1fa2afcc115db933932aac5ab1ac.png",
+      "lat": 11.103559596820068,
+      "lng": 77.02641305945481,
+      "width": 0.00034700358442212986,
+      "height": 0.0004536765439665373,
+      "rotation": 57.48905287602082,
+      "opacity": 1
+    }
+  ]
+}
