@@ -263,18 +263,26 @@ function CampusMapApp() {
       (pos) => {
         const nextPosition = { lat: pos.coords.latitude, lng: pos.coords.longitude };
 
-        if (prevPositionRef.current) {
-          setWalkingBearing(getBearing(prevPositionRef.current, nextPosition));
-        }
+        const anchor = movementAnchorRef.current;
+        const displacement = anchor ? haversineDistance(anchor.lat, anchor.lng, nextPosition.lat, nextPosition.lng) : 0;
+        const speed = pos.coords.speed;
+        const hasSpeed = speed !== null && Number.isFinite(speed) && speed >= 0;
+        const reliable = Number.isFinite(pos.coords.accuracy) && pos.coords.accuracy <= 25;
+        const moving = reliable && (hasSpeed ? speed >= 0.5 : displacement >= Math.max(WALKING_MOVEMENT_THRESHOLD_METERS, Math.min(pos.coords.accuracy, 8)));
 
-        if (!movementAnchorRef.current) {
-          movementAnchorRef.current = nextPosition;
-        } else if (haversineDistance(movementAnchorRef.current.lat, movementAnchorRef.current.lng, nextPosition.lat, nextPosition.lng) >= WALKING_MOVEMENT_THRESHOLD_METERS) {
-          movementAnchorRef.current = nextPosition;
+        if (moving) {
+          const heading = pos.coords.heading;
+          if (heading !== null && Number.isFinite(heading)) setWalkingBearing(heading);
+          else if (anchor && displacement >= WALKING_MOVEMENT_THRESHOLD_METERS) setWalkingBearing(getBearing(anchor, nextPosition));
+          if (!anchor || displacement >= WALKING_MOVEMENT_THRESHOLD_METERS) movementAnchorRef.current = nextPosition;
           setWalkingState("walking");
           if (idleTimer) clearTimeout(idleTimer);
-          idleTimer = setTimeout(() => setWalkingState("idle"), 3500);
-        }
+          idleTimer = setTimeout(() => { setWalkingState("idle"); movementAnchorRef.current = null; }, 2500);
+        } else if (!reliable || (hasSpeed && speed < 0.5)) {
+          if (idleTimer) clearTimeout(idleTimer);
+          setWalkingState("idle");
+          movementAnchorRef.current = nextPosition;
+        } else if (!anchor) movementAnchorRef.current = nextPosition;
 
         prevPositionRef.current = nextPosition;
         setWalkingPosition(nextPosition);
