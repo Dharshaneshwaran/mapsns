@@ -3,6 +3,7 @@ import { Building2, CircleCheck, Map, MapPin, Users } from "lucide-react";
 import { CAMPUS_LOCATIONS } from "@/data/campusLocations";
 import MapImageEditor from "@/components/admin/MapImageEditor";
 import LandingEditor from "@/components/admin/LandingEditor";
+import AdBannerEditor from "@/components/admin/AdBannerEditor";
 
 const managedPlaces = [
   { label: "Registration Office", locationId: "admin-building" },
@@ -33,6 +34,7 @@ export default function AdminPage() {
 
       <div className="mx-auto max-w-7xl px-5 py-7 lg:px-8">
         <MapImageEditor />
+        <AdBannerEditor />
         <LandingEditor />
         <section className="mb-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[

@@ -330,7 +330,7 @@ function CampusMapApp() {
         </div>
       )}
 
-      {(routeLoading || routeError) && <div role="status" className="absolute left-3 right-3 top-20 z-50 rounded-xl bg-white p-4 text-sm shadow-lg sm:left-auto sm:max-w-sm">{routeLoading ? "Finding a mapped route…" : routeError}{routeError && <button className="ml-3 font-semibold text-teal-700" onClick={() => handlePrepareRoute(travelMode)}>Retry</button>}</div>}
+      {(routeLoading || routeError) && <div role="status" className="absolute left-3 right-3 top-20 z-[70] rounded-xl bg-white p-4 text-sm shadow-lg sm:left-auto sm:max-w-sm">{routeLoading ? "Finding a mapped route…" : routeError}{routeError && <button className="ml-3 font-semibold text-teal-700" onClick={() => handlePrepareRoute(travelMode)}>Retry</button>}</div>}
       {/* Google Maps-style active navigation UI */}
       {isWalking && rerouteMessage && <p role="status" className="absolute left-4 right-4 top-28 z-50 rounded-xl bg-white px-4 py-3 text-sm text-teal-800 shadow-lg sm:right-auto sm:max-w-md">{rerouteMessage}</p>}
       {isWalking && selectedLocation && walkingPosition && (
@@ -361,7 +361,7 @@ function CampusMapApp() {
 
       {/* Non-blocking Google-style location notice */}
       {locationStatus === "denied" && (
-        <div className="pointer-events-none absolute bottom-5 left-3 right-3 z-50 flex justify-center safe-bottom sm:bottom-6">
+        <div className="pointer-events-none absolute bottom-5 left-3 right-3 z-[70] flex justify-center safe-bottom sm:bottom-6">
           <div className="pointer-events-auto flex w-full max-w-md items-center gap-3 rounded-2xl bg-[#202124] px-4 py-3 text-white shadow-xl">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#3c4043]">
               <AlertTriangle className="h-5 w-5 text-[#fdd663]" />
@@ -399,7 +399,7 @@ function CampusMapApp() {
               onClick={() => setShowSettings(true)}
               aria-label="Open settings"
               title="Settings"
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-zinc-200 bg-white/95 text-zinc-600 shadow-lg backdrop-blur-xl transition-colors hover:bg-white hover:text-blue-600 sm:h-12 sm:w-12"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-zinc-200 bg-white/95 text-zinc-600 shadow-lg backdrop-blur-xl transition-colors hover:bg-white hover:text-teal-700 sm:h-12 sm:w-12"
             >
               <Settings className="h-5 w-5" />
             </button>
@@ -423,11 +423,7 @@ function CampusMapApp() {
       )}
 
       {!selectedLocation && !isWalking && !isRoutePreview && <ExplorePanel onSelect={handleLocationSelect} />}
-      {!isWalking && !isRoutePreview && <div className="campus-map-tools">
-        <button title="Change map layers" onClick={() => setShowSettings(true)}>Layers</button>
-        <button title="Show the whole campus" disabled={!mapInstance} onClick={() => { mapInstance?.panTo(CAMPUS_CENTER); mapInstance?.setZoom(17); }}>Campus</button>
-        <button title="Find my location" disabled={!mapInstance} onClick={() => { if (!navigator.geolocation) { setLocationStatus("denied"); return; } navigator.geolocation.getCurrentPosition((position) => { const point = { lat: position.coords.latitude, lng: position.coords.longitude }; setUserPosition(point); mapInstance?.panTo(point); mapInstance?.setZoom(18); }, () => setLocationStatus("denied"), { enableHighAccuracy: true, timeout: 10000 }); }}>My location</button>
-      </div>}
+
 
       {showSettings && (
         <SettingsDialog
@@ -455,7 +451,7 @@ function CampusMapApp() {
             <div className="px-6 pb-6">
               <button
                 onClick={handleStopWalking}
-                className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 rounded-2xl transition-colors"
+                className="w-full bg-teal-700 hover:bg-teal-800 text-white font-semibold py-3 rounded-2xl transition-colors"
               >
                 Done
               </button>

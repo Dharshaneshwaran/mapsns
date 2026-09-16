@@ -1,20 +1,33 @@
 {
-  "landing": {
-    "enabled": true,
-    "eyebrow": "Campus spotlight",
-    "title": "Discover SNS Innovation Hub",
-    "description": "Explore student innovation, technology projects, events, and opportunities across the SNS campus.",
-    "imageUrl": "/ihub.png",
-    "linkUrl": "https://snsce.ac.in",
-    "buttonLabel": "Learn more"
-  },
-  "placeCard": {
-    "enabled": true,
-    "eyebrow": "Advertisement",
-    "title": "Discover SNS Innovation Hub",
-    "description": "Explore student innovation, technology projects, events, and opportunities across the SNS campus.",
-    "imageUrl": "/ihub.png",
-    "linkUrl": "https://snsce.ac.in",
-    "buttonLabel": "Learn more"
-  }
+  "banners": [
+    {
+      "id": "default-placecard",
+      "enabled": true,
+      "placements": [
+        "placeCard",
+        "landing"
+      ],
+      "eyebrow": "Advertisement",
+      "title": "Discover SNS Innovation Hub",
+      "description": "Explore student innovation, technology projects, events, and opportunities across the SNS campus.",
+      "imageUrl": "/uploads/ads/628cdafaa107ad218f0aeb58e959651f3a949dcead5cf9d9fcb7c1d1ece41307.jpeg",
+      "linkUrl": "https://snsce.ac.in",
+      "buttonLabel": "Learn more",
+      "order": 0
+    },
+    {
+      "id": "default-landing",
+      "enabled": true,
+      "placements": [
+        "landing"
+      ],
+      "eyebrow": "Campus spotlight",
+      "title": "Discover SNS Innovation Hub",
+      "description": "Explore student innovation, technology projects, events, and opportunities across the SNS campus.",
+      "imageUrl": "/ihub.png",
+      "linkUrl": "https://snsce.ac.in",
+      "buttonLabel": "Learn more",
+      "order": 0
+    }
+  ]
 }
