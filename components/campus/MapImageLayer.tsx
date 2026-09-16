@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { MapPin } from "lucide-react";
 import type { MapImage } from "@/types/mapImage";
-import "@/components/admin/map-editor.css";
 
 type Props = {
   map: google.maps.Map;
@@ -17,96 +18,43 @@ type Props = {
 export default function MapImageLayer(props: Props) {
   const latest = useRef(props);
   const redraw = useRef<(() => void) | null>(null);
+  const [host, setHost] = useState<HTMLDivElement | null>(null);
   useEffect(() => { latest.current = props; redraw.current?.(); });
 
   useEffect(() => {
-    const { map } = props;
     const overlay = new google.maps.OverlayView();
     const element = document.createElement("div");
-    element.className = "map-image-overlay";
-    const picture = document.createElement("img");
-    picture.draggable = false;
-    element.appendChild(picture);
-    const handles: HTMLButtonElement[] = [];
-    for (const [mode, left, top] of [["nw", "0%", "0%"], ["ne", "100%", "0%"], ["sw", "0%", "100%"], ["se", "100%", "100%"], ["rotate", "50%", "-28px"]]) {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = `map-image-handle ${mode === "rotate" ? "map-image-rotate" : ""}`;
-      button.dataset.mode = mode;
-      button.style.left = left;
-      button.style.top = top;
-      button.setAttribute("aria-label", mode === "rotate" ? "Rotate image" : `Stretch image ${mode}`);
-      if (mode === "rotate") button.textContent = "↻";
-      element.appendChild(button);
-      handles.push(button);
-    }
-
-    let gesture: { image: MapImage; x: number; y: number; width: number; height: number; center: google.maps.Point; screenX: number; screenY: number; angle: number; mode: string; pointerId: number } | null = null;
-    let width = 0;
-    let height = 0;
-    let center: google.maps.Point | null = null;
+    element.className = "map-marker-overlay";
+    element.style.cssText = "position:absolute;transform:translate(-50%,-100%);touch-action:none";
+    let gesture: { x: number; y: number; center: google.maps.Point; image: MapImage; pointerId: number } | null = null;
+    let dragged = false;
     const draw = () => {
-      const { image, editable, selected } = latest.current;
-      const projection = overlay.getProjection();
-      if (!projection) return;
-      center = projection.fromLatLngToDivPixel(new google.maps.LatLng(image.lat, image.lng));
-      const nw = projection.fromLatLngToDivPixel(new google.maps.LatLng(image.lat + image.height / 2, image.lng - image.width / 2));
-      const se = projection.fromLatLngToDivPixel(new google.maps.LatLng(image.lat - image.height / 2, image.lng + image.width / 2));
-      if (!center || !nw || !se) return;
-      const ne = projection.fromLatLngToDivPixel(new google.maps.LatLng(image.lat + image.height / 2, image.lng + image.width / 2));
-      if (!ne) return;
-      width = Math.hypot(ne.x - nw.x, ne.y - nw.y);
-      height = Math.hypot(se.x - ne.x, se.y - ne.y);
-      const mapRotation = Math.atan2(ne.y - nw.y, ne.x - nw.x) * 180 / Math.PI;
+      const { image, selected } = latest.current;
+      const center = overlay.getProjection()?.fromLatLngToDivPixel(new google.maps.LatLng(image.lat, image.lng));
+      if (!center) return;
       element.style.left = `${center.x}px`;
       element.style.top = `${center.y}px`;
-      element.style.width = `${width}px`;
-      element.style.height = `${height}px`;
-      element.style.transform = `translate(-50%, -50%) rotate(${image.rotation + mapRotation}deg)`;
-      element.style.outline = editable && selected ? "2px solid #008b92" : "none";
-      element.style.zIndex = selected ? "100" : "1";
-      element.style.cursor = editable ? "move" : image.locationId ? "pointer" : "default";
-      element.style.pointerEvents = editable || image.locationId ? "auto" : "none";
-      picture.style.opacity = String(image.opacity);
-      if (picture.getAttribute("src") !== image.src) picture.src = image.src;
-      picture.alt = image.name;
-      element.title = image.name;
-      handles.forEach((handle) => { handle.hidden = !editable || !selected; });
+      element.style.zIndex = selected ? "100" : "10";
     };
     redraw.current = draw;
     element.addEventListener("pointerdown", (event) => {
-      if (!latest.current.editable || event.button !== 0 || !center) return;
-      event.preventDefault();
-      event.stopPropagation();
+      dragged = false;
+      if (!latest.current.editable || event.button !== 0) return;
+      const center = overlay.getProjection().fromLatLngToDivPixel(new google.maps.LatLng(latest.current.image.lat, latest.current.image.lng));
+      if (!center) return;
       latest.current.onSelect?.(latest.current.image.id);
-      const rect = element.getBoundingClientRect();
-      const screenX = rect.left + rect.width / 2;
-      const screenY = rect.top + rect.height / 2;
-      gesture = { image: { ...latest.current.image }, x: event.clientX, y: event.clientY, width, height, center, screenX, screenY, angle: Math.atan2(event.clientY - screenY, event.clientX - screenX), mode: (event.target as HTMLElement).dataset.mode || "move", pointerId: event.pointerId };
+      gesture = { x: event.clientX, y: event.clientY, center, image: latest.current.image, pointerId: event.pointerId };
       element.setPointerCapture(event.pointerId);
     });
     element.addEventListener("pointermove", (event) => {
-      if (!gesture || gesture.pointerId !== event.pointerId) return;
-      const start = gesture;
-      const next = { ...start.image };
-      const dx = event.clientX - start.x;
-      const dy = event.clientY - start.y;
-      if (start.mode === "move") {
-        const coordinate = overlay.getProjection().fromDivPixelToLatLng(new google.maps.Point(start.center.x + dx, start.center.y + dy));
-        if (!coordinate) return;
-        next.lat = Math.max(-80, Math.min(80, coordinate.lat()));
-        next.lng = coordinate.lng();
-      } else if (start.mode === "rotate") {
-        const angle = Math.atan2(event.clientY - start.screenY, event.clientX - start.screenX);
-        next.rotation = ((start.image.rotation + (angle - start.angle) * 180 / Math.PI) % 360 + 360) % 360;
-      } else {
-        // Convert the pointer delta into the image's rotated coordinate system.
-        const radians = start.image.rotation * Math.PI / 180;
-        const localX = dx * Math.cos(radians) + dy * Math.sin(radians);
-        const localY = -dx * Math.sin(radians) + dy * Math.cos(radians);
-        next.width = Math.max(0.00001, Math.min(0.02, start.image.width * (start.width + 2 * localX * (start.mode.includes("e") ? 1 : -1)) / start.width));
-        next.height = Math.max(0.00001, Math.min(0.02, start.image.height * (start.height + 2 * localY * (start.mode.includes("s") ? 1 : -1)) / start.height));
-      }
+      if (!gesture || gesture.pointerId !== event.pointerId || !latest.current.editable) return;
+      const dx = event.clientX - gesture.x;
+      const dy = event.clientY - gesture.y;
+      if (!dragged && Math.hypot(dx, dy) < 4) return;
+      dragged = true;
+      const coordinate = overlay.getProjection().fromDivPixelToLatLng(new google.maps.Point(gesture.center.x + dx, gesture.center.y + dy));
+      if (!coordinate) return;
+      const next = { ...gesture.image, lat: Math.max(-80, Math.min(80, coordinate.lat())), lng: coordinate.lng() };
       latest.current = { ...latest.current, image: next };
       draw();
       latest.current.onChange?.(next);
@@ -115,20 +63,27 @@ export default function MapImageLayer(props: Props) {
     element.addEventListener("pointerup", finish);
     element.addEventListener("pointercancel", finish);
     element.addEventListener("lostpointercapture", finish);
-    element.addEventListener("click", () => {
+    element.addEventListener("click", (event) => {
+      event.stopPropagation();
+      if (dragged) { dragged = false; return; }
       if (latest.current.editable) latest.current.onSelect?.(latest.current.image.id);
       else latest.current.onClick?.(latest.current.image);
     });
     overlay.onAdd = () => {
       overlay.getPanes()?.overlayMouseTarget.appendChild(element);
       google.maps.OverlayView.preventMapHitsAndGesturesFrom(element);
+      setHost(element);
     };
     overlay.draw = draw;
-    overlay.onRemove = () => { element.remove(); };
-    overlay.setMap(map);
+    overlay.onRemove = () => element.remove();
+    overlay.setMap(props.map);
     return () => { gesture = null; redraw.current = null; overlay.setMap(null); };
-    // Other props update the overlay without interrupting an active pointer gesture.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.map]);
-  return null;
+
+  return host ? createPortal(
+    <button type="button" aria-label={props.image.name} aria-pressed={props.editable ? !!props.selected : undefined} title={props.image.name}
+      className={`flex items-end justify-center rounded-lg bg-transparent transition-transform hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-600 ${props.selected ? "h-12 w-11" : "h-9 w-9"}`}
+      style={{ cursor: props.editable ? "grab" : "pointer" }}>
+      <MapPin size={props.selected ? 44 : 26} strokeWidth={1.25} aria-hidden="true" className="pointer-events-none fill-[#ea4335] stroke-white drop-shadow-sm [&_circle]:fill-white [&_circle]:stroke-none" />
+    </button>, host) : null;
 }

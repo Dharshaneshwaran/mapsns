@@ -13,7 +13,25 @@ export default function PlaceActions({ location }: { location: CampusLocation })
   const saved = useSavedPlaces(); const active = saved.includes(location.id);
   const [message, setMessage] = useState("");
   const share = async () => {
-    const url = new URL(window.location.href); url.search = ""; url.searchParams.set("place", location.id);
+    setMessage("");
+    let url: URL;
+    try {
+      url = new URL(process.env.NEXT_PUBLIC_SITE_URL || window.location.origin);
+      if (!["https:", "http:"].includes(url.protocol)) throw new Error("Invalid website URL");
+      if (["localhost", "127.0.0.1", "[::1]"].includes(url.hostname) || url.hostname.endsWith(".localhost")) {
+        setMessage("Open the live website to share this place. Localhost links only work on your device.");
+        return;
+      }
+      url.pathname = "/";
+      url.search = "";
+      url.hash = "";
+      url.username = "";
+      url.password = "";
+      url.searchParams.set("place", location.id);
+    } catch {
+      setMessage("The live website URL is not configured correctly.");
+      return;
+    }
     try {
       if (navigator.share) await navigator.share({ title: location.name, url: url.href });
       else if (navigator.clipboard) { await navigator.clipboard.writeText(url.href); setMessage("Link copied"); }

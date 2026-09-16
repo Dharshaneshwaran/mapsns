@@ -50,8 +50,6 @@ export default function SNSCampusMap({
   const blueDotRef = useRef<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const blueDotPulseRef = useRef<any>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const selectedMarkerRef = useRef<any>(null);
   const [mapError, setMapError] = useState<string | null>(null);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -85,17 +83,7 @@ export default function SNSCampusMap({
         disableDefaultUI: true,
         minZoom: 15,
         maxZoom: 21,
-        styles: [
-          { featureType: "poi", elementType: "all", stylers: [{ visibility: "off" }] },
-          { featureType: "poi.business", elementType: "all", stylers: [{ visibility: "off" }] },
-          { featureType: "poi.medical", elementType: "all", stylers: [{ visibility: "off" }] },
-          { featureType: "poi.place_of_worship", elementType: "all", stylers: [{ visibility: "off" }] },
-          { featureType: "poi.attraction", elementType: "all", stylers: [{ visibility: "off" }] },
-          { featureType: "poi.government", elementType: "all", stylers: [{ visibility: "off" }] },
-          { featureType: "poi.park", elementType: "all", stylers: [{ visibility: "off" }] },
-          { featureType: "poi.school", elementType: "all", stylers: [{ visibility: "off" }] },
-          { featureType: "poi.sports_complex", elementType: "all", stylers: [{ visibility: "off" }] },
-        ],
+        // Vector maps use cloud styling; inline styles are unsupported.
       });
 
       map.fitBounds(bounds, 0);
@@ -149,24 +137,7 @@ export default function SNSCampusMap({
   useEffect(() => {
     if (!mapRef.current || !isMapLoaded || !window.google) return;
 
-    if (!selectedLocation || isWalking) {
-      selectedMarkerRef.current?.setMap(null);
-      selectedMarkerRef.current = null;
-      return;
-    }
-
-    if (!selectedMarkerRef.current) {
-      selectedMarkerRef.current = new google.maps.Marker({
-        map: mapRef.current,
-        position: selectedLocation.position,
-        title: selectedLocation.name,
-        zIndex: 10000,
-      });
-    } else {
-      selectedMarkerRef.current.setPosition(selectedLocation.position);
-      selectedMarkerRef.current.setTitle(selectedLocation.name);
-      selectedMarkerRef.current.setMap(mapRef.current);
-    }
+    if (!selectedLocation || isWalking) return;
 
     mapRef.current.panTo(selectedLocation.position);
     mapRef.current.setZoom(18);
@@ -179,6 +150,16 @@ export default function SNSCampusMap({
 
     if (walkingPosition && isWalking) {
       const pos = new google.maps.LatLng(walkingPosition.lat, walkingPosition.lng);
+
+      // The character is the position indicator; keep its background transparent.
+      if (pointerStyle === "character") {
+        blueDotRef.current?.setMap(null);
+        blueDotRef.current = null;
+        blueDotPulseRef.current?.setMap(null);
+        blueDotPulseRef.current = null;
+        mapRef.current.panTo(pos);
+        return;
+      }
 
       // Blue pulse circle (accuracy ring)
       if (!blueDotPulseRef.current) {
@@ -234,7 +215,7 @@ export default function SNSCampusMap({
         blueDotPulseRef.current = null;
       }
     }
-  }, [walkingPosition, isWalking, isMapLoaded, pointerColor]);
+  }, [walkingPosition, isWalking, isMapLoaded, pointerColor, pointerStyle]);
 
   // Update route polyline - Google Maps style blue line
   useEffect(() => {
@@ -349,7 +330,6 @@ export default function SNSCampusMap({
     const polyline = routePolylineRef.current;
     const blueDot = blueDotRef.current;
     const blueDotPulse = blueDotPulseRef.current;
-    const selectedMarker = selectedMarkerRef.current;
     return () => {
       markers.forEach((marker: { map: null }) => { marker.map = null; });
       boundary?.setMap(null);
@@ -360,7 +340,6 @@ export default function SNSCampusMap({
       }
       blueDot?.setMap(null);
       blueDotPulse?.setMap(null);
-      selectedMarker?.setMap(null);
     };
   }, []);
 
@@ -379,8 +358,8 @@ export default function SNSCampusMap({
   return (
     <div className="campus-map-canvas relative w-full h-full">
       <div ref={mapContainerRef} className="absolute inset-0" />
-      {mapInstance && <PublishedMapImages map={mapInstance} onClick={(image) => {
-        const location = publishedPlaces([image]).find((item) => item.id === image.locationId);
+      {mapInstance && <PublishedMapImages map={mapInstance} selectedLocation={isWalking ? null : selectedLocation} onClick={(image) => {
+        const location = publishedPlaces([image]).find((item) => item.id === (image.locationId || image.id));
         if (location) onLocationSelect(location);
       }} />}
       {isWalking && isWalkingMode && walkingPosition && mapInstance && pointerStyle === "character" && (

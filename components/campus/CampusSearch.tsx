@@ -39,7 +39,7 @@ export default function CampusSearch({ onSelectLocation }: Props) {
   }, []);
 
   return (
-    <div ref={containerRef} className="relative w-full max-w-md">
+    <div ref={containerRef} className="relative min-w-0 w-full max-w-md">
       <div
         className="search-bar flex items-center gap-2 sm:gap-3 rounded-2xl px-3 sm:px-4 py-2.5 sm:py-3 shadow-lg shadow-black/5 cursor-text"
         onClick={() => inputRef.current?.focus()}
@@ -55,7 +55,8 @@ export default function CampusSearch({ onSelectLocation }: Props) {
           }}
           onFocus={() => setIsOpen(true)}
           placeholder="Search SNS campus..."
-          className="flex-1 bg-transparent text-zinc-900 placeholder:text-zinc-400 outline-none text-sm font-medium search-input"
+          aria-label="Search campus"
+          className="min-w-0 flex-1 bg-transparent text-zinc-900 placeholder:text-zinc-400 outline-none text-sm font-medium search-input"
         />
         {query && (
           <button

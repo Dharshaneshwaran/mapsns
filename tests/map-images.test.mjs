@@ -100,7 +100,7 @@ test("deleting an overlay is persisted without restoring default images", async 
 test("admin and public pages render", async () => {
   assert.equal((await fetch(`${base}/admin`)).status, 401);
   const auth = `Basic ${Buffer.from(`admin:${key}`).toString("base64")}`;
-  assert.match(await (await fetch(`${base}/admin`, { headers: { Authorization: auth } })).text(), /Campus image editor/);
+  assert.match(await (await fetch(`${base}/admin`, { headers: { Authorization: auth } })).text(), /Campus marker editor/);
   assert.equal((await fetch(base)).status, 200);
 });
 

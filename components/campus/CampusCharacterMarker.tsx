@@ -5,11 +5,12 @@ import { useEffect, useRef } from "react";
 const WALK_FRAMES = ["/step_1.png", "/step_3.png", "/step_4.png", "/step_5.png", "/step_6.png"];
 const IDLE_FRAME = "/idel.png";
 const FRAME_DURATION = 150;
-const CHARACTER_SIZE = 112;
-const SPRITE_WIDTH = 125;
-const SPRITE_HEIGHT = 222;
-const SPRITE_LEFT = -6;
-const SPRITE_TOP = -52;
+const CHARACTER_SIZE = 64;
+const SPRITE_SCALE = CHARACTER_SIZE / 112;
+const SPRITE_WIDTH = 125 * SPRITE_SCALE;
+const SPRITE_HEIGHT = 222 * SPRITE_SCALE;
+const SPRITE_LEFT = -6 * SPRITE_SCALE;
+const SPRITE_TOP = -52 * SPRITE_SCALE;
 
 type Props = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

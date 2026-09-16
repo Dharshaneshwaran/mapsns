@@ -7,8 +7,8 @@ import PlaceActions from "./PlaceActions";
 import CampusAd from "./CampusAd";
 type Props = { location: CampusLocation; distance: number | null; walkingTime: number | null; onClose: () => void; onStartWalking: () => void };
 export default function BottomSheet({ location, distance, walkingTime, onClose, onStartWalking }: Props) {
-  return <SlidePanel label={location.name + " details"}><div className="p-5">
-    <div className="flex items-start gap-3"><div className="flex-1"><p className="text-xs font-semibold uppercase tracking-widest text-teal-700">SNS Campus</p><h2 className="mt-2 text-2xl font-semibold">{location.name}</h2><p className="mt-1 text-sm capitalize text-zinc-500">{location.category} · {location.isVerified ? "Verified location" : "Approximate location"}</p></div><button onClick={onClose} aria-label="Close location details" className="google-round-button"><X size={18} /></button></div>
+  return <SlidePanel key={location.id} initiallyExpanded label={location.name + " details"}><div className="p-4 sm:p-5">
+    <div className="flex items-start gap-3"><div className="min-w-0 flex-1"><p className="text-xs font-semibold uppercase tracking-widest text-teal-700">SNS Campus</p><h2 className="mt-2 break-words text-xl font-semibold sm:text-2xl">{location.name}</h2><p className="mt-1 text-sm capitalize text-zinc-500">{location.category} · {location.isVerified ? "Verified location" : "Approximate location"}</p></div><button onClick={onClose} aria-label="Close location details" className="google-round-button shrink-0"><X size={18} /></button></div>
     <div className="my-4 flex flex-wrap gap-2"><button onClick={onStartWalking} className="google-action-button bg-teal-700 text-white"><Navigation size={16} />Directions</button><PlaceActions location={location} /></div>
     <div className="relative h-44 overflow-hidden rounded-2xl bg-zinc-50"><Image src={location.customIcon || "/place-placeholder.svg"} alt={location.name} fill sizes="380px" className="object-contain p-3" /></div>
     <p className="mt-4 text-sm leading-6 text-zinc-600">{location.description || "Explore this location on the SNS campus."}</p>

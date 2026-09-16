@@ -36,7 +36,7 @@ export function loadGoogleMapsApi(): Promise<typeof google> {
     script.onerror = () => reject(new Error("Failed to load Google Maps API"));
     document.head.appendChild(script);
 
-    // Poll for google.maps availability
+    // The namespace appears before the asynchronously loaded constructors are ready.
     waitForGoogle(resolve, reject);
   });
 
@@ -51,7 +51,7 @@ function waitForGoogle(
   let attempts = 0;
 
   const check = () => {
-    if (window.google?.maps) {
+    if (typeof window.google?.maps?.Map === "function" && typeof window.google.maps.OverlayView === "function" && typeof window.google.maps.Polygon === "function") {
       resolve(window.google);
     } else if (attempts < maxAttempts) {
       attempts++;

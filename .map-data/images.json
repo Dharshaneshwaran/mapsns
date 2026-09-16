@@ -1,27 +1,29 @@
 {
-  "revision": "a9a9dd1b-e213-4633-b287-7a995d57b23d",
+  "revision": "861a94ac-dc57-4222-ae09-e484f161944e",
   "images": [
     {
       "id": "9caa12d8-dfcb-4c32-b265-9f33e5c069d6",
-      "name": "861bb4fd-74b0-46b3-bfd1-6e36bdc46dfd-removebg-preview",
+      "name": "admin block",
       "src": "/uploads/map-images/bed4e0cc298113eb765b754b372be9927dca1e5d751ceb6f2141fce3abf7fae5.png",
       "lat": 11.100110115834134,
       "lng": 77.02675103814924,
       "width": 0.001077977560663051,
       "height": 0.0005104049405046926,
       "rotation": 1.8655503568205063,
-      "opacity": 1
+      "opacity": 1,
+      "locationId": "9caa12d8-dfcb-4c32-b265-9f33e5c069d6"
     },
     {
       "id": "fcbf85ec-e8d8-4135-ae84-87c02582f69e",
-      "name": "e9a7e3ec-aa2f-41c9-9526-0d0d9e7138e0-removebg-preview-removebg-preview (1)",
+      "name": "SNS Lawn",
       "src": "/uploads/map-images/b7e1881292e995d3442f08498f3427877cd31199f16a8257c02bb1cdbeb5fe82.png",
       "lat": 11.100751487023379,
       "lng": 77.0265450379525,
       "width": 0.00041945795189224236,
       "height": 0.0003602411377671846,
       "rotation": 0,
-      "opacity": 1
+      "opacity": 1,
+      "locationId": "fcbf85ec-e8d8-4135-ae84-87c02582f69e"
     },
     {
       "id": "547b960f-4ad2-4ed2-b9b0-c3b305e248b7",
@@ -32,62 +34,68 @@
       "width": 0.0008061158342981412,
       "height": 0.0003768086471920032,
       "rotation": 75.6688365035642,
-      "opacity": 1
+      "opacity": 1,
+      "locationId": "547b960f-4ad2-4ed2-b9b0-c3b305e248b7"
     },
     {
       "id": "79999ce7-d83c-4eeb-b811-c61d0d7fb451",
-      "name": "ChatGPT_Image_Sep_12__2026__09_23_36_PM-removebg-preview",
+      "name": "Dtplayhouse",
       "src": "/uploads/map-images/8f5b50c8ed91c1db2ee532d54a541a6362b505d2eafabcf611e25d3a064ef5ca.png",
       "lat": 11.103987360886622,
       "lng": 77.0277571188856,
       "width": 0.000494456917591108,
       "height": 0.00048736642190653085,
       "rotation": 0,
-      "opacity": 1
+      "opacity": 1,
+      "locationId": "79999ce7-d83c-4eeb-b811-c61d0d7fb451"
     },
     {
       "id": "8bcc1bfe-69c9-4f9e-8b65-a8cbe7554b9e",
-      "name": "WhatsApp_Image_2026-09-12_at_7.43.54_PM-removebg-preview",
+      "name": "spine",
       "src": "/uploads/map-images/34affe2d07967d48b1e0f4c45839f13788ab376dc5c850a08055389e27aab32f.png",
       "lat": 11.103998415482833,
       "lng": 77.02642567046976,
       "width": 0.0003833636918166916,
       "height": 0.00039742933181674995,
       "rotation": 54.513522118874334,
-      "opacity": 1
+      "opacity": 1,
+      "locationId": "8bcc1bfe-69c9-4f9e-8b65-a8cbe7554b9e"
     },
     {
       "id": "bc069885-e90b-4855-b601-eeba4b34e3a2",
-      "name": "ChatGPT Image Sep 12, 2026, 08_50_45 PM",
+      "name": "playground",
       "src": "/uploads/map-images/6a541a4b4c0b1259d00d1de2ea3f9fe575616cb566147e49f9758fb38b0bad46.png",
       "lat": 11.103441292969189,
       "lng": 77.026926634931,
       "width": 0.000659277580287797,
       "height": 0.0007257032398859238,
       "rotation": 88.09421209728657,
-      "opacity": 1
+      "opacity": 1,
+      "locationId": "bc069885-e90b-4855-b601-eeba4b34e3a2"
     },
     {
       "id": "e35386a1-ac4a-4faa-b497-1fc1b27bfd83",
-      "name": "WhatsApp_Image_2026-09-15_at_2.49.27_PM-removebg-preview",
+      "name": "CGC building",
       "src": "/uploads/map-images/1a587b4f135c879c8010c5fbd6de978d97447acd9768ee725e640d30e7f6713b.png",
       "lat": 11.101219626213846,
       "lng": 77.02653910308507,
       "width": 0.00036390791411562397,
       "height": 0.00027259360590714353,
       "rotation": 0,
-      "opacity": 1
+      "opacity": 1,
+      "locationId": "e35386a1-ac4a-4faa-b497-1fc1b27bfd83"
     },
     {
       "id": "2bf078ef-6fe3-4578-9743-a21447ff28da",
-      "name": "WhatsApp_Image_2026-09-15_at_2.57.57_PM-removebg-preview",
+      "name": "sns clinic",
       "src": "/uploads/map-images/e416ab94ff125a9b6d89516a4b75568a93b75194b8f7a161a5a126d6dceabc82.png",
       "lat": 11.101355438524013,
       "lng": 77.02610243953112,
       "width": 0.0005303145844370845,
       "height": 0.00031512470613970326,
       "rotation": 268.7522282386619,
-      "opacity": 1
+      "opacity": 1,
+      "locationId": "2bf078ef-6fe3-4578-9743-a21447ff28da"
     },
     {
       "id": "07d078c2-1acc-487d-be43-3e6243b59af4",
@@ -98,18 +106,20 @@
       "width": 0.0002578966206605382,
       "height": 0.0003231278591344143,
       "rotation": 0,
-      "opacity": 1
+      "opacity": 1,
+      "locationId": "07d078c2-1acc-487d-be43-3e6243b59af4"
     },
     {
       "id": "d9908599-5e06-4806-b73c-4a3910c22b64",
-      "name": "WhatsApp_Image_2026-09-15_at_3.02.47_PM-removebg-preview",
+      "name": "sns Ihub",
       "src": "/uploads/map-images/3227c334e0d9890d818e29491ca2e556579ee0817ce377ee9332832e69818bb7.png",
       "lat": 11.100089171110856,
       "lng": 77.0273713924278,
       "width": 0.00023230989104238938,
       "height": 0.0001736280945795145,
       "rotation": 0,
-      "opacity": 1
+      "opacity": 1,
+      "locationId": "d9908599-5e06-4806-b73c-4a3910c22b64"
     },
     {
       "id": "87220244-5908-4268-a922-69256b3d196a",
@@ -120,18 +130,20 @@
       "width": 0.00022550393568701552,
       "height": 0.00011949211953677729,
       "rotation": 0,
-      "opacity": 1
+      "opacity": 1,
+      "locationId": "87220244-5908-4268-a922-69256b3d196a"
     },
     {
       "id": "1133b886-1dee-4f39-9e62-9e90609e9a4b",
-      "name": "ChatGPT Image Sep 15, 2026, 03_07_17 PM",
+      "name": "chanakya hall",
       "src": "/uploads/map-images/efedc3b82a2fcd33074abae186ce9d73373ee2f77f0f9da27de4109b05b02b13.png",
       "lat": 11.100711909521081,
       "lng": 77.02709493159597,
       "width": 0.0007318447288228337,
       "height": 0.00024386315930353437,
       "rotation": 87.31351210439573,
-      "opacity": 1
+      "opacity": 1,
+      "locationId": "1133b886-1dee-4f39-9e62-9e90609e9a4b"
     },
     {
       "id": "e622bbcf-7dc1-4857-a6a9-2fb8f9dbe9d8",
@@ -142,29 +154,32 @@
       "width": 0.0003308541740998514,
       "height": 0.0002557477050030231,
       "rotation": 0,
-      "opacity": 1
+      "opacity": 1,
+      "locationId": "e622bbcf-7dc1-4857-a6a9-2fb8f9dbe9d8"
     },
     {
       "id": "cd98ed41-27f1-4f4c-958c-31c075547686",
-      "name": "WhatsApp_Image_2026-09-12_at_7.43.39_PM-removebg-preview",
+      "name": "building",
       "src": "/uploads/map-images/5aa50ed15cf886a98912a5ab8e48f6a650be1fa2afcc115db933932aac5ab1ac.png",
       "lat": 11.103559596820068,
       "lng": 77.02641305945481,
       "width": 0.00034700358442212986,
       "height": 0.0004536765439665373,
       "rotation": 57.48905287602082,
-      "opacity": 1
+      "opacity": 1,
+      "locationId": "cd98ed41-27f1-4f4c-958c-31c075547686"
     },
     {
       "id": "a4b04246-3348-4ce1-b521-d6b4f3e5490b",
-      "name": "ChatGPT Image Sep 15, 2026, 03_32_16 PM",
+      "name": "sns open autorium",
       "src": "/uploads/map-images/15ee30aefd4e93c3cae803c6a2bd8edbdc8c7f0a51b84d54ee0e72c51a776a2e.png",
       "lat": 11.102638976055092,
       "lng": 77.02789944124163,
       "width": 0.0009922111296031624,
       "height": 0.0007461113567161683,
       "rotation": 270.08988636797153,
-      "opacity": 1
+      "opacity": 1,
+      "locationId": "a4b04246-3348-4ce1-b521-d6b4f3e5490b"
     }
   ]
 }

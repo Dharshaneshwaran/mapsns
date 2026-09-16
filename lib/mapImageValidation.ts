@@ -21,7 +21,7 @@ export function validateMapDocument(input: unknown): MapImageDocument {
     ids.add(image.id);
     if (typeof image.name !== "string" || !image.name.trim() || image.name.length > 120) throw new Error("Each image needs a name (maximum 120 characters).");
     if (typeof image.src !== "string") throw new Error("Missing image data.");
-    if (!builtInSources.has(image.src) && !isStoredMapImage(image.src)) {
+    if (image.src !== "lucide:map-pin" && !builtInSources.has(image.src) && !isStoredMapImage(image.src)) {
       const match = /^data:image\/(png|jpeg|webp);base64,([A-Za-z0-9+/]+={0,2})$/.exec(image.src);
       if (!match || match[2].length > Math.ceil(MAX_IMAGE_BYTES / 3) * 4) throw new Error("Use a PNG, JPEG or WebP image up to 5 MB.");
       const bytes = Buffer.from(match[2], "base64");

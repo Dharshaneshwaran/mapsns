@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import { DEFAULT_MAP_IMAGES } from "@/data/mapImages";
 import type { MapImage, MapImageDocument } from "@/types/mapImage";
 import MapImageLayer from "./MapImageLayer";
+import type { CampusLocation } from "@/types/campus";
 
-export default function PublishedMapImages({ map, onClick }: { map: google.maps.Map; onClick: (image: MapImage) => void }) {
+export default function PublishedMapImages({ map, onClick, selectedLocation }: { map: google.maps.Map; selectedLocation: CampusLocation | null; onClick: (image: MapImage) => void }) {
   const [images, setImages] = useState(DEFAULT_MAP_IMAGES);
   useEffect(() => {
     let etag = "";
@@ -29,5 +30,14 @@ export default function PublishedMapImages({ map, onClick }: { map: google.maps.
     document.addEventListener("visibilitychange", refresh);
     return () => { controller.abort(); clearInterval(timer); window.removeEventListener("focus", refresh); document.removeEventListener("visibilitychange", refresh); };
   }, []);
-  return images.map((image) => <MapImageLayer key={image.id} map={map} image={image} onClick={onClick} />);
+  const hasSelectedMarker = selectedLocation && images.some((image) => (image.locationId || image.id) === selectedLocation.id);
+  const fallback: MapImage | null = selectedLocation && !hasSelectedMarker ? {
+    id: selectedLocation.id, locationId: selectedLocation.id, name: selectedLocation.name,
+    src: "lucide:map-pin", ...selectedLocation.position,
+    width: 0.0001, height: 0.0001, rotation: 0, opacity: 1,
+  } : null;
+  return <>
+    {images.map((image) => <MapImageLayer key={image.id} map={map} image={image} selected={(image.locationId || image.id) === selectedLocation?.id} onClick={onClick} />)}
+    {fallback && <MapImageLayer key={`selected-${fallback.id}`} map={map} image={fallback} selected onClick={onClick} />}
+  </>;
 }
