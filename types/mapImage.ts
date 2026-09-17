@@ -9,6 +9,7 @@ export type MapImage = {
   rotation: number;
   opacity: number;
   locationId?: string;
+  showInShortcuts?: boolean;
 };
 
 export type MapImageDocument = { revision: string; images: MapImage[] };

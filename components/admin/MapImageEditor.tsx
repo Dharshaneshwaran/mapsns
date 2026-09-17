@@ -195,6 +195,8 @@ export default function MapImageEditor() {
           </div>
           {selected ? <fieldset disabled={busy || loading} className="space-y-3 border-t border-zinc-200 pt-3">
             <label className="block text-xs font-medium">Marker name<input className="mt-1 w-full rounded border border-zinc-300 p-2 text-sm" value={selected.name} maxLength={120} onChange={(event) => change({ ...selected, name: event.target.value })} /></label>
+            <label className="flex items-center gap-2 text-sm font-medium"><input type="checkbox" checked={selected.showInShortcuts !== false} onChange={(event) => change({ ...selected, showInShortcuts: event.target.checked })} />Show in top map buttons</label>
+            <p className="text-xs text-zinc-500">Choose whether this place appears in the top button row. Hidden buttons still appear as map pins and in search. Click Save / Publish to apply.</p>
             <label className="block text-xs font-medium">Destination photo
               <input aria-label="Destination photo" type="file" accept="image/png,image/jpeg,image/webp" className="mt-2 block w-full text-xs file:mr-2 file:rounded-lg file:border-0 file:bg-teal-50 file:px-3 file:py-2 file:text-teal-800" onChange={(event) => { void uploadImage(event.target.files?.[0]); event.target.value = ""; }} />
             </label>

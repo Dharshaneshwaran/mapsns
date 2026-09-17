@@ -1,9 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
-import { CAMPUS_LOCATIONS } from "@/data/campusLocations";
+import type { CampusLocation } from "@/types/campus";
 import { publishedPlaces } from "@/lib/publishedPlaces";
 export function useCampusPlaces() {
-  const [places, setPlaces] = useState(CAMPUS_LOCATIONS);
+  const [places, setPlaces] = useState<CampusLocation[]>([]);
   useEffect(() => {
     const controller = new AbortController(); let busy = false;
     const refresh = async () => { if (busy || document.hidden) return; busy = true; try { const response = await fetch("/api/map-images", { cache: "no-store", signal: controller.signal }); if (response.ok) { const data = await response.json(); if (!controller.signal.aborted) setPlaces(publishedPlaces(data.images)); } } catch {} finally { busy = false; } };

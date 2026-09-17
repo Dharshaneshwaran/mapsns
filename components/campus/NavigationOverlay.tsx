@@ -11,10 +11,11 @@ type Props = {
   mode: TravelMode;
   onExit: () => void;
   onRecenter: () => void;
+  isFollowingLocation: boolean;
   onOverview: () => void;
 };
 
-export default function NavigationOverlay({ destination, distance, duration, mode, onExit, onRecenter, onOverview }: Props) {
+export default function NavigationOverlay({ destination, distance, duration, mode, onExit, onRecenter, onOverview, isFollowingLocation }: Props) {
   const minutes = Math.max(1, Math.ceil(duration / 60));
   const distanceLabel = distance < 1000 ? `${Math.round(distance)} m` : `${(distance / 1000).toFixed(1)} km`;
 
@@ -32,7 +33,7 @@ export default function NavigationOverlay({ destination, distance, duration, mod
       </div>
 
       <div className="pointer-events-auto absolute right-3 top-[42%] flex -translate-y-1/2 flex-col gap-2.5">
-        <button onClick={onRecenter} aria-label="Recenter on my location" className="navigation-round-control"><Navigation className="h-6 w-6 fill-[#d93025] text-[#202124]" /></button>
+        {!isFollowingLocation && <button onClick={onRecenter} aria-label="Recenter on my location" className="flex min-h-12 items-center gap-2 rounded-full bg-white px-4 py-3 text-sm font-semibold text-teal-700 shadow-lg"><Navigation className="h-5 w-5 fill-current" />Recenter</button>}
         <button onClick={onOverview} aria-label="Route overview" className="navigation-round-control"><ListTree className="h-6 w-6" /></button>
       </div>
 

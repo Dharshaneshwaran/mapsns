@@ -3,9 +3,9 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { CampusLocation, WalkingState, WalkingRoute, TravelMode } from "@/types/campus";
-import { CAMPUS_LOCATIONS } from "@/data/campusLocations";
+import { useCampusPlaces } from "@/components/campus/useCampusPlaces";
 import { haversineDistance, estimateWalkingTime } from "@/lib/googleMaps";
-import { Check, AlertTriangle, Settings, X, Building2, MapPin } from "lucide-react";
+import { Check, AlertTriangle, Settings, X, MapPin } from "lucide-react";
 import CampusSearch from "@/components/campus/CampusSearch";
 import BottomSheet from "@/components/campus/BottomSheet";
 import NavigationOverlay from "@/components/campus/NavigationOverlay";
@@ -14,7 +14,6 @@ import SettingsDialog, { UserProfile } from "@/components/campus/SettingsDialog"
 import ExplorePanel from "@/components/campus/ExplorePanel";
 import { CAMPUS_CENTER } from "@/data/campusBoundary";
 import { requestRoute } from "@/lib/requestRoute";
-import { publishedPlaces } from "@/lib/publishedPlaces";
 import { routeDeviation } from "@/lib/routeDeviation";
 
 type Coordinate = { lat: number; lng: number };
@@ -68,11 +67,19 @@ export default function CampusMapPage() {
 }
 
 function CampusMapApp() {
+  const places = useCampusPlaces();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [mapInstance, setMapInstance] = useState<any>(null);
-  const [selectedLocation, setSelectedLocation] = useState<CampusLocation | null>(null);
+  const [selectedPlace, setSelectedLocation] = useState<CampusLocation | null>(null);
   const [activeRoute, setActiveRoute] = useState<WalkingRoute | null>(null);
   const [isWalking, setIsWalking] = useState(false);
+  const [isFollowingLocation, setIsFollowingLocation] = useState(true);
+  const handleMapInteraction = useCallback(() => setIsFollowingLocation(false), []);
+  const selectedLocation = selectedPlace && !isWalking
+    ? places.find((place) => place.id === selectedPlace.id) ?? selectedPlace
+    : selectedPlace;
+  const [sharedPlaceId, setSharedPlaceId] = useState<string | null>(null);
+  const openedSharedPlace = useRef(false);
   const [walkingPosition, setWalkingPosition] = useState<{ lat: number; lng: number } | null>(null);
   const [walkingBearing, setWalkingBearing] = useState(0);
   const [walkingState, setWalkingState] = useState<WalkingState>("idle");
@@ -99,15 +106,8 @@ function CampusMapApp() {
   }, []);
 
   useEffect(() => {
-    const place = CAMPUS_LOCATIONS.find((item) => item.id === new URLSearchParams(window.location.search).get("place"));
-    // Shared links open the selected destination after hydration.
-    if (place) queueMicrotask(() => setSelectedLocation(place));
-    if (!place && new URLSearchParams(window.location.search).has("place")) {
-      void fetch("/api/map-images").then((response) => response.json()).then((data) => {
-        const shared = publishedPlaces(data.images).find((item) => item.id === new URLSearchParams(window.location.search).get("place"));
-        if (shared) setSelectedLocation(shared);
-      }).catch(() => {});
-    }
+    const placeId = new URLSearchParams(window.location.search).get("place");
+    queueMicrotask(() => setSharedPlaceId(placeId));
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
       (pos) => {
@@ -117,6 +117,14 @@ function CampusMapApp() {
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
   }, []);
+
+  useEffect(() => {
+    if (!sharedPlaceId || openedSharedPlace.current) return;
+    const place = places.find((item) => item.id === sharedPlaceId);
+    if (!place) return;
+    openedSharedPlace.current = true;
+    queueMicrotask(() => setSelectedLocation(place));
+  }, [places, sharedPlaceId]);
 
   const handleLocationSelect = useCallback((location: CampusLocation) => {
     previewRequest.current?.abort(); setRouteLoading(false); setRouteError("");
@@ -187,16 +195,18 @@ function CampusMapApp() {
 
   const handleBeginNavigation = useCallback(() => {
     if (!selectedLocation || !activeRoute || routeLoading) return;
-    const gate = CAMPUS_LOCATIONS.find((location) => location.id === "main-gate");
+    setSelectedLocation(selectedLocation);
+    const gate = places.find((location) => location.id === "main-gate");
     const startPosition = walkingPosition ?? userPosition ?? gate?.position;
     if (startPosition) setWalkingPosition(startPosition);
     setIsRoutePreview(false);
     setIsWalking(true);
+    setIsFollowingLocation(true);
     setWalkingState("idle");
     setLocationStatus("tracking");
     prevPositionRef.current = null;
     movementAnchorRef.current = null;
-  }, [selectedLocation, walkingPosition, userPosition, activeRoute, routeLoading]);
+  }, [selectedLocation, walkingPosition, userPosition, activeRoute, routeLoading, places]);
 
   useEffect(() => {
     if (!isWalking || !selectedLocation || !navigator.geolocation) return;
@@ -292,7 +302,7 @@ function CampusMapApp() {
   const travelTime = activeRoute?.durationSeconds !== undefined ? activeRoute.durationSeconds * remainingFraction : null;
 
   return (
-    <main className={`campus-map-app relative h-screen w-full overflow-hidden bg-zinc-100 ${isWalking ? "navigation-active" : ""} ${isRoutePreview ? "route-preview-active" : ""}`}>
+    <main className={`campus-map-app relative w-full overflow-hidden bg-zinc-100 ${isWalking ? "navigation-active" : ""} ${isRoutePreview ? "route-preview-active" : ""}`}>
       <SNSCampusMap
         onLocationSelect={handleLocationSelect}
         selectedLocation={selectedLocation}
@@ -301,6 +311,8 @@ function CampusMapApp() {
         walkingPosition={walkingPosition}
         walkingBearing={walkingBearing}
         isWalking={isWalking}
+        isFollowingLocation={isFollowingLocation}
+        onMapInteraction={handleMapInteraction}
         isWalkingMode={travelMode === "walking"}
         walkingState={walkingState}
         pointerStyle={profile.pointerStyle}
@@ -308,23 +320,15 @@ function CampusMapApp() {
       />
 
       {!isWalking && !isRoutePreview && (
-        <div className="desktop-map-chips pointer-events-auto absolute left-[424px] top-[18px] z-30 hidden items-center gap-2 lg:flex">
-          {[
-            { label: "Registration Office", locationId: "admin-building", icon: Building2 },
-            { label: "Heritage Courtyard", locationId: "heritage-courtyard", icon: MapPin },
-            { label: "SNS Lawn", locationId: "temple", icon: MapPin },
-            { label: "Innovation Hub", locationId: "ihub", icon: MapPin },
-          ].map(({ label, locationId, icon: Icon }) => (
+        <div className="desktop-map-chips pointer-events-auto absolute left-[424px] right-4 top-[18px] z-30 hidden items-center gap-2 overflow-x-auto pb-2 lg:flex">
+          {places.filter((location) => location.showInShortcuts !== false).map((location) => (
             <button
-              key={label}
+              key={location.id}
               type="button"
-              onClick={() => {
-                const location = CAMPUS_LOCATIONS.find((item) => item.id === locationId);
-                if (location) handleLocationSelect(location);
-              }}
-              className="flex h-9 items-center gap-1.5 rounded-full border border-[#dadce0] bg-white px-3 text-sm font-medium text-[#3c4043] shadow-sm transition hover:bg-[#f8f9fa] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#008b92]"
+              onClick={() => handleLocationSelect(location)}
+              className="flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-[#dadce0] bg-white px-3 text-sm font-medium text-[#3c4043] shadow-sm transition hover:bg-[#f8f9fa] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#008b92]"
             >
-              <Icon className="h-4 w-4" /> {label}
+              <MapPin className="h-4 w-4" /> {location.name}
             </button>
           ))}
         </div>
@@ -340,7 +344,8 @@ function CampusMapApp() {
           duration={travelTime ?? 0}
           mode={travelMode}
           onExit={handleStopWalking}
-          onRecenter={() => { mapInstance?.moveCamera({ center: walkingPosition, zoom: 20, heading: walkingBearing, tilt: 0 }); }}
+          isFollowingLocation={isFollowingLocation}
+          onRecenter={() => { setIsFollowingLocation(true); mapInstance?.moveCamera({ center: walkingPosition, zoom: 20, heading: walkingBearing, tilt: 0 }); }}
           onOverview={() => { setIsWalking(false); setIsRoutePreview(true); }}
         />
       )}

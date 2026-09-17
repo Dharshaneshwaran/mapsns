@@ -17,6 +17,8 @@ type Props = {
   walkingPosition: { lat: number; lng: number } | null;
   walkingBearing: number;
   isWalking: boolean;
+  isFollowingLocation: boolean;
+  onMapInteraction: () => void;
   isWalkingMode: boolean;
   walkingState: WalkingState;
   pointerStyle: PointerStyle;
@@ -32,12 +34,15 @@ export default function SNSCampusMap({
   walkingPosition,
   walkingBearing,
   isWalking,
+  isFollowingLocation,
+  onMapInteraction,
   isWalkingMode,
   walkingState,
   pointerStyle,
   onMapReady,
 }: Props) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
+  const cameraFrameRef = useRef<number | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mapRef = useRef<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -157,7 +162,6 @@ export default function SNSCampusMap({
         blueDotRef.current = null;
         blueDotPulseRef.current?.setMap(null);
         blueDotPulseRef.current = null;
-        mapRef.current.panTo(pos);
         return;
       }
 
@@ -195,15 +199,11 @@ export default function SNSCampusMap({
           zIndex: 9999,
         });
         blueDotRef.current = dot;
-        mapRef.current.panTo(pos);
-        mapRef.current.setZoom(18);
       } else {
         blueDotRef.current.setCenter(pos);
         blueDotRef.current.setOptions({ fillColor: pointerColor });
       }
 
-      // Auto-pan map to follow user
-      mapRef.current.panTo(pos);
     } else {
       // Remove blue dot when not walking
       if (blueDotRef.current) {
@@ -304,20 +304,56 @@ export default function SNSCampusMap({
     }
   }, [activeRoute, isMapLoaded, isWalking]);
 
+  // Pause camera following only for user gestures, not programmatic camera changes.
   useEffect(() => {
-    if (!mapInstance || !isWalking || !walkingPosition) return;
+    const container = mapContainerRef.current;
+    if (!mapInstance || !container || !isWalking || !isFollowingLocation) return;
+    const pauseFollowing = () => {
+      if (cameraFrameRef.current !== null) cancelAnimationFrame(cameraFrameRef.current);
+      onMapInteraction();
+    };
+    let pointer: { id: number; x: number; y: number } | null = null;
+    const pointerDown = (event: PointerEvent) => { pointer = { id: event.pointerId, x: event.clientX, y: event.clientY }; };
+    const pointerMove = (event: PointerEvent) => {
+      if (pointer?.id === event.pointerId && Math.hypot(event.clientX - pointer.x, event.clientY - pointer.y) > 5) pauseFollowing();
+    };
+    const pointerUp = () => { pointer = null; };
+    const keyDown = (event: KeyboardEvent) => {
+      if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "+", "-", "="].includes(event.key)) pauseFollowing();
+    };
+    const dragListener = mapInstance.addListener("dragstart", pauseFollowing);
+    container.addEventListener("pointerdown", pointerDown, { passive: true });
+    container.addEventListener("pointermove", pointerMove, { passive: true });
+    window.addEventListener("pointerup", pointerUp);
+    window.addEventListener("pointercancel", pointerUp);
+    container.addEventListener("wheel", pauseFollowing, { passive: true });
+    container.addEventListener("dblclick", pauseFollowing);
+    container.addEventListener("keydown", keyDown);
+    return () => {
+      dragListener.remove();
+      container.removeEventListener("pointerdown", pointerDown);
+      container.removeEventListener("pointermove", pointerMove);
+      window.removeEventListener("pointerup", pointerUp);
+      window.removeEventListener("pointercancel", pointerUp);
+      container.removeEventListener("wheel", pauseFollowing);
+      container.removeEventListener("dblclick", pauseFollowing);
+      container.removeEventListener("keydown", keyDown);
+    };
+  }, [mapInstance, isWalking, isFollowingLocation, onMapInteraction]);
+
+  useEffect(() => {
+    if (!mapInstance || !isWalking || !walkingPosition || !isFollowingLocation) return;
     const heading = mapInstance.getHeading() || 0;
     const delta = ((walkingBearing - heading + 540) % 360) - 180;
-    let frame = 0;
     const start = performance.now();
     const animate = (now: number) => {
       const progress = Math.min(1, (now - start) / 450);
       mapInstance.moveCamera({ center: walkingPosition, heading: heading + delta * progress, tilt: 0 });
-      if (progress < 1) frame = requestAnimationFrame(animate);
+      if (progress < 1) cameraFrameRef.current = requestAnimationFrame(animate);
     };
-    frame = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(frame);
-  }, [mapInstance, isWalking, walkingPosition, walkingBearing]);
+    cameraFrameRef.current = requestAnimationFrame(animate);
+    return () => { if (cameraFrameRef.current !== null) cancelAnimationFrame(cameraFrameRef.current); };
+  }, [mapInstance, isWalking, walkingPosition, walkingBearing, isFollowingLocation]);
 
   useEffect(() => {
     if (mapInstance && isWalking) mapInstance.setZoom(20);

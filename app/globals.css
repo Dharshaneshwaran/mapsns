@@ -58,6 +58,33 @@ body {
 .safe-left { padding-left: var(--sal); }
 .safe-right { padding-right: var(--sar); }
 
+/* Size the map to the visible screen as mobile browser toolbars expand. */
+.campus-map-app {
+  height: 100%;
+  height: 100dvh;
+}
+
+.route-preview-sheet {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100% - 112px - var(--sat, 0px));
+  padding-left: var(--sal, 0px);
+  padding-right: var(--sar, 0px);
+}
+
+.route-preview-details {
+  /* Keep actions directly below the details as the sheet expands. */
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+}
+
+.route-preview-actions {
+  padding-bottom: calc(12px + var(--sab, 0px));
+}
+
 @media (max-width: 640px) {
   button, a, [role="button"] {
     min-height: 44px;
@@ -395,4 +422,7 @@ body {
 }
 .google-round-button, .google-action-button { flex-shrink: 0; }
 .google-round-button:focus-visible, .google-action-button:focus-visible { outline: 2px solid #007b7e; outline-offset: 3px; }
-@media (max-height: 500px) { .route-preview-sheet { max-height: 62dvh; overflow-y: auto; overscroll-behavior: contain; } }
+@media (max-height: 500px) {
+  .route-preview-sheet { max-height: calc(100% - 24px - var(--sat, 0px)); }
+  .route-preview-sheet h2 { font-size: 16px; }
+}

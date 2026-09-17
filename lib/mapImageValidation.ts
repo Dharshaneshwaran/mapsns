@@ -33,7 +33,8 @@ export function validateMapDocument(input: unknown): MapImageDocument {
     const range = (n: number, min: number, max: number) => typeof n === "number" && Number.isFinite(n) && n >= min && n <= max;
     if (!range(image.lat, -80, 80) || !range(image.lng, -180, 180) || !range(image.width, 0.00001, 0.02) || !range(image.height, 0.00001, 0.02) || !range(image.rotation, -360, 360) || !range(image.opacity, 0.05, 1)) throw new Error("Invalid image position, size, rotation or opacity.");
     if (image.locationId !== undefined && (typeof image.locationId !== "string" || !/^[a-zA-Z0-9-]{1,80}$/.test(image.locationId))) throw new Error("Invalid linked location.");
-    return { id: image.id, name: image.name.trim(), src: image.src, lat: image.lat, lng: image.lng, width: image.width, height: image.height, rotation: image.rotation, opacity: image.opacity, ...(image.locationId ? { locationId: image.locationId } : {}) };
+    if (image.showInShortcuts !== undefined && typeof image.showInShortcuts !== "boolean") throw new Error("Invalid top button visibility.");
+    return { id: image.id, name: image.name.trim(), src: image.src, lat: image.lat, lng: image.lng, width: image.width, height: image.height, rotation: image.rotation, opacity: image.opacity, showInShortcuts: image.showInShortcuts ?? true, ...(image.locationId ? { locationId: image.locationId } : {}) };
   });
   return { revision: doc.revision, images };
 }

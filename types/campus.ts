@@ -22,6 +22,7 @@ export type CampusLocation = {
   description?: string;
   isVerified: boolean;
   customIcon?: string;
+  showInShortcuts?: boolean;
 };
 
 export type WalkPoint = {
