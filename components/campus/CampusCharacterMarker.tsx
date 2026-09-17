@@ -1,9 +1,12 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import type { Gender } from "./SettingsDialog";
 
 const WALK_FRAMES = ["/step_1.png", "/step_3.png", "/step_4.png", "/step_5.png", "/step_6.png"];
 const IDLE_FRAME = "/idel.png";
+const FEMALE_FRAMES = ["1.png", "2.png", "2 (1).png", "4.png", "6.png", "7.png", "8.png", "8 (1).png"].map((name) => `/female/${encodeURIComponent(name)}`);
+const CART_FRAMES = ["photo 1.png", "photo 2.png", "photo 3.png", "photo 4.png", "photo 5.png", "photo 6.png", "photos 8.png"].map((name) => `/uploads/map-images/bullet%20cart/${encodeURIComponent(name)}`);
 const FRAME_DURATION = 150;
 const CHARACTER_SIZE = 64;
 const SPRITE_SCALE = CHARACTER_SIZE / 112;
@@ -18,6 +21,8 @@ type Props = {
   position: { lat: number; lng: number } | null;
   bearing: number;
   isMoving: boolean;
+  vehicle?: boolean;
+  gender?: Gender;
 };
 
 export default function CampusCharacterMarker({
@@ -25,7 +30,11 @@ export default function CampusCharacterMarker({
   position,
   bearing,
   isMoving,
+  vehicle = false,
+  gender = "male",
 }: Props) {
+  const frames = vehicle ? CART_FRAMES : gender === "female" ? FEMALE_FRAMES : WALK_FRAMES;
+  const idleFrame = vehicle || gender === "female" ? frames[0] : IDLE_FRAME;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const overlayRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -45,6 +54,7 @@ export default function CampusCharacterMarker({
     container.style.height = `${CHARACTER_SIZE}px`;
     container.style.position = "relative";
     container.style.pointerEvents = "none";
+    container.style.zIndex = "1000";
     containerRef.current = container;
 
     const visual = document.createElement("div");
@@ -60,7 +70,8 @@ export default function CampusCharacterMarker({
     container.appendChild(visual);
 
     const img = document.createElement("img");
-    img.src = IDLE_FRAME;
+    img.src = idleFrame;
+    img.alt = vehicle ? "Bullet cart" : `${gender === "female" ? "Female" : "Male"} walking pointer`;
     img.style.position = "absolute";
     img.style.width = `${SPRITE_WIDTH}px`;
     img.style.height = `${SPRITE_HEIGHT}px`;
@@ -70,9 +81,25 @@ export default function CampusCharacterMarker({
     img.style.display = "block";
     img.style.imageRendering = "auto";
     img.draggable = false;
+    if (!vehicle && gender === "female") {
+      img.style.width = "80px";
+      img.style.height = "80px";
+      img.style.left = "-8px";
+      img.style.top = "-8px";
+      img.style.objectFit = "contain";
+      visual.style.overflow = "visible";
+    }
+    if (vehicle) {
+      img.style.width = "112px";
+      img.style.height = "112px";
+      img.style.left = "-24px";
+      img.style.top = "-24px";
+      img.style.objectFit = "contain";
+      visual.style.overflow = "visible";
+    }
     visual.appendChild(img);
 
-    WALK_FRAMES.forEach((frame) => {
+    frames.forEach((frame) => {
       const preload = new Image();
       preload.src = frame;
     });
@@ -107,7 +134,7 @@ export default function CampusCharacterMarker({
     overlay.setMap(map);
     overlayRef.current = overlay;
     return () => { headingListener.remove(); overlay.setMap(null); overlayRef.current = null; };
-  }, [map]);
+  }, [map, vehicle, gender, frames, idleFrame]);
 
   useEffect(() => {
     positionRef.current = position;
@@ -132,21 +159,21 @@ export default function CampusCharacterMarker({
         animFrameRef.current = null;
       }
       visualRef.current.className = "walking-character-visual idle";
-      img.src = IDLE_FRAME;
+      img.src = idleFrame;
       return;
     }
 
     frameIndexRef.current = 0;
     lastFrameTimeRef.current = 0;
     visualRef.current.className = "walking-character-visual walking";
-    img.src = WALK_FRAMES[0];
+    img.src = frames[0];
 
     const animate = (timestamp: number) => {
       if (lastFrameTimeRef.current === 0) lastFrameTimeRef.current = timestamp;
 
       if (timestamp - lastFrameTimeRef.current >= FRAME_DURATION) {
-        frameIndexRef.current = (frameIndexRef.current + 1) % WALK_FRAMES.length;
-        img.src = WALK_FRAMES[frameIndexRef.current];
+        frameIndexRef.current = (frameIndexRef.current + 1) % frames.length;
+        img.src = frames[frameIndexRef.current];
         lastFrameTimeRef.current = timestamp;
       }
 
@@ -171,7 +198,7 @@ export default function CampusCharacterMarker({
         cancelAnimationFrame(animFrameRef.current);
       }
     };
-  }, [isMoving, map]);
+  }, [isMoving, map, vehicle, frames, idleFrame]);
 
   useEffect(() => {
     return () => {

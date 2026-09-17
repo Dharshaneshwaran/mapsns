@@ -23,7 +23,6 @@ export default function MapImageEditor() {
   const [mapError, setMapError] = useState("");
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [token, setToken] = useState("");
   const [placing, setPlacing] = useState(false);
   const placingRef = useRef(false);
   const lockedRef = useRef(false);
@@ -137,7 +136,7 @@ export default function MapImageEditor() {
       change(updated);
       const nextDocument = document ? { ...document, images: document.images.map((item) => item.id === updated.id ? updated : item) } : null;
       if (nextDocument) {
-        const response = await fetch("/api/map-images", { method: "PUT", headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body: JSON.stringify(nextDocument) });
+        const response = await fetch("/api/map-images", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(nextDocument) });
         const result = await response.json();
         if (response.ok) {
           setDocument(result);
@@ -160,7 +159,7 @@ export default function MapImageEditor() {
     setError("");
     setMessage("");
     try {
-      const response = await fetch("/api/map-images", { method: "PUT", headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body: JSON.stringify(document) });
+      const response = await fetch("/api/map-images", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(document) });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Publishing failed.");
       setDocument(result);
@@ -209,7 +208,7 @@ export default function MapImageEditor() {
             <p className="text-xs leading-5 text-zinc-500">Click a marker to select it. Drag it to move. Published markers open their destination when clicked. Place the pin at an accessible entrance.</p>
             <button className={`${buttonClass} w-full text-red-700`} onClick={() => { setDocument((current) => current ? { ...current, images: current.images.filter((image) => image.id !== selected.id) } : current); setSelectedId(null); setMessage("Marker removed from draft. Publish to remove it from the public map."); }}><Trash2 size={15} />Remove marker</button>
           </fieldset> : <p className="text-sm text-zinc-500">Select a marker to edit it.</p>}
-          <details className="text-xs text-zinc-500"><summary className="cursor-pointer">Admin publish key</summary><input aria-label="Admin publish key" type="password" autoComplete="off" className="mt-2 w-full rounded border border-zinc-300 p-2" placeholder="Enter key if configured" value={token} onChange={(event) => setToken(event.target.value)} /></details>
+          
           <button className={buttonClass} disabled={busy || loading} onClick={() => { if (!dirty || window.confirm("Discard unpublished edits and load the public map?")) { setLoading(true); void load(); } }}><RotateCcw size={15} />Reload published markers</button>
           <a className={`${buttonClass} text-teal-700`} href="/" target="_blank" rel="noopener" onClick={(event) => { if (window.location.hostname === "admin.localhost") { event.preventDefault(); const url = new URL(window.location.href); url.hostname = "localhost"; url.pathname = "/"; window.open(url.toString(), "_blank", "noopener"); } }}><ExternalLink size={15} />View public map</a>
         </aside>

@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { Plus, Trash2, GripVertical, Eye, EyeOff, ChevronDown, ChevronUp, Upload, X } from "lucide-react";
-import { type AdBanner, type AdPlacement, type AdsConfig, DEFAULT_ADS, createBanner } from "@/lib/ads";
+import { type AdBanner, type AdPlacement, type AdsConfig, createBanner } from "@/lib/ads";
 
 const PLACEMENT_LABELS: Record<AdPlacement, string> = {
   landing: "Landing sidebar",
@@ -26,6 +26,10 @@ function BannerCard({
   onMoveDown: () => void;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+  const latest = useRef({ banner, onChange });
+  useEffect(() => { latest.current = { banner, onChange }; }, [banner, onChange]);
 
   return (
     <div className="rounded-xl border border-[#e3e7ee] bg-white shadow-sm overflow-hidden">
@@ -173,25 +177,34 @@ function BannerCard({
             ) : (
               <label className="flex h-32 w-48 cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-[#dadce0] bg-[#f8f9fa] text-[#5f6368] transition hover:border-[#008b92] hover:bg-[#e0f3f4]">
                 <Upload className="h-6 w-6" />
-                <span className="text-xs font-medium">Upload image</span>
+                <span className="text-xs font-medium">{uploading ? "Uploading…" : "Upload image"}</span>
                 <span className="text-[10px] text-[#9aa0a6]">PNG, JPEG, WebP (max 5 MB)</span>
                 <input
                   type="file"
+                  disabled={uploading}
                   accept="image/png,image/jpeg,image/webp"
                   className="sr-only"
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (!file) return;
+                    setUploadError("");
+                    if (!["image/png", "image/jpeg", "image/webp"].includes(file.type) || file.size > 5 * 1024 * 1024) {
+                      setUploadError("Choose a PNG, JPEG, or WebP image up to 5 MB.");
+                      e.target.value = "";
+                      return;
+                    }
                     const uploadBannerImage = async () => {
+                      setUploading(true);
                       const formData = new FormData();
                       formData.append("file", file);
                       try {
-                        const response = await fetch("/api/ads/upload", { method: "POST", body: formData });
-                        const data = await response.json();
-                        if (response.ok && data.url) {
-                          onChange({ ...banner, imageUrl: data.url });
-                        }
-                      } catch {}
+                        const response = await fetch("/api/ads/upload", { method: "POST", body: formData, credentials: "same-origin" });
+                        const data = await response.json().catch(() => ({}));
+                        if (!response.ok) throw new Error(response.status === 401 ? "Sign in again, then retry the upload." : data.error || "Upload failed. Please try again.");
+                        if (typeof data.url !== "string") throw new Error("Upload returned no image URL. Please retry.");
+                        latest.current.onChange({ ...latest.current.banner, imageUrl: data.url });
+                      } catch (error) { setUploadError(error instanceof Error ? error.message : "Upload failed. Please try again."); }
+                      finally { setUploading(false); }
                     };
                     void uploadBannerImage();
                     e.target.value = "";
@@ -199,6 +212,8 @@ function BannerCard({
                 />
               </label>
             )}
+            {uploadError && <p role="alert" className="mt-2 text-sm text-red-600">{uploadError}</p>}
+            {banner.imageUrl && <p className="mt-2 text-xs text-[#5f6368]">Click Save / Publish banners to show this image on the public map.</p>}
             <label className="mt-2 block text-xs font-medium text-[#5f6368]">
               Or enter URL
               <input
@@ -280,7 +295,6 @@ export default function AdBannerEditor() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const [token, setToken] = useState("");
   const [filter, setFilter] = useState<"all" | AdPlacement>("all");
 
   useEffect(() => {
@@ -332,8 +346,7 @@ export default function AdBannerEditor() {
       const response = await fetch("/api/ads", {
         method: "PUT",
         headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          "Content-Type": "application/json"
         },
         body: JSON.stringify(config),
       });
@@ -346,7 +359,7 @@ export default function AdBannerEditor() {
     } finally {
       setBusy(false);
     }
-  }, [config, token]);
+  }, [config]);
 
   const filteredBanners = config?.banners.filter(
     (b) => filter === "all" || b.placements.includes(filter)
@@ -422,16 +435,7 @@ export default function AdBannerEditor() {
 
           {/* Footer actions */}
           <div className="flex flex-wrap items-end gap-3 pt-3 border-t border-[#e3e7ee]">
-            <label className="text-xs text-[#5f6368]">
-              Admin publish key (if configured)
-              <input
-                type="password"
-                autoComplete="off"
-                value={token}
-                onChange={(e) => setToken(e.target.value)}
-                className="mt-1 block rounded-lg border border-[#dadce0] p-2 text-sm"
-              />
-            </label>
+            
             <button
               type="submit"
               disabled={busy || !config}

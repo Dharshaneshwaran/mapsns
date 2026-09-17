@@ -17,6 +17,13 @@ export type AdsConfig = {
   banners: AdBanner[];
 };
 
+export function adImageSource(value: string): string | null {
+  const source = value.trim().replace(/\\/g, "/");
+  if (/^https?:\/\//i.test(source)) return source;
+  const local = source.startsWith("uploads/") ? `/${source}` : source;
+  return /^\/(?!\/)/.test(local) ? local : null;
+}
+
 let _counter = 0;
 function nextId(): string {
   _counter++;

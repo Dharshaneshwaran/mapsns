@@ -1,5 +1,5 @@
 {
-  "revision": "694f7128-9aa3-491f-b9a3-091ebb0cd089",
+  "revision": "b9eec49a-1c0b-44a9-a48b-549677b164f9",
   "images": [
     {
       "id": "9caa12d8-dfcb-4c32-b265-9f33e5c069d6",
@@ -11,6 +11,7 @@
       "height": 0.0005104049405046926,
       "rotation": 1.8655503568205063,
       "opacity": 1,
+      "showInShortcuts": true,
       "locationId": "9caa12d8-dfcb-4c32-b265-9f33e5c069d6"
     },
     {
@@ -23,11 +24,12 @@
       "height": 0.0003602411377671846,
       "rotation": 0,
       "opacity": 1,
+      "showInShortcuts": false,
       "locationId": "fcbf85ec-e8d8-4135-ae84-87c02582f69e"
     },
     {
       "id": "547b960f-4ad2-4ed2-b9b0-c3b305e248b7",
-      "name": "WhatsApp_Image_2026-09-12_at_7.44.13_PM-removebg-preview",
+      "name": "ai campus",
       "src": "/uploads/map-images/a24fd17d0f8cad9f20468e03aa882b5b08d9018cad4a741f72e0111c835f5d59.png",
       "lat": 11.103599404401642,
       "lng": 77.02725500961176,
@@ -35,6 +37,7 @@
       "height": 0.0003768086471920032,
       "rotation": 75.6688365035642,
       "opacity": 1,
+      "showInShortcuts": true,
       "locationId": "547b960f-4ad2-4ed2-b9b0-c3b305e248b7"
     },
     {
@@ -47,6 +50,7 @@
       "height": 0.00048736642190653085,
       "rotation": 0,
       "opacity": 1,
+      "showInShortcuts": true,
       "locationId": "79999ce7-d83c-4eeb-b811-c61d0d7fb451"
     },
     {
@@ -59,6 +63,7 @@
       "height": 0.00039742933181674995,
       "rotation": 54.513522118874334,
       "opacity": 1,
+      "showInShortcuts": false,
       "locationId": "8bcc1bfe-69c9-4f9e-8b65-a8cbe7554b9e"
     },
     {
@@ -71,6 +76,7 @@
       "height": 0.0007257032398859238,
       "rotation": 88.09421209728657,
       "opacity": 1,
+      "showInShortcuts": false,
       "locationId": "bc069885-e90b-4855-b601-eeba4b34e3a2"
     },
     {
@@ -83,6 +89,7 @@
       "height": 0.00027259360590714353,
       "rotation": 0,
       "opacity": 1,
+      "showInShortcuts": true,
       "locationId": "e35386a1-ac4a-4faa-b497-1fc1b27bfd83"
     },
     {
@@ -95,11 +102,12 @@
       "height": 0.00031512470613970326,
       "rotation": 268.7522282386619,
       "opacity": 1,
+      "showInShortcuts": false,
       "locationId": "2bf078ef-6fe3-4578-9743-a21447ff28da"
     },
     {
       "id": "07d078c2-1acc-487d-be43-3e6243b59af4",
-      "name": "WhatsApp_Image_2026-09-15_at_2.49.27_PM__1_-removebg-preview",
+      "name": "temple",
       "src": "/uploads/map-images/2c5a9b87f78f72f0a9abb02ff6ff363263ba2df1a37a630d77b7e34e07910d6b.png",
       "lat": 11.10000415616054,
       "lng": 77.02613891771287,
@@ -107,6 +115,7 @@
       "height": 0.0003231278591344143,
       "rotation": 0,
       "opacity": 1,
+      "showInShortcuts": false,
       "locationId": "07d078c2-1acc-487d-be43-3e6243b59af4"
     },
     {
@@ -119,6 +128,7 @@
       "height": 0.0001736280945795145,
       "rotation": 0,
       "opacity": 1,
+      "showInShortcuts": true,
       "locationId": "d9908599-5e06-4806-b73c-4a3910c22b64"
     },
     {
@@ -131,6 +141,7 @@
       "height": 0.00011949211953677729,
       "rotation": 0,
       "opacity": 1,
+      "showInShortcuts": false,
       "locationId": "87220244-5908-4268-a922-69256b3d196a"
     },
     {
@@ -143,11 +154,12 @@
       "height": 0.00024386315930353437,
       "rotation": 87.31351210439573,
       "opacity": 1,
+      "showInShortcuts": true,
       "locationId": "1133b886-1dee-4f39-9e62-9e90609e9a4b"
     },
     {
       "id": "e622bbcf-7dc1-4857-a6a9-2fb8f9dbe9d8",
-      "name": "ChatGPT_Image_Sep_15__2026__03_24_11_PM-removebg-preview",
+      "name": "buddha",
       "src": "/uploads/map-images/971b578001af00465e59018195e5e9826fb1295bd67d470fc6f08bf8231e0fbe.png",
       "lat": 11.10048526834058,
       "lng": 77.02624492941396,
@@ -155,6 +167,7 @@
       "height": 0.0002557477050030231,
       "rotation": 0,
       "opacity": 1,
+      "showInShortcuts": false,
       "locationId": "e622bbcf-7dc1-4857-a6a9-2fb8f9dbe9d8"
     },
     {
@@ -167,6 +180,7 @@
       "height": 0.0004536765439665373,
       "rotation": 57.48905287602082,
       "opacity": 1,
+      "showInShortcuts": false,
       "locationId": "cd98ed41-27f1-4f4c-958c-31c075547686"
     },
     {
@@ -179,6 +193,7 @@
       "height": 0.0007461113567161683,
       "rotation": 270.08988636797153,
       "opacity": 1,
+      "showInShortcuts": false,
       "locationId": "a4b04246-3348-4ce1-b521-d6b4f3e5490b"
     }
   ]

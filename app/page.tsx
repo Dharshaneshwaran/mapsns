@@ -12,7 +12,6 @@ import NavigationOverlay from "@/components/campus/NavigationOverlay";
 import RoutePreviewOverlay from "@/components/campus/RoutePreviewOverlay";
 import SettingsDialog, { UserProfile } from "@/components/campus/SettingsDialog";
 import ExplorePanel from "@/components/campus/ExplorePanel";
-import { CAMPUS_CENTER } from "@/data/campusBoundary";
 import { requestRoute } from "@/lib/requestRoute";
 import { routeDeviation } from "@/lib/routeDeviation";
 
@@ -30,7 +29,8 @@ function getSavedProfile(): UserProfile {
   if (typeof window === "undefined") return DEFAULT_PROFILE;
   try {
     const saved = window.localStorage.getItem("sns-campus-profile");
-    return saved ? { ...DEFAULT_PROFILE, ...JSON.parse(saved) } : DEFAULT_PROFILE;
+    const profile = saved ? { ...DEFAULT_PROFILE, ...JSON.parse(saved) } : DEFAULT_PROFILE;
+    return { ...profile, mapStyle: profile.mapStyle === "satellite" || profile.mapStyle === "hybrid" ? "satellite" : "roadmap" };
   } catch {
     return DEFAULT_PROFILE;
   }
@@ -94,6 +94,7 @@ function CampusMapApp() {
   const prevPositionRef = useRef<{ lat: number; lng: number } | null>(null);
   const movementAnchorRef = useRef<{ lat: number; lng: number } | null>(null);
   const previewRequest = useRef<AbortController | null>(null);
+  const latestFix = useRef<GeolocationPosition | null>(null);
   const [routeError, setRouteError] = useState("");
   const [routeLoading, setRouteLoading] = useState(false);
   useEffect(() => () => previewRequest.current?.abort(), []);
@@ -111,6 +112,7 @@ function CampusMapApp() {
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
       (pos) => {
+        latestFix.current = pos;
         setUserPosition({ lat: pos.coords.latitude, lng: pos.coords.longitude });
       },
       () => {},
@@ -176,7 +178,11 @@ function CampusMapApp() {
       const timeout = setTimeout(() => controller.abort(), 20000);
       try {
         if (!navigator.geolocation) throw new Error("Your browser does not support location.");
-        const fix = await new Promise<GeolocationPosition>((resolve, reject) => navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 8000, maximumAge: 3000 }));
+        const cached = latestFix.current;
+        const fix = cached && Date.now() - cached.timestamp < 10000 && cached.coords.accuracy <= 25
+          ? cached
+          : await new Promise<GeolocationPosition>((resolve, reject) => navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 8000, maximumAge: 3000 }));
+        latestFix.current = fix;
         controller.signal.throwIfAborted();
         const start = { lat: fix.coords.latitude, lng: fix.coords.longitude };
         const route = await requestRoute(start, end, mode, controller.signal);
@@ -215,6 +221,9 @@ function CampusMapApp() {
     let idleTimer: ReturnType<typeof setTimeout> | null = null;
     let lastReroute = 0;
     let deviationCount = 0;
+    let deviationSince = 0;
+    let furthestProgress = 0;
+    let lastFixTimestamp = 0;
     let request: AbortController | null = null;
     let disposed = false;
     const reroute = async (start: Coordinate, heading: number | null) => {
@@ -225,16 +234,22 @@ function CampusMapApp() {
       setRerouteMessage("Updating your route…");
       try {
         const result = await requestRoute(start, end, travelMode, controller.signal, heading);
-        if (disposed) return;
+        if (disposed || controller.signal.aborted) return;
         const updated: WalkingRoute = { ...result, id: `route-${selectedLocation.id}`, name: `Route to ${selectedLocation.name}`, from: "current", to: selectedLocation.id, isPrototype: false };
         routeRef.current = updated;
         setActiveRoute(updated);
-        setRerouteMessage("Route updated for your current direction.");
+        furthestProgress = 0;
+        deviationCount = 0;
+        deviationSince = 0;
+        setRerouteMessage("Route updated from your current location.");
       } catch { if (!disposed) setRerouteMessage("Could not update route. Keeping the previous route and retrying as you move."); }
       finally { clearTimeout(timeout); request = null; }
     };
     watchIdRef.current = navigator.geolocation.watchPosition(
       (pos) => {
+        if (disposed || pos.timestamp <= lastFixTimestamp) return;
+        lastFixTimestamp = pos.timestamp;
+        latestFix.current = pos;
         const nextPosition = { lat: pos.coords.latitude, lng: pos.coords.longitude };
 
         const anchor = movementAnchorRef.current;
@@ -242,6 +257,11 @@ function CampusMapApp() {
         const speed = pos.coords.speed;
         const hasSpeed = speed !== null && Number.isFinite(speed) && speed >= 0;
         const reliable = Number.isFinite(pos.coords.accuracy) && pos.coords.accuracy <= 25;
+        if (!reliable) {
+          deviationCount = 0;
+          deviationSince = 0;
+          return;
+        }
         const moving = reliable && (hasSpeed ? speed >= 0.5 : displacement >= Math.max(WALKING_MOVEMENT_THRESHOLD_METERS, Math.min(pos.coords.accuracy, 8)));
 
         if (moving) {
@@ -260,14 +280,22 @@ function CampusMapApp() {
 
         prevPositionRef.current = nextPosition;
         setWalkingPosition(nextPosition);
-        if (haversineDistance(nextPosition.lat, nextPosition.lng, end.lat, end.lng) < 20) { disposed = true; request?.abort(); handleArrived(); return; }
+        if (pos.coords.accuracy <= 15 && haversineDistance(nextPosition.lat, nextPosition.lng, end.lat, end.lng) < 15) { disposed = true; request?.abort(); handleArrived(); return; }
         const heading = pos.coords.heading !== null && Number.isFinite(pos.coords.heading) ? pos.coords.heading : anchor && displacement >= 3 ? getBearing(anchor, nextPosition) : null;
         const route = routeRef.current;
-        if (moving && route) {
+        if (route) {
           const deviation = routeDeviation(nextPosition, route.points, heading);
           const offRoute = deviation.distance > Math.max(15, pos.coords.accuracy * 1.5);
-          deviationCount = offRoute || deviation.wrongWay ? deviationCount + 1 : 0;
-          if (deviationCount >= 2 && !request && Date.now() - lastReroute > 10000) { deviationCount = 0; void reroute(nextPosition, heading); }
+          if (!offRoute) furthestProgress = Math.max(furthestProgress, deviation.progressMeters);
+          const backtracking = moving && deviation.wrongWay && furthestProgress - deviation.progressMeters > Math.max(15, pos.coords.accuracy * 2);
+          if (offRoute || backtracking) {
+            if (deviationCount === 0) deviationSince = pos.timestamp;
+            deviationCount += 1;
+          } else { deviationCount = 0; deviationSince = 0; }
+          if (deviationCount >= 3 && pos.timestamp - deviationSince >= 3000 && !request && Date.now() - lastReroute > 10000) {
+            deviationCount = 0;
+            void reroute(nextPosition, heading);
+          }
         } else deviationCount = 0;
       },
       (error) => console.error("GPS watch error:", error),
@@ -316,6 +344,7 @@ function CampusMapApp() {
         isWalkingMode={travelMode === "walking"}
         walkingState={walkingState}
         pointerStyle={profile.pointerStyle}
+        gender={profile.gender}
         onMapReady={handleMapReady}
       />
 

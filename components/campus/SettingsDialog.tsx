@@ -5,7 +5,7 @@ import { Check, Map, Satellite, UserRound, X, Navigation, Settings2 } from "luci
 
 export type Gender = "male" | "female";
 export type PointerStyle = "character" | "blue" | "red" | "green";
-export type MapStyle = "roadmap" | "hybrid";
+export type MapStyle = "roadmap" | "satellite";
 export type UserProfile = { name: string; gender: Gender; pointerStyle: PointerStyle; mapStyle: MapStyle };
 type Props = { profile: UserProfile; onSave: (profile: UserProfile) => void; onClose: () => void };
 const POINTERS: { value: PointerStyle; label: string; color: string }[] = [
@@ -52,7 +52,7 @@ export default function SettingsDialog({ profile, onSave, onClose }: Props) {
         </fieldset>
         <fieldset className="border-t border-zinc-100 pt-5"><legend className="flex items-center gap-2 text-sm font-semibold text-zinc-900"><Map size={17} className="text-teal-700" />Map appearance</legend>
           <p className="mb-3 text-xs leading-5 text-zinc-500">Choose the view that helps you find your way.</p>
-          <div className="grid grid-cols-2 gap-3">{([{ value: "roadmap", label: "Standard", description: "Roads and buildings", Icon: Map }, { value: "hybrid", label: "Satellite", description: "Aerial view with labels", Icon: Satellite }] as const).map(({ value, label, description, Icon }) => <label key={value} className={`${optionClass} flex-col items-start gap-2`}>
+          <div className="grid grid-cols-2 gap-3">{([{ value: "roadmap", label: "Normal", description: "Roads and buildings", Icon: Map }, { value: "satellite", label: "Satellite", description: "Satellite imagery", Icon: Satellite }] as const).map(({ value, label, description, Icon }) => <label key={value} className={`${optionClass} flex-col items-start gap-2`}>
             <input type="radio" name="map-view" value={value} checked={draft.mapStyle === value} onChange={() => setDraft({ ...draft, mapStyle: value })} className="sr-only" />
             <div className="flex w-full items-center justify-between"><Icon size={24} className="text-teal-700" />{draft.mapStyle === value && <Check size={16} aria-hidden="true" />}</div>
             <span className="font-medium">{label}</span><span className="text-xs leading-4 text-zinc-500">{description}</span>

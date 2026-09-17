@@ -1,4 +1,5 @@
 import { adminWriteAccess } from "@/lib/adminAuth";
+import { BodyTooLarge, readLimitedBody } from "@/lib/requestBody";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { DEFAULT_ADS, type AdBanner, type AdsConfig, type AdPlacement } from "@/lib/ads";
@@ -54,7 +55,12 @@ export async function PUT(request: Request) {
   const denied = adminWriteAccess(request);
   if (denied) return denied;
 
-  const input = (await request.json()) as Partial<AdsConfig>;
+  if (!request.headers.get("content-type")?.includes("application/json")) return Response.json({ error: "Expected JSON." }, { status: 415 });
+  let input: Partial<AdsConfig>;
+  try {
+    input = JSON.parse((await readLimitedBody(request, 128 * 1024)).toString("utf8"));
+    if (!input || !Array.isArray(input.banners) || input.banners.length > 100 || input.banners.some((banner) => !banner || typeof banner !== "object")) throw new Error("Invalid banners.");
+  } catch (error) { return Response.json({ error: "Invalid or oversized ad settings." }, { status: error instanceof BodyTooLarge ? 413 : 400 }); }
   const current = await readAds();
 
   if (Array.isArray(input.banners)) {

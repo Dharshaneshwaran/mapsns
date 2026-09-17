@@ -11,7 +11,7 @@
       "title": "Discover SNS Innovation Hub",
       "description": "Explore student innovation, technology projects, events, and opportunities across the SNS campus.",
       "imageUrl": "/uploads/ads/628cdafaa107ad218f0aeb58e959651f3a949dcead5cf9d9fcb7c1d1ece41307.jpeg",
-      "linkUrl": "https://snsce.ac.in",
+      "linkUrl": "https://snsce.ac.in/",
       "buttonLabel": "Learn more",
       "order": 0
     },
@@ -24,8 +24,8 @@
       "eyebrow": "Campus spotlight",
       "title": "Discover SNS Innovation Hub",
       "description": "Explore student innovation, technology projects, events, and opportunities across the SNS campus.",
-      "imageUrl": "/ihub.png",
-      "linkUrl": "https://snsce.ac.in",
+      "imageUrl": "uploads\\map-images\\3227c334e0d9890d818e29491ca2e556579ee0817ce377ee9332832e69818bb7.png",
+      "linkUrl": "https://snsce.ac.in/",
       "buttonLabel": "Learn more",
       "order": 0
     }

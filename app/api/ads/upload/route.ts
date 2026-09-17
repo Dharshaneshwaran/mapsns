@@ -2,6 +2,7 @@ import { adminWriteAccess } from "@/lib/adminAuth";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { createHash } from "node:crypto";
+import { BodyTooLarge, readLimitedBody, isImageSignature } from "@/lib/requestBody";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -25,9 +26,10 @@ export async function POST(request: Request) {
 
   let formData: FormData;
   try {
-    formData = await request.formData();
-  } catch {
-    return Response.json({ error: "Could not read form data." }, { status: 400 });
+    const body = await readLimitedBody(request, MAX_BYTES + 64 * 1024);
+    formData = await new Response(new Uint8Array(body), { headers: { "Content-Type": contentType } }).formData();
+  } catch (error) {
+    return Response.json({ error: "Invalid or oversized upload." }, { status: error instanceof BodyTooLarge ? 413 : 400 });
   }
 
   const file = formData.get("file");
@@ -44,6 +46,7 @@ export async function POST(request: Request) {
   }
 
   const bytes = Buffer.from(await file.arrayBuffer());
+  if (!isImageSignature(bytes, file.type)) return Response.json({ error: "The file is not a supported image." }, { status: 400 });
   const ext = ALLOWED_TYPES[file.type];
   const filename = `${createHash("sha256").update(bytes).update(`${Date.now()}`).digest("hex")}.${ext}`;
 

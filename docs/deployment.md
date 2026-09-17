@@ -6,7 +6,7 @@ Set these environment variables on the server:
 
 - `VITE_GOOGLE_MAPS_API_KEY`: existing Google Maps browser key, restricted to the deployed hostnames.
 - `ADMIN_USERNAME`: administrator username (default `admin`).
-- `ADMIN_MAP_TOKEN`: a long random password. Required in production. `/admin` uses the browser's sign-in dialog (HTTP Basic authentication over HTTPS); the same credentials protect every write endpoint. Existing bearer publish keys remain supported. Localhost development works without credentials when no password is configured.
+- `ADMIN_MAP_TOKEN`: a long random password, required in every environment including localhost. `/admin` uses the browser's sign-in dialog (HTTP Basic authentication over HTTPS); the same credentials protect every write endpoint. Existing bearer publish keys remain supported. Set a separate development token in the ignored `.env.local` file. Browser writes require a matching Origin; command-line clients should use Bearer authentication.
 - `MAP_IMAGES_DATA_DIR`: absolute path to a persistent metadata directory.
 - `MAP_IMAGES_UPLOAD_DIR`: absolute path to a persistent image directory.
 - Optional `NEXT_PUBLIC_WALKING_ROUTER_URL` and `NEXT_PUBLIC_DRIVING_ROUTER_URL`: OSRM-compatible URLs ending in `/route/v1/<profile>` for your own routing servers. Defaults use the FOSSGIS walking/driving servers. Set these before building. Respect their service limits; deploy your own router for heavy usage.

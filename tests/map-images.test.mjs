@@ -115,7 +115,24 @@ test("browser sign-in credentials can publish landing settings", async () => {
   const draft = await response.json();
   draft.heading = "Test campus sidebar";
   const auth = `Basic ${Buffer.from(`admin:${key}`).toString("base64")}`;
-  const updated = await fetch(`${base}/api/landing`, { method: "PUT", headers: { Authorization: auth, "Content-Type": "application/json" }, body: JSON.stringify(draft) });
+  const updated = await fetch(`${base}/api/landing`, { method: "PUT", headers: { Authorization: auth, Origin: base, "Content-Type": "application/json" }, body: JSON.stringify(draft) });
   assert.equal(updated.status, 200, await updated.clone().text());
   assert.equal((await (await fetch(`${base}/api/landing`)).json()).heading, draft.heading);
+});
+
+test("security headers and bounded write endpoints reject hostile payloads", async () => {
+  const page = await fetch(base);
+  assert.equal(page.headers.get("x-content-type-options"), "nosniff");
+  assert.equal(page.headers.get("x-frame-options"), "DENY");
+  const headers = { Authorization: `Bearer ${key}`, "Content-Type": "application/json" };
+  for (const endpoint of ["ads", "landing"]) {
+    const oversized = await fetch(`${base}/api/${endpoint}`, { method: "PUT", headers, body: "x".repeat(140000) });
+    assert.equal(oversized.status, 413);
+    const malformed = await fetch(`${base}/api/${endpoint}`, { method: "PUT", headers, body: "{" });
+    assert.equal(malformed.status, 400);
+  }
+  const form = new FormData();
+  form.set("file", new Blob(["<script>alert(1)</script>"], { type: "image/png" }), "fake.png");
+  const upload = await fetch(`${base}/api/ads/upload`, { method: "POST", headers: { Authorization: `Bearer ${key}` }, body: form });
+  assert.equal(upload.status, 400);
 });

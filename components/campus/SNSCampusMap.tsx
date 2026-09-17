@@ -7,13 +7,13 @@ import { CampusLocation, WalkingRoute, WalkingState } from "@/types/campus";
 import CampusCharacterMarker from "./CampusCharacterMarker";
 import PublishedMapImages from "./PublishedMapImages";
 import { publishedPlaces } from "@/lib/publishedPlaces";
-import type { PointerStyle } from "./SettingsDialog";
+import type { Gender, PointerStyle } from "./SettingsDialog";
 
 type Props = {
   onLocationSelect: (location: CampusLocation) => void;
   selectedLocation: CampusLocation | null;
   activeRoute: WalkingRoute | null;
-  mapTypeId: "satellite" | "roadmap" | "hybrid";
+  mapTypeId: "satellite" | "roadmap";
   walkingPosition: { lat: number; lng: number } | null;
   walkingBearing: number;
   isWalking: boolean;
@@ -22,6 +22,7 @@ type Props = {
   isWalkingMode: boolean;
   walkingState: WalkingState;
   pointerStyle: PointerStyle;
+  gender: Gender;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onMapReady?: (map: any) => void;
 };
@@ -39,10 +40,12 @@ export default function SNSCampusMap({
   isWalkingMode,
   walkingState,
   pointerStyle,
+  gender,
   onMapReady,
 }: Props) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const cameraFrameRef = useRef<number | null>(null);
+  const initialMapType = useRef(mapTypeId);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mapRef = useRef<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -75,7 +78,7 @@ export default function SNSCampusMap({
       const map = new google.maps.Map(mapContainerRef.current, {
         center: CAMPUS_CENTER,
         zoom: 17,
-        mapTypeId: "roadmap",
+        mapTypeId: initialMapType.current,
         renderingType: google.maps.RenderingType.VECTOR,
         headingInteractionEnabled: true,
         tiltInteractionEnabled: false,
@@ -157,7 +160,7 @@ export default function SNSCampusMap({
       const pos = new google.maps.LatLng(walkingPosition.lat, walkingPosition.lng);
 
       // The character is the position indicator; keep its background transparent.
-      if (pointerStyle === "character") {
+      if (!isWalkingMode || pointerStyle === "character") {
         blueDotRef.current?.setMap(null);
         blueDotRef.current = null;
         blueDotPulseRef.current?.setMap(null);
@@ -215,7 +218,7 @@ export default function SNSCampusMap({
         blueDotPulseRef.current = null;
       }
     }
-  }, [walkingPosition, isWalking, isMapLoaded, pointerColor, pointerStyle]);
+  }, [walkingPosition, isWalking, isWalkingMode, isMapLoaded, pointerColor, pointerStyle]);
 
   // Update route polyline - Google Maps style blue line
   useEffect(() => {
@@ -398,12 +401,14 @@ export default function SNSCampusMap({
         const location = publishedPlaces([image]).find((item) => item.id === (image.locationId || image.id));
         if (location) onLocationSelect(location);
       }} />}
-      {isWalking && isWalkingMode && walkingPosition && mapInstance && pointerStyle === "character" && (
+      {isWalking && walkingPosition && mapInstance && (!isWalkingMode || pointerStyle === "character") && (
         <CampusCharacterMarker
           map={mapInstance}
           position={walkingPosition}
           bearing={walkingBearing}
           isMoving={walkingState === "walking"}
+          vehicle={!isWalkingMode}
+          gender={gender}
         />
       )}
       {!isMapLoaded && (

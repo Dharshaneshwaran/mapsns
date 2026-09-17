@@ -1,13 +1,13 @@
 "use client";
 
 import {
-  CarFront,
   Layers,
   Navigation,
   PersonStanding,
   X,
 } from "lucide-react";
 import PlaceActions from "./PlaceActions";
+import Image from "next/image";
 import { useEffect, useRef, useState, type PointerEvent } from "react";
 import type { CampusLocation, TravelMode } from "@/types/campus";
 
@@ -121,7 +121,7 @@ export default function RoutePreviewOverlay({ destination, distance, duration, m
 
         <div className="grid shrink-0 grid-cols-2 border-b border-[#dadce0] px-2">
           <button onClick={() => onModeChange("walking")} className={`route-mode-tab ${mode === "walking" ? "active" : ""}`}><PersonStanding className="h-[18px] w-[18px]" /><span>Walk</span></button>
-          <button onClick={() => onModeChange("vehicle")} className={`route-mode-tab ${mode === "vehicle" ? "active" : ""}`}><CarFront className="h-[18px] w-[18px]" /><span>Vehicle</span></button>
+          <button onClick={() => onModeChange("vehicle")} className={`route-mode-tab ${mode === "vehicle" ? "active" : ""}`}><Image src="/uploads/map-images/bullet%20cart/photo%201.png" alt="" width={28} height={28} unoptimized className="h-7 w-7 object-contain" /><span>Vehicle</span></button>
         </div>
 
         <div className="route-preview-details px-5 py-3">
