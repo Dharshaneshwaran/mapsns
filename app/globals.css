@@ -64,6 +64,11 @@ body {
   height: 100dvh;
 }
 
+.welcome-map .campus-map-canvas {
+  width: 100%;
+  margin-left: 0;
+}
+
 .route-preview-sheet {
   display: flex;
   flex-direction: column;
@@ -261,14 +266,14 @@ body {
   align-items: center;
   justify-content: center;
   border-radius: 9999px;
-  background: #101112;
-  color: #f1f3f4;
+  background: #ffffff;
+  color: #3c4043;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
   transition: background-color 150ms ease;
 }
 
 .navigation-round-control:hover {
-  background: #2a2b2d;
+  background: #f1f3f4;
 }
 
 .route-mode-tab {

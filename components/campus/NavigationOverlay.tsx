@@ -37,15 +37,15 @@ export default function NavigationOverlay({ destination, distance, duration, mod
         <button onClick={onOverview} aria-label="Route overview" className="navigation-round-control"><ListTree className="h-6 w-6" /></button>
       </div>
 
-      <div className="navigation-status pointer-events-auto absolute bottom-0 left-0 right-0 flex min-h-[112px] items-center gap-3 bg-[#101112] px-3 pb-[max(14px,var(--sab))] pt-3 text-white sm:left-4 sm:right-auto sm:bottom-4 sm:w-[420px] sm:rounded-[22px] sm:pb-3">
+      <div className="navigation-status pointer-events-auto absolute bottom-0 left-0 right-0 flex min-h-[112px] items-center gap-3 border-t border-zinc-200 bg-white px-3 pb-[max(14px,var(--sab))] pt-3 text-[#202124] shadow-lg sm:left-4 sm:right-auto sm:bottom-4 sm:w-[420px] sm:rounded-[22px] sm:pb-3">
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2 text-[23px] font-medium text-[#57d68d]">
+          <div className="flex items-center gap-2 text-[23px] font-medium text-[#188038]">
             <span>{minutes} min</span>
             {mode === "walking" ? <Footprints className="h-5 w-5" /> : <CarFront className="h-5 w-5" />}
           </div>
-          <p className="mt-1 truncate text-sm text-[#bdc1c6]">{distanceLabel} · {destination}</p>
+          <p className="mt-1 truncate text-sm text-[#5f6368]">{distanceLabel} · {destination}</p>
         </div>
-        <div className="flex h-13 w-13 items-center justify-center rounded-full bg-[#303134] text-[#8ab4f8]">
+        <div className="flex h-13 w-13 items-center justify-center rounded-full bg-[#e8f0fe] text-[#1a73e8]">
           <Navigation className="h-6 w-6 fill-current" />
         </div>
         <button onClick={onExit} className="flex h-13 w-13 items-center justify-center rounded-full bg-[#ea4335] text-sm font-medium text-white hover:bg-[#d93025]">Exit</button>

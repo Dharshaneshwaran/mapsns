@@ -2,10 +2,11 @@
 
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import dynamic from "next/dynamic";
+import Image from "next/image";
 import { CampusLocation, WalkingState, WalkingRoute, TravelMode } from "@/types/campus";
 import { useCampusPlaces } from "@/components/campus/useCampusPlaces";
 import { haversineDistance, estimateWalkingTime } from "@/lib/googleMaps";
-import { Check, AlertTriangle, Settings, X, MapPin } from "lucide-react";
+import { Check, AlertTriangle, Settings, X, MapPin, ArrowRight, Navigation } from "lucide-react";
 import CampusSearch from "@/components/campus/CampusSearch";
 import BottomSheet from "@/components/campus/BottomSheet";
 import NavigationOverlay from "@/components/campus/NavigationOverlay";
@@ -63,10 +64,54 @@ const SNSCampusMap = dynamic(
 );
 
 export default function CampusMapPage() {
-  return <CampusMapApp />;
+  const [gender, setGender] = useState<UserProfile["gender"] | null>(null);
+  const [initialProfile, setInitialProfile] = useState<UserProfile | null>(null);
+
+  if (initialProfile) return <CampusMapApp initialProfile={initialProfile} />;
+
+  return (
+    <main className="campus-map-app relative isolate overflow-hidden bg-[#e8eaed] text-[#202124]">
+      <div className="welcome-map absolute inset-0 pointer-events-none" aria-hidden="true" inert>
+        <SNSCampusMap onLocationSelect={() => {}} selectedLocation={null} activeRoute={null} mapTypeId="roadmap" walkingPosition={null} walkingBearing={0} isWalking={false} isFollowingLocation={false} onMapInteraction={() => {}} isWalkingMode walkingState="idle" pointerStyle="character" gender={gender ?? "male"} />
+      </div>
+      <div className="absolute left-4 right-4 top-[max(16px,env(safe-area-inset-top))] flex h-14 items-center gap-3 rounded-full bg-white px-5 shadow-md sm:right-auto sm:w-80">
+        <MapPin className="h-6 w-6 text-[#1a73e8]" />
+        <span className="text-base font-medium">SNS Campus</span>
+        <span className="ml-auto text-sm text-[#5f6368]">Explore & navigate</span>
+      </div>
+      <form className="absolute bottom-0 left-0 right-0 max-h-[calc(100%-88px-env(safe-area-inset-top))] overflow-y-auto overscroll-contain rounded-t-[28px] bg-white px-6 pb-[max(24px,env(safe-area-inset-bottom))] pt-3 shadow-[0_-4px_24px_#00000018] sm:bottom-6 sm:left-6 sm:right-auto sm:w-[400px] sm:rounded-[24px] sm:p-7"
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (!gender) return;
+          const nextProfile: UserProfile = { ...getSavedProfile(), gender };
+          try { window.localStorage.setItem("sns-campus-profile", JSON.stringify(nextProfile)); } catch { /* Continue even when browser storage is unavailable. */ }
+          setInitialProfile(nextProfile);
+        }}>
+        <div className="mx-auto mb-5 h-1 w-9 rounded-full bg-[#dadce0] sm:hidden" aria-hidden="true" />
+        <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-full bg-[#e8f0fe] text-[#1a73e8]"><Navigation size={22} /></div>
+        <h1 className="text-[26px] font-medium tracking-tight">Make your way around</h1>
+        <p className="mt-2 text-sm leading-6 text-[#5f6368]">Choose your character to start exploring campus.</p>
+        <fieldset className="mt-5">
+          <legend className="sr-only">Select male or female</legend>
+          <div className="mt-3 grid grid-cols-2 gap-3">
+            {(["male", "female"] as const).map((option) => (
+              <label key={option} className="relative flex cursor-pointer flex-col items-center gap-2 rounded-2xl border-2 border-[#e8eaed] bg-[#f8f9fa] px-4 py-3 transition-colors hover:bg-[#f1f3f4] has-checked:border-[#1a73e8] has-checked:bg-[#e8f0fe] has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-[#1a73e8]">
+                <input type="radio" name="gender" value={option} required checked={gender === option} onChange={() => setGender(option)} className="sr-only" />
+                <span className={`absolute right-3 top-3 flex h-5 w-5 items-center justify-center rounded-full border ${gender === option ? "border-[#1a73e8] bg-[#1a73e8] text-white" : "border-[#dadce0] bg-white"}`} aria-hidden="true">{gender === option && <Check size={13} strokeWidth={3} />}</span>
+                <Image src={option === "male" ? "/idel.png" : "/female/1.png"} alt="" width={72} height={80} unoptimized className="h-20 w-[72px] object-contain" />
+                <span className="text-sm font-medium capitalize">{option}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+        <p className="mt-4 text-center text-xs text-[#5f6368]">You can change your character in Settings.</p>
+        <button type="submit" disabled={!gender} className="mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#1a73e8] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#1557b0] disabled:cursor-not-allowed disabled:bg-[#f1f3f4] disabled:text-[#80868b]">Continue<ArrowRight size={18} /></button>
+      </form>
+    </main>
+  );
 }
 
-function CampusMapApp() {
+function CampusMapApp({ initialProfile }: { initialProfile: UserProfile }) {
   const places = useCampusPlaces();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [mapInstance, setMapInstance] = useState<any>(null);
@@ -88,7 +133,7 @@ function CampusMapApp() {
   const [travelMode, setTravelMode] = useState<TravelMode>("walking");
   const [isRoutePreview, setIsRoutePreview] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [profile, setProfile] = useState<UserProfile>(getSavedProfile);
+  const [profile, setProfile] = useState<UserProfile>(initialProfile);
 
   const watchIdRef = useRef<number | null>(null);
   const prevPositionRef = useRef<{ lat: number; lng: number } | null>(null);
