@@ -7,6 +7,7 @@ import { CampusLocation, WalkingRoute, WalkingState } from "@/types/campus";
 import CampusCharacterMarker from "./CampusCharacterMarker";
 import PublishedMapImages from "./PublishedMapImages";
 import { publishedPlaces } from "@/lib/publishedPlaces";
+import { remainingRoute } from "@/lib/routeDeviation";
 import type { Gender, PointerStyle } from "./SettingsDialog";
 
 type Props = {
@@ -45,6 +46,7 @@ export default function SNSCampusMap({
 }: Props) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const cameraFrameRef = useRef<number | null>(null);
+  const completedRouteProgress = useRef(0);
   const initialMapType = useRef(mapTypeId);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mapRef = useRef<any>(null);
@@ -222,6 +224,7 @@ export default function SNSCampusMap({
 
   // Update route polyline - Google Maps style blue line
   useEffect(() => {
+    completedRouteProgress.current = 0;
     if (!mapRef.current || !isMapLoaded) return;
 
     if (routePolylineRef.current) {
@@ -240,9 +243,10 @@ export default function SNSCampusMap({
       const shadowPolyline = new google.maps.Polyline({
         path: activeRoute.points.map((p) => new google.maps.LatLng(p.lat, p.lng)),
         geodesic: true,
-        strokeColor: "#4B2ECC",
-        strokeOpacity: 0.4,
-        strokeWeight: 10,
+        strokeColor: "#174ea6",
+        strokeOpacity: 1,
+        strokeWeight: 8,
+        zIndex: 10,
         map: mapRef.current,
         clickable: false,
       });
@@ -251,16 +255,17 @@ export default function SNSCampusMap({
       const polyline = new google.maps.Polyline({
         path: activeRoute.points.map((p) => new google.maps.LatLng(p.lat, p.lng)),
         geodesic: true,
-        strokeColor: "#5B35E5",
+        strokeColor: "#4285f4",
         strokeOpacity: 1,
         strokeWeight: 6,
+        zIndex: 11,
         map: mapRef.current,
         clickable: false,
         icons: isWalking ? undefined : [{
           icon: {
             path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
             scale: 3,
-            fillColor: "#5B35E5",
+            fillColor: "#4285f4",
             fillOpacity: 1,
             strokeColor: "#ffffff",
             strokeWeight: 1,
@@ -270,18 +275,7 @@ export default function SNSCampusMap({
         }],
       });
 
-      // White border line on top
-      const borderPolyline = new google.maps.Polyline({
-        path: activeRoute.points.map((p) => new google.maps.LatLng(p.lat, p.lng)),
-        geodesic: true,
-        strokeColor: "#ffffff",
-        strokeOpacity: 0.6,
-        strokeWeight: 2,
-        map: mapRef.current,
-        clickable: false,
-      });
-
-      routePolylineRef.current = { shadow: shadowPolyline, main: polyline, border: borderPolyline };
+      routePolylineRef.current = { shadow: shadowPolyline, main: polyline };
 
       // Keep the close navigation camera when starting or updating a route.
       if (isWalking) return;
@@ -306,6 +300,14 @@ export default function SNSCampusMap({
       }
     }
   }, [activeRoute, isMapLoaded, isWalking]);
+
+  useEffect(() => {
+    if (!isWalking || !walkingPosition || !activeRoute || !routePolylineRef.current) return;
+    const remaining = remainingRoute(walkingPosition, activeRoute.points, completedRouteProgress.current);
+    completedRouteProgress.current = remaining.progress;
+    routePolylineRef.current.main.setPath(remaining.points);
+    routePolylineRef.current.shadow.setPath(remaining.points);
+  }, [walkingPosition, activeRoute, isWalking, isMapLoaded]);
 
   // Pause camera following only for user gestures, not programmatic camera changes.
   useEffect(() => {

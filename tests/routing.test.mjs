@@ -1,7 +1,20 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { requestRoute } from "../lib/requestRoute.ts";
-import { routeDeviation } from "../lib/routeDeviation.ts";
+import { routeDeviation, remainingRoute } from "../lib/routeDeviation.ts";
+
+test("completed route disappears through corners without mutating navigation geometry", () => {
+  const points = [{ lat: 0, lng: 0 }, { lat: 0.001, lng: 0 }, { lat: 0.001, lng: 0.001 }];
+  const halfway = remainingRoute({ lat: 0.0005, lng: 0 }, points);
+  assert.deepEqual(halfway.points, [{ lat: 0.0005, lng: 0 }, ...points.slice(1)]);
+  const aroundCorner = remainingRoute({ lat: 0.001, lng: 0.0005 }, points, halfway.progress);
+  assert.deepEqual(aroundCorner.points, [{ lat: 0.001, lng: 0.0005 }, points[2]]);
+  assert.deepEqual(remainingRoute({ lat: 0.001, lng: 0.0004 }, points, aroundCorner.progress), aroundCorner);
+  assert.deepEqual(remainingRoute({ lat: 0.003, lng: 0.001 }, points, aroundCorner.progress), aroundCorner);
+  assert.deepEqual(remainingRoute(points[2], points, aroundCorner.progress).points, []);
+  assert.equal(points.length, 3);
+  assert.deepEqual(remainingRoute(points[0], points).points, points);
+});
 
 test("remaining distance follows the route around a corner", () => {
   const points = [{ lat: 0, lng: 0 }, { lat: 0.001, lng: 0 }, { lat: 0.001, lng: 0.001 }];
@@ -20,5 +33,22 @@ test("walking route keeps service distance and duration; no artificial fallback"
     assert.equal(route.distanceMeters, 250); assert.equal(route.durationSeconds, 190);
     globalThis.fetch = async () => Response.json({ code: "NoRoute" });
     await assert.rejects(requestRoute({ lat: 11, lng: 77 }, { lat: 11.001, lng: 77.001 }, "walking", new AbortController().signal), /No mapped route/);
+  } finally { globalThis.fetch = original; }
+});
+
+test("rejects routes snapped away from either endpoint and explains missing paths", async () => {
+  const original = globalThis.fetch;
+  const start = { lat: 11, lng: 77 }, end = { lat: 11.001, lng: 77.001 };
+  let coordinates = [[77.002, 11], [77.001, 11.001]];
+  try {
+    globalThis.fetch = async (url) => {
+      assert.equal(new URL(url).searchParams.get("radiuses"), "30;30");
+      return Response.json({ code: "Ok", routes: [{ distance: 250, duration: 190, geometry: { coordinates } }] });
+    };
+    await assert.rejects(requestRoute(start, end, "walking", new AbortController().signal), /does not reach/);
+    coordinates = [[77, 11], [77.003, 11.001]];
+    await assert.rejects(requestRoute(start, end, "walking", new AbortController().signal), /does not reach/);
+    globalThis.fetch = async () => Response.json({ code: "NoSegment" });
+    await assert.rejects(requestRoute(start, end, "walking", new AbortController().signal), /campus footpaths may be missing/);
   } finally { globalThis.fetch = original; }
 });

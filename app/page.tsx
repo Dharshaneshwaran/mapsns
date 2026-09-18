@@ -333,7 +333,7 @@ function CampusMapApp({ initialProfile }: { initialProfile: UserProfile }) {
           const offRoute = deviation.distance > Math.max(15, pos.coords.accuracy * 1.5);
           if (!offRoute) furthestProgress = Math.max(furthestProgress, deviation.progressMeters);
           const backtracking = moving && deviation.wrongWay && furthestProgress - deviation.progressMeters > Math.max(15, pos.coords.accuracy * 2);
-          if (offRoute || backtracking) {
+          if (moving && (offRoute || backtracking)) {
             if (deviationCount === 0) deviationSince = pos.timestamp;
             deviationCount += 1;
           } else { deviationCount = 0; deviationSince = 0; }
