@@ -13,6 +13,7 @@ import type { CampusLocation, TravelMode } from "@/types/campus";
 
 type Props = {
   destination: string;
+  destinationGapMeters?: number;
   distance: number;
   duration: number;
   mode: TravelMode;
@@ -31,7 +32,7 @@ function durationLabel(seconds: number) {
   return remaining ? `${hours} hr ${remaining} min` : `${hours} hr`;
 }
 
-export default function RoutePreviewOverlay({ destination, distance, duration, mode, onModeChange, onStart, onClose, onLayers, location }: Props) {
+export default function RoutePreviewOverlay({ destination, destinationGapMeters, distance, duration, mode, onModeChange, onStart, onClose, onLayers, location }: Props) {
   const distanceLabel = distance < 1000 ? `${Math.round(distance)} m` : `${(distance / 1000).toFixed(1)} km`;
   const sheet = useRef<HTMLDivElement>(null);
   const [expanded, setExpanded] = useState(false);
@@ -130,6 +131,7 @@ export default function RoutePreviewOverlay({ destination, distance, duration, m
             <div className="min-w-0 flex-1 text-xs leading-4 text-[#5f6368]">
               <p><span className="font-medium text-[#202124]">Estimated journey</span> · Route estimate</p>
               <p>{distanceLabel}</p>
+              {!!destinationGapMeters && destinationGapMeters > 30 && <p className="mt-1 text-xs">Route ends on a campus path, {Math.round(destinationGapMeters)} m from the pin. Check the entrance from there.</p>}
               <p className="mt-1">Check the marked route before starting.</p>
               <p className="mt-1">Route: <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap contributors</a> · <a href="https://www.openstreetmap.org/fixthemap" target="_blank" rel="noreferrer">Fix the map</a></p>
             </div>

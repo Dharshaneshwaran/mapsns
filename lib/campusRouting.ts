@@ -33,7 +33,7 @@ export function campusWalkingRoute(start: Coordinate, end: Coordinate) {
       segments.push([u, v]); connect(u, v);
     }
   }
-  const snap = (p: Coordinate) => {
+  const snap = (p: Coordinate, limit: number) => {
     let best: { u: number; v: number; p: Coordinate; gap: number } | null = null;
     for (const [u, v] of segments) {
       const a = nodes[u], b = nodes[v];
@@ -45,9 +45,11 @@ export function campusWalkingRoute(start: Coordinate, end: Coordinate) {
       const gap = meters(p, projected);
       if (!best || gap < best.gap) best = { u, v, p: projected, gap };
     }
-    return best && best.gap <= 30 ? best : null;
+    return best && best.gap <= limit ? best : null;
   };
-  const first = snap(start), last = snap(end);
+  // Building pins may sit away from a road. Report the gap rather than
+  // drawing an unverified shortcut; GPS still must be within 30 m.
+  const first = snap(start, 30), last = snap(end, 60);
   if (!first || !last) return null;
   const source = node(first.p), target = node(last.p);
   connect(source, first.u); connect(source, first.v);
@@ -56,10 +58,12 @@ export function campusWalkingRoute(start: Coordinate, end: Coordinate) {
   const distances = nodes.map(() => Infinity), previous = nodes.map(() => -1);
   const visited = new Set<number>();
   distances[source] = 0;
+  // A*: straight-line distance is an admissible, consistent lower bound.
+  const estimate = (i: number) => distances[i] + meters(nodes[i], nodes[target]);
   while (true) {
     let current = -1;
     for (let i = 0; i < nodes.length; i++) {
-      if (!visited.has(i) && Number.isFinite(distances[i]) && (current < 0 || distances[i] < distances[current])) current = i;
+      if (!visited.has(i) && Number.isFinite(distances[i]) && (current < 0 || estimate(i) < estimate(current))) current = i;
     }
     if (current < 0) return null;
     if (current === target) break;
@@ -74,5 +78,5 @@ export function campusWalkingRoute(start: Coordinate, end: Coordinate) {
   for (let at = target; at !== -1; at = previous[at]) path.push(nodes[at]);
   path.reverse();
   if (path.length === 1) path.push({ ...path[0] });
-  return { points: path, distanceMeters: distances[target], durationSeconds: distances[target] / 1.25 };
+  return { points: path, distanceMeters: distances[target], durationSeconds: distances[target] / 1.25, destinationGapMeters: last.gap };
 }

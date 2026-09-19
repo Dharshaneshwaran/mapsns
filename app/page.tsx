@@ -184,7 +184,9 @@ function CampusMapApp({ initialProfile }: { initialProfile: UserProfile }) {
     setIsRoutePreview(false);
   }, []);
 
+  const [arrivalGap, setArrivalGap] = useState(0);
   const handleArrived = useCallback(() => {
+    setArrivalGap(routeRef.current?.destinationGapMeters ?? 0);
     setIsWalking(false);
     setWalkingState("arrived");
     setWalkingPosition(null);
@@ -333,7 +335,9 @@ function CampusMapApp({ initialProfile }: { initialProfile: UserProfile }) {
 
         prevPositionRef.current = nextPosition;
         setWalkingPosition(nextPosition);
-        if (pos.coords.accuracy <= 15 && haversineDistance(nextPosition.lat, nextPosition.lng, end.lat, end.lng) < 15) { disposed = true; request?.abort(); handleArrived(); return; }
+        const currentRoute = routeRef.current;
+        const arrivalPoint = currentRoute && (currentRoute.destinationGapMeters ?? 0) > 30 ? currentRoute.points[currentRoute.points.length - 1] : end;
+        if (pos.coords.accuracy <= 15 && haversineDistance(nextPosition.lat, nextPosition.lng, arrivalPoint.lat, arrivalPoint.lng) < 15) { disposed = true; request?.abort(); handleArrived(); return; }
         const heading = pos.coords.heading !== null && Number.isFinite(pos.coords.heading) ? pos.coords.heading : anchor && displacement >= 3 ? getBearing(anchor, nextPosition) : null;
         const route = routeRef.current;
         if (route) {
@@ -421,6 +425,7 @@ function CampusMapApp({ initialProfile }: { initialProfile: UserProfile }) {
       {isWalking && rerouteMessage && <p role="status" className="absolute left-4 right-4 top-28 z-50 rounded-xl bg-white px-4 py-3 text-sm text-teal-800 shadow-lg sm:right-auto sm:max-w-md">{rerouteMessage}</p>}
       {isWalking && selectedLocation && walkingPosition && (
         <NavigationOverlay
+          destinationGapMeters={activeRoute?.destinationGapMeters}
           destination={selectedLocation.name}
           distance={distance ?? 0}
           duration={travelTime ?? 0}
@@ -434,6 +439,7 @@ function CampusMapApp({ initialProfile }: { initialProfile: UserProfile }) {
 
       {isRoutePreview && selectedLocation && walkingPosition && (
         <RoutePreviewOverlay
+          destinationGapMeters={activeRoute?.destinationGapMeters}
           destination={selectedLocation.name}
           distance={distance ?? 0}
           duration={travelTime ?? 0}
@@ -532,7 +538,8 @@ function CampusMapApp({ initialProfile }: { initialProfile: UserProfile }) {
               <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-50 border border-green-100 flex items-center justify-center">
                 <Check className="w-8 h-8 text-green-500" />
               </div>
-              <h3 className="text-lg font-bold text-zinc-900 mb-1">You have arrived!</h3>
+              <h3 className="text-lg font-bold text-zinc-900 mb-1">{arrivalGap > 30 ? "You reached the nearby campus path" : "You have arrived!"}</h3>
+              {arrivalGap > 30 && <p className="text-sm text-zinc-600">The destination pin is about {Math.round(arrivalGap)} m away. Check the entrance from here.</p>}
               <p className="text-sm text-zinc-500">{selectedLocation.name}</p>
             </div>
             <div className="px-6 pb-6">

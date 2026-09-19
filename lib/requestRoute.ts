@@ -3,7 +3,7 @@ import { isInsideCampus } from "../data/campusBoundary.ts";
 import { campusWalkingRoute } from "./campusRouting.ts";
 export class CampusRouteError extends Error {}
 let nextRequest = 0;
-export async function requestRoute(start: Coordinate, end: Coordinate, mode: TravelMode, signal: AbortSignal, heading: number | null = null): Promise<Pick<WalkingRoute, "points" | "distanceMeters" | "durationSeconds">> {
+export async function requestRoute(start: Coordinate, end: Coordinate, mode: TravelMode, signal: AbortSignal, heading: number | null = null): Promise<Pick<WalkingRoute, "points" | "distanceMeters" | "durationSeconds" | "destinationGapMeters">> {
   signal.throwIfAborted();
   const campusRoute = mode === "walking" ? campusWalkingRoute(start, end) : null;
   if (campusRoute) return campusRoute;

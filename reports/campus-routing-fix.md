@@ -9,3 +9,9 @@ If the local graph cannot serve a trip, the public router is still queried. Retu
 Regression verification: the saved northern road endpoint (11.103914, 77.026619) reaches the published iHub pin using 578 m of internal road geometry without any network request. Tests also cover outside detours, internal alternatives, endpoint limits, same-segment routing, and HTTP 400 error bodies.
 
 The geometry is existing repository data; physical accessibility and completeness have not been field-verified. This change does not make every possible GPS position routable. The earlier `campus-route-audit.md` describes public-router results only, not this local graph.
+
+## Shortest-path and destination approach update
+
+Local walking routes now use A* with an admissible straight-line distance heuristic. Road lengths remain the optimization cost. Start positions still require a road within 30 m. Destination pins may be up to 60 m from their nearest mapped campus road; the route stops on that road and does not draw an unverified connector. For destination gaps over 30 m, preview, navigation, and arrival explain that the route reaches a nearby path rather than the pin itself.
+
+The saved CGC building and Plane View pins are respectively about 46.5 m and 43.9 m from the local network. Both now return internal routes from the tested northern road endpoint without an external request. These checks do not reproduce the unknown GPS origins in the screenshots. Destinations more than 60 m from the local road network still require better mapped approaches.

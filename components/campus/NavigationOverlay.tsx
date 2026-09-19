@@ -6,6 +6,7 @@ import type { TravelMode } from "@/types/campus";
 
 type Props = {
   destination: string;
+  destinationGapMeters?: number;
   distance: number;
   duration: number;
   mode: TravelMode;
@@ -15,7 +16,7 @@ type Props = {
   onOverview: () => void;
 };
 
-export default function NavigationOverlay({ destination, distance, duration, mode, onExit, onRecenter, onOverview, isFollowingLocation }: Props) {
+export default function NavigationOverlay({ destination, destinationGapMeters, distance, duration, mode, onExit, onRecenter, onOverview, isFollowingLocation }: Props) {
   const minutes = Math.max(1, Math.ceil(duration / 60));
   const distanceLabel = distance < 1000 ? `${Math.round(distance)} m` : `${(distance / 1000).toFixed(1)} km`;
 
@@ -27,6 +28,7 @@ export default function NavigationOverlay({ destination, distance, duration, mod
           <div className="min-w-0 flex-1">
             <p className="text-sm text-white/85">towards</p>
             <p className="truncate text-[18px] font-medium">{destination}</p>
+            {!!destinationGapMeters && destinationGapMeters > 30 && <p className="text-xs">To campus path · {Math.round(destinationGapMeters)} m from pin</p>}
           </div>
           <div className="rounded-lg bg-[#fdd663] px-2 py-1 text-sm font-bold text-[#5f4b00]">SNS</div>
         </div>

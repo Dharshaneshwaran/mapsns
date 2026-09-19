@@ -39,6 +39,7 @@ export type WalkingRoute = {
   isPrototype: boolean;
   distanceMeters?: number;
   durationSeconds?: number;
+  destinationGapMeters?: number;
 };
 
 export type WalkingState = "idle" | "walking" | "turning" | "arrived";
