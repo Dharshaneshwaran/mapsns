@@ -4,7 +4,7 @@ import type { Coordinate } from "@/types/campus";
 
 const meters = (a: Coordinate, b: Coordinate) => Math.hypot((a.lat - b.lat) * 111320, (a.lng - b.lng) * 109240);
 
-// Existing campus road geometry from mapsns/frontend/public/campus-roads.json.
+// Campus road geometry imported from OpenStreetMap; see scripts/import-campus-roads.mjs.
 // Join only shared vertices; never invent connections across unmapped ground.
 export function campusWalkingRoute(start: Coordinate, end: Coordinate) {
   if (!isInsideCampus(start.lat, start.lng) || !isInsideCampus(end.lat, end.lng)) return null;
@@ -49,6 +49,7 @@ export function campusWalkingRoute(start: Coordinate, end: Coordinate) {
   };
   // Building pins may sit away from a road. Report the gap rather than
   // drawing an unverified shortcut; GPS still must be within 30 m.
+  // This is a route to a nearby path, not a verified entrance connection.
   const first = snap(start, 30), last = snap(end, 60);
   if (!first || !last) return null;
   const source = node(first.p), target = node(last.p);

@@ -131,6 +131,7 @@ export default function RoutePreviewOverlay({ destination, destinationGapMeters,
             <div className="min-w-0 flex-1 text-xs leading-4 text-[#5f6368]">
               <p><span className="font-medium text-[#202124]">Estimated journey</span> · Route estimate</p>
               <p>{distanceLabel}</p>
+              {destinationGapMeters !== undefined && <a className="text-xs underline" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">Campus roads © OpenStreetMap contributors</a>}
               {!!destinationGapMeters && destinationGapMeters > 30 && <p className="mt-1 text-xs">Route ends on a campus path, {Math.round(destinationGapMeters)} m from the pin. Check the entrance from there.</p>}
               <p className="mt-1">Check the marked route before starting.</p>
               <p className="mt-1">Route: <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap contributors</a> · <a href="https://www.openstreetmap.org/fixthemap" target="_blank" rel="noreferrer">Fix the map</a></p>

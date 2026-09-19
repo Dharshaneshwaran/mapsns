@@ -5,8 +5,8 @@ import { routeDeviation, remainingRoute } from "../lib/routeDeviation.ts";
 
 test("campus trips reject outside detours and select an inside alternative", async () => {
   const original = globalThis.fetch;
-  const start = { lat: 11.1040, lng: 77.0279 };
-  const end = { lat: 11.1038, lng: 77.0279 };
+  const start = { lat: 11.103, lng: 77.0281 };
+  const end = { lat: 11.1028, lng: 77.0281 };
   const inside = { distance: 100, duration: 80, geometry: { coordinates: [[start.lng, start.lat], [end.lng, end.lat]] } };
   const outside = { distance: 520, duration: 420, geometry: { coordinates: [[start.lng, start.lat], [77.0255, 11.0995], [end.lng, end.lat]] } };
   let routes = [outside];
