@@ -3,6 +3,25 @@ import assert from "node:assert/strict";
 import { requestRoute } from "../lib/requestRoute.ts";
 import { routeDeviation, remainingRoute } from "../lib/routeDeviation.ts";
 
+test("campus trips reject outside detours and select an inside alternative", async () => {
+  const original = globalThis.fetch;
+  const start = { lat: 11.1040, lng: 77.0279 };
+  const end = { lat: 11.1038, lng: 77.0279 };
+  const inside = { distance: 100, duration: 80, geometry: { coordinates: [[start.lng, start.lat], [end.lng, end.lat]] } };
+  const outside = { distance: 520, duration: 420, geometry: { coordinates: [[start.lng, start.lat], [77.0255, 11.0995], [end.lng, end.lat]] } };
+  let routes = [outside];
+  try {
+    globalThis.fetch = async () => Response.json({ code: "Ok", routes });
+    for (const mode of ["walking", "vehicle"]) {
+      await assert.rejects(requestRoute(start, end, mode, new AbortController().signal), /No mapped route stays inside campus/);
+    }
+    routes = [outside, inside];
+    assert.equal((await requestRoute(start, end, "walking", new AbortController().signal)).distanceMeters, 100);
+    routes = [inside];
+    assert.equal((await requestRoute(start, end, "walking", new AbortController().signal)).distanceMeters, 100);
+  } finally { globalThis.fetch = original; }
+});
+
 test("completed route disappears through corners without mutating navigation geometry", () => {
   const points = [{ lat: 0, lng: 0 }, { lat: 0.001, lng: 0 }, { lat: 0.001, lng: 0.001 }];
   const halfway = remainingRoute({ lat: 0.0005, lng: 0 }, points);
@@ -48,7 +67,11 @@ test("rejects routes snapped away from either endpoint and explains missing path
     await assert.rejects(requestRoute(start, end, "walking", new AbortController().signal), /does not reach/);
     coordinates = [[77, 11], [77.003, 11.001]];
     await assert.rejects(requestRoute(start, end, "walking", new AbortController().signal), /does not reach/);
-    globalThis.fetch = async () => Response.json({ code: "NoSegment" });
+    globalThis.fetch = async () => Response.json({ code: "NoSegment" }, { status: 400 });
     await assert.rejects(requestRoute(start, end, "walking", new AbortController().signal), /campus footpaths may be missing/);
+    globalThis.fetch = async () => Response.json({ code: "NoRoute" }, { status: 400 });
+    await assert.rejects(requestRoute(start, end, "walking", new AbortController().signal), /walkways may be missing or disconnected/);
+    globalThis.fetch = async () => new Response("Bad Gateway", { status: 502 });
+    await assert.rejects(requestRoute(start, end, "walking", new AbortController().signal), /HTTP 502/);
   } finally { globalThis.fetch = original; }
 });

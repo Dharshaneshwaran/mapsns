@@ -13,7 +13,7 @@ import NavigationOverlay from "@/components/campus/NavigationOverlay";
 import RoutePreviewOverlay from "@/components/campus/RoutePreviewOverlay";
 import SettingsDialog, { UserProfile } from "@/components/campus/SettingsDialog";
 import ExplorePanel from "@/components/campus/ExplorePanel";
-import { requestRoute } from "@/lib/requestRoute";
+import { CampusRouteError, requestRoute } from "@/lib/requestRoute";
 import { routeDeviation } from "@/lib/routeDeviation";
 
 type Coordinate = { lat: number; lng: number };
@@ -287,7 +287,15 @@ function CampusMapApp({ initialProfile }: { initialProfile: UserProfile }) {
         deviationCount = 0;
         deviationSince = 0;
         setRerouteMessage("Route updated from your current location.");
-      } catch { if (!disposed) setRerouteMessage("Could not update route. Keeping the previous route and retrying as you move."); }
+      } catch (error) {
+        if (!disposed && error instanceof CampusRouteError) {
+          routeRef.current = null;
+          setActiveRoute(null);
+          setIsWalking(false);
+          setRouteError(error.message);
+          setRerouteMessage("");
+        } else if (!disposed) setRerouteMessage("Could not update route. Keeping the previous route and retrying as you move.");
+      }
       finally { clearTimeout(timeout); request = null; }
     };
     watchIdRef.current = navigator.geolocation.watchPosition(

@@ -1,4 +1,4 @@
-import { Coordinate } from "@/types/campus";
+import type { Coordinate } from "@/types/campus";
 
 export const CAMPUS_BOUNDARY: Coordinate[] = [
   { lat: 11.099576688026927, lng: 77.02602315513506 },
