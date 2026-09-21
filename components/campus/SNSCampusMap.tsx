@@ -279,25 +279,11 @@ export default function SNSCampusMap({
 
       // Keep the close navigation camera when starting or updating a route.
       if (isWalking) return;
-      // Fit bounds to route, but constrain to campus area
+      // Show the entire route, including the user's position outside campus.
       const routeBounds = new google.maps.LatLngBounds();
       activeRoute.points.forEach((p) => routeBounds.extend(new google.maps.LatLng(p.lat, p.lng)));
 
-      const campusBounds = new google.maps.LatLngBounds();
-      CAMPUS_BOUNDARY.forEach((c) => campusBounds.extend(new google.maps.LatLng(c.lat, c.lng)));
-
-      // If route extends outside campus, use campus bounds instead
-      const sw = routeBounds.getSouthWest();
-      const ne = routeBounds.getNorthEast();
-      const campusSw = campusBounds.getSouthWest();
-      const campusNe = campusBounds.getNorthEast();
-
-      if (sw.lat() < campusSw.lat() || sw.lng() < campusSw.lng() ||
-          ne.lat() > campusNe.lat() || ne.lng() > campusNe.lng()) {
-        mapRef.current.fitBounds(campusBounds, 80);
-      } else {
-        mapRef.current.fitBounds(routeBounds, 80);
-      }
+      mapRef.current.fitBounds(routeBounds, 80);
     }
   }, [activeRoute, isMapLoaded, isWalking]);
 

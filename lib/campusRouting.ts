@@ -1,5 +1,4 @@
 import roads from "../data/campus-roads.json" with { type: "json" };
-import { isInsideCampus } from "../data/campusBoundary.ts";
 import type { Coordinate } from "@/types/campus";
 
 const meters = (a: Coordinate, b: Coordinate) => Math.hypot((a.lat - b.lat) * 111320, (a.lng - b.lng) * 109240);
@@ -7,7 +6,6 @@ const meters = (a: Coordinate, b: Coordinate) => Math.hypot((a.lat - b.lat) * 11
 // Campus road geometry imported from OpenStreetMap; see scripts/import-campus-roads.mjs.
 // Join only shared vertices; never invent connections across unmapped ground.
 export function campusWalkingRoute(start: Coordinate, end: Coordinate) {
-  if (!isInsideCampus(start.lat, start.lng) || !isInsideCampus(end.lat, end.lng)) return null;
   const nodes: Coordinate[] = [];
   const edges: Map<number, number>[] = [];
   const ids = new Map<string, number>();
@@ -28,7 +26,6 @@ export function campusWalkingRoute(start: Coordinate, end: Coordinate) {
     for (let i = 1; i < road.length; i++) {
       const a = { lng: road[i - 1][0], lat: road[i - 1][1] };
       const b = { lng: road[i][0], lat: road[i][1] };
-      if (!isInsideCampus(a.lat, a.lng) || !isInsideCampus(b.lat, b.lng)) continue;
       const u = node(a), v = node(b);
       segments.push([u, v]); connect(u, v);
     }
@@ -59,12 +56,11 @@ export function campusWalkingRoute(start: Coordinate, end: Coordinate) {
   const distances = nodes.map(() => Infinity), previous = nodes.map(() => -1);
   const visited = new Set<number>();
   distances[source] = 0;
-  // A*: straight-line distance is an admissible, consistent lower bound.
-  const estimate = (i: number) => distances[i] + meters(nodes[i], nodes[target]);
+  // Dijkstra: minimize total mapped-road distance, including outside the overlay.
   while (true) {
     let current = -1;
     for (let i = 0; i < nodes.length; i++) {
-      if (!visited.has(i) && Number.isFinite(distances[i]) && (current < 0 || estimate(i) < estimate(current))) current = i;
+      if (!visited.has(i) && Number.isFinite(distances[i]) && (current < 0 || distances[i] < distances[current])) current = i;
     }
     if (current < 0) return null;
     if (current === target) break;

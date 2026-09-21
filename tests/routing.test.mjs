@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { requestRoute } from "../lib/requestRoute.ts";
 import { routeDeviation, remainingRoute } from "../lib/routeDeviation.ts";
 
-test("campus trips reject outside detours and select an inside alternative", async () => {
+test("campus trips allow boundary crossings and select the shortest alternative", async () => {
   const original = globalThis.fetch;
   const start = { lat: 11.103, lng: 77.0281 };
   const end = { lat: 11.1028, lng: 77.0281 };
@@ -13,12 +13,31 @@ test("campus trips reject outside detours and select an inside alternative", asy
   try {
     globalThis.fetch = async () => Response.json({ code: "Ok", routes });
     for (const mode of ["walking", "vehicle"]) {
-      await assert.rejects(requestRoute(start, end, mode, new AbortController().signal), /No mapped route stays inside campus/);
+      assert.equal((await requestRoute(start, end, mode, new AbortController().signal)).distanceMeters, 520);
     }
     routes = [outside, inside];
     assert.equal((await requestRoute(start, end, "walking", new AbortController().signal)).distanceMeters, 100);
     routes = [inside];
     assert.equal((await requestRoute(start, end, "walking", new AbortController().signal)).distanceMeters, 100);
+  } finally { globalThis.fetch = original; }
+});
+
+test("outside-to-campus trips choose the shortest valid alternative", async () => {
+  const original = globalThis.fetch;
+  const start = { lat: 11.099, lng: 77.027 }, end = { lat: 11.1028, lng: 77.0281 };
+  const geometry = { coordinates: [[start.lng, start.lat], [end.lng, end.lat]] };
+  try {
+    globalThis.fetch = async () => Response.json({ code: "Ok", routes: [
+      { distance: 900, duration: 100, geometry },
+      null,
+      { distance: 1, duration: 1, geometry: { coordinates: [[77, 11], [77, 11.001]] } },
+      { distance: 500, duration: 400, geometry },
+    ] });
+    for (const mode of ["walking", "vehicle"]) {
+      const route = await requestRoute(start, end, mode, new AbortController().signal);
+      assert.equal(route.distanceMeters, 500);
+      assert.deepEqual(route.points, [start, end]);
+    }
   } finally { globalThis.fetch = original; }
 });
 

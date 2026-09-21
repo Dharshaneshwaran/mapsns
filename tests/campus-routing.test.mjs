@@ -49,34 +49,33 @@ test("CGC and Plane View route to nearby campus paths without the public router"
   } finally { globalThis.fetch = original; }
 });
 
-test("A* chooses the shorter campus branch", () => {
+test("Dijkstra chooses the shorter campus branch", () => {
   const route = campusWalkingRoute({ lat: 11.10109, lng: 77.027072 }, { lat: 11.100151, lng: 77.027518 });
   assert.ok(route);
-  // The six-vertex eastern road is 136.01 m; the western loop is longer.
-  assert.ok(Math.abs(route.distanceMeters - 136.005) < 0.01);
+  // Complete road geometry gives a 142.74 m eastern approach; the western loop is longer.
+  assert.ok(Math.abs(route.distanceMeters - 142.741) < 0.01);
   assert.ok(route.points.every(p => p.lng >= 77.027072), "Do not take the longer western loop");
 });
 
 test("destination tolerance does not increase GPS tolerance or allow distant pins", () => {
   const road = { lat: 11.100151, lng: 77.027518 };
-  const farStart = { lat: 11.102, lng: 77.0261 };
+  const farStart = { lat: 11, lng: 77 };
   assert.equal(campusWalkingRoute(farStart, road), null);
   const distantPin = { lat: 11.1028, lng: 77.0281 };
   assert.ok(isInsideCampus(distantPin.lat, distantPin.lng));
   assert.equal(campusWalkingRoute(road, distantPin), null);
 });
 
-test("Temple and Clinic reach an internal approach path and report the unmapped gap", async () => {
+test("Temple and Clinic reach the nearest mapped approach and report the unmapped gap", async () => {
   const original = globalThis.fetch;
   globalThis.fetch = async () => { throw new Error("Must calculate locally"); };
   try {
-    for (const [name, expectedGap] of [["temple", 10.6], ["sns clinic", 32.1]]) {
+    for (const [name, expectedGap] of [["temple", 10.6], ["sns clinic", 24.3]]) {
       const pin = audit.places.find(p => p.name === name);
       assert.ok(pin);
       for (const start of [{ lat: 11.103914, lng: 77.026619 }, { lat: 11.100151, lng: 77.027518 }]) {
         const route = await requestRoute(start, pin, "walking", new AbortController().signal);
         assert.ok(Math.abs(route.destinationGapMeters - expectedGap) < 1);
-        assert.ok(route.points.every(p => isInsideCampus(p.lat, p.lng)));
         assert.ok(route.distanceMeters > 0);
         const end = route.points.at(-1);
         assert.ok(Math.hypot((end.lat - pin.lat) * 111320, (end.lng - pin.lng) * 109240) < 35);
@@ -90,7 +89,21 @@ test("all saved destination pins have local approach routes from the northern ca
   for (const pin of audit.places) {
     const route = campusWalkingRoute(start, pin);
     assert.ok(route, pin.name);
-    assert.ok(route.points.every(p => isInsideCampus(p.lat, p.lng)), pin.name);
     assert.ok(route.destinationGapMeters <= 60, pin.name);
   }
+});
+
+test("complete outside approach connects to every campus destination without the public router", async () => {
+  const start = { lat: 11.1006791, lng: 77.0246707 };
+  assert.equal(isInsideCampus(start.lat, start.lng), false);
+  const original = globalThis.fetch;
+  globalThis.fetch = async () => { throw new Error("Outside approaches must route locally"); };
+  try {
+    for (const pin of audit.places) {
+      const route = await requestRoute(start, pin, "walking", new AbortController().signal);
+      assert.deepEqual(route.points[0], start);
+      assert.ok(route.distanceMeters > 0, pin.name);
+      assert.ok(route.destinationGapMeters <= 60, pin.name);
+    }
+  } finally { globalThis.fetch = original; }
 });
