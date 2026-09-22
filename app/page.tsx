@@ -15,7 +15,7 @@ import SettingsDialog, { UserProfile } from "@/components/campus/SettingsDialog"
 import ExplorePanel from "@/components/campus/ExplorePanel";
 import { CampusRouteError, requestRoute } from "@/lib/requestRoute";
 import { routeDeviation } from "@/lib/routeDeviation";
-import { majorPlaceLabel } from "@/data/majorPlaces";
+import { conferenceEvents, normalizePlaceName } from "@/data/majorPlaces";
 
 type Coordinate = { lat: number; lng: number };
 const WALKING_MOVEMENT_THRESHOLD_METERS = 3;
@@ -75,11 +75,6 @@ export default function CampusMapPage() {
       <div className="welcome-map absolute inset-0 pointer-events-none" aria-hidden="true" inert>
         <SNSCampusMap onLocationSelect={() => {}} selectedLocation={null} activeRoute={null} mapTypeId="roadmap" walkingPosition={null} walkingBearing={0} isWalking={false} isFollowingLocation={false} onMapInteraction={() => {}} isWalkingMode walkingState="idle" pointerStyle="character" gender={gender ?? "male"} />
       </div>
-      <div className="absolute left-4 right-4 top-[max(16px,env(safe-area-inset-top))] flex h-14 items-center gap-3 rounded-full bg-white px-5 shadow-md sm:right-auto sm:w-80">
-        <MapPin className="h-6 w-6 text-[#1a73e8]" />
-        <span className="text-base font-medium">SNS Campus</span>
-        <span className="ml-auto text-sm text-[#5f6368]">Explore & navigate</span>
-      </div>
       <form className="campus-welcome-card absolute bottom-0 left-0 right-0 max-h-[calc(100%-88px-env(safe-area-inset-top))] overflow-y-auto overscroll-contain rounded-t-[28px] bg-white px-6 pb-[max(24px,env(safe-area-inset-bottom))] pt-3 shadow-[0_-4px_24px_#00000018] sm:bottom-6 sm:left-6 sm:right-auto sm:w-[400px] sm:rounded-[24px] sm:p-7"
         onSubmit={(event) => {
           event.preventDefault();
@@ -100,7 +95,7 @@ export default function CampusMapPage() {
               <label key={option} className="relative flex cursor-pointer flex-col items-center gap-2 rounded-2xl border-2 border-[#e8eaed] bg-[#f8f9fa] px-4 py-3 transition-colors hover:bg-[#f1f3f4] has-checked:border-[#1a73e8] has-checked:bg-[#e8f0fe] has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-[#1a73e8]">
                 <input type="radio" name="gender" value={option} required checked={gender === option} onChange={() => setGender(option)} className="sr-only" />
                 <span className={`absolute right-3 top-3 flex h-5 w-5 items-center justify-center rounded-full border ${gender === option ? "border-[#1a73e8] bg-[#1a73e8] text-white" : "border-[#dadce0] bg-white"}`} aria-hidden="true">{gender === option && <Check size={13} strokeWidth={3} />}</span>
-                <Image src={option === "male" ? "/idel.png" : "/female/1.png"} alt="" width={72} height={80} unoptimized className="h-20 w-[72px] object-contain" />
+                <Image src={option === "male" ? "/idel.png" : "/female_v_2/image%201.0.png"} alt="" width={72} height={80} unoptimized className="h-20 w-[72px] object-contain" />
                 <span className="text-sm font-medium capitalize">{option}</span>
               </label>
             ))}
@@ -339,7 +334,7 @@ function CampusMapApp({ initialProfile }: { initialProfile: UserProfile }) {
         setWalkingPosition(nextPosition);
         const currentRoute = routeRef.current;
         const arrivalPoint = currentRoute && (currentRoute.destinationGapMeters ?? 0) > 30 ? currentRoute.points[currentRoute.points.length - 1] : end;
-        if (pos.coords.accuracy <= 15 && haversineDistance(nextPosition.lat, nextPosition.lng, arrivalPoint.lat, arrivalPoint.lng) <= 2) { disposed = true; request?.abort(); handleArrived(); return; }
+        if (pos.coords.accuracy <= 15 && haversineDistance(nextPosition.lat, nextPosition.lng, arrivalPoint.lat, arrivalPoint.lng) <= 5) { disposed = true; request?.abort(); handleArrived(); return; }
         const heading = pos.coords.heading !== null && Number.isFinite(pos.coords.heading) ? pos.coords.heading : anchor && displacement >= 3 ? getBearing(anchor, nextPosition) : null;
         const route = routeRef.current;
         if (route) {
@@ -409,16 +404,21 @@ function CampusMapApp({ initialProfile }: { initialProfile: UserProfile }) {
 
       {!isWalking && !isRoutePreview && (
         <div className="desktop-map-chips pointer-events-auto absolute left-[424px] right-4 top-[18px] z-30 hidden items-center gap-2 overflow-x-auto pb-2 lg:flex">
-          {places.filter((location) => location.showInShortcuts !== false && majorPlaceLabel(location.name)).map((location) => (
+          {conferenceEvents.map((event) => {
+            const location = places.find(place => place.showInShortcuts !== false && event.names.some(alias => normalizePlaceName(alias) === normalizePlaceName(place.name)));
+            if (!location) return null;
+            return (
             <button
-              key={location.id}
+              key={event.title}
+              title={`${event.title} ? ${event.venue}`}
               type="button"
               onClick={() => handleLocationSelect(location)}
               className="flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-[#dadce0] bg-white px-3 text-sm font-medium text-[#3c4043] shadow-sm transition hover:bg-[#f8f9fa] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#008b92]"
             >
-              <MapPin className="h-4 w-4" /> {majorPlaceLabel(location.name)}
+              <MapPin className="h-4 w-4" /> {event.title}
             </button>
-          ))}
+          );
+          })}
         </div>
       )}
 

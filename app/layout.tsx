@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import "./campus-ui.css";
 import "./conference-theme.css";
+import "./laptop.css";
 
 const conferenceDisplay = localFont({ src: "../public/fonts/Anton-Regular.ttf", variable: "--font-conference", weight: "400", display: "swap" });
 

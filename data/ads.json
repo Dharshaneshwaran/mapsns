@@ -2,7 +2,7 @@
   "banners": [
     {
       "id": "default-placecard",
-      "enabled": true,
+      "enabled": false,
       "placements": [
         "placeCard",
         "landing"
@@ -17,7 +17,7 @@
     },
     {
       "id": "default-landing",
-      "enabled": true,
+      "enabled": false,
       "placements": [
         "landing"
       ],

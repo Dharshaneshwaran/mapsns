@@ -1,0 +1,128 @@
+/* Laptop-only presentation. No rules in this file apply below 1024px. */
+@media (min-width: 1024px) {
+  .campus-map-app { --desktop-rail: clamp(320px, 26vw, 380px); background: #f7f7f7; }
+  .campus-map-app:has(.event-landing) { --desktop-rail: clamp(500px, 46vw, 700px); }
+  .campus-map-app .event-landing { border-radius: 16px; }
+  .event-home { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-content: start; gap: 0 16px; padding: 20px; }
+  .event-home-header { grid-column: 1 / -1; padding-bottom: 12px; border-bottom: 1px solid #e7e7e7; }
+  .event-brand > span { font-size: 22px; }
+  .event-brand p { font-size: 12px; }
+  .event-avatar { width: 36px; height: 36px; }
+  .event-greeting { grid-column: 1 / -1; margin: 18px 0 16px; }
+  .event-greeting h1 { font-size: clamp(36px, 3.2vw, 46px); line-height: 1.04; }
+  .conference-welcome { font-size: 13px; margin-bottom: 14px; }
+  .conference-tagline { font-size: 13px; padding: 5px 8px; margin-top: 10px; }
+  .conference-date { font-size: 12px; margin-top: 10px; }
+  .event-header-actions button { width: 34px; height: 34px; }
+  .event-map-link { grid-column: 1 / -1; max-width: 380px; min-height: 38px; justify-self: start; padding: 4px; }
+  .event-map-pill { padding: 8px 14px; font-size: 13px; }
+  .event-map-caption { font-size: 12px; padding-right: 14px; }
+  .event-section-label { grid-column: 1 / -1; margin: 18px 0 10px; }
+  .event-section-label h2 { font-size: 13px; }
+  .event-section-label > span { font-size: 12px; }
+  .event-grid { grid-column: 1 / -1; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .event-tile { padding: 10px; min-height: 128px; border-radius: 14px; }
+  .event-tile .campus-place-art { height: 62px; margin-bottom: 10px; }
+  .event-tile .campus-place-art img { height: 62px; }
+  .event-tile .campus-place-name { font-size: clamp(17px, 1.4vw, 20px); }
+  .event-tile .campus-place-caption { font-size: 12px; line-height: 1.5; }
+  .event-footer, .event-empty, .event-home > .campus-ad-card { grid-column: 1 / -1; }
+  .event-footer { font-size: 12px; margin-top: 14px; }
+  .campus-map-app .campus-map-canvas { border-radius: 16px; }
+  .campus-map-app .campus-search-panel { width: min(400px, calc(100% - var(--desktop-rail) - 92px)); }
+  .campus-map-app .desktop-map-chips { top: 84px; gap: 7px; }
+  .desktop-map-chips button { min-height: 30px; font-size: 12px; }
+  .campus-map-app .explore-panel { border-radius: 16px; }
+  .campus-place-details { padding: 20px; }
+  .campus-place-details h2 { font-size: 26px; line-height: 1.14; }
+  .campus-place-details > div:nth-child(2) { gap: 8px; margin-block: 16px; }
+  .campus-place-details > div:nth-child(2) button { min-height: 34px; font-size: 13px; }
+  .campus-place-details > div:nth-child(2) > button:first-child { min-height: 34px; padding-inline: 12px; }
+  .campus-place-details > div:nth-child(3) { height: clamp(150px, 20vh, 190px); border-radius: 14px; }
+  .campus-place-details > p { font-size: 13px; line-height: 1.6; }
+
+  /* Compact onboarding alongside the map. */
+  .campus-welcome { --desktop-rail: clamp(360px, 32vw, 440px); }
+  .campus-welcome-card { top: 110px; bottom: 24px; left: 24px; width: var(--desktop-rail); max-height: none; padding: 20px 38px; border-radius: 18px; box-shadow: none; border-color: #e5e5e5; }
+  .campus-welcome-card h1 { font-size: clamp(32px, 3vw, 40px); line-height: 1.12; }
+  .campus-welcome-card > p { font-size: 13px; line-height: 1.7; }
+  .campus-welcome-card label { padding: 12px; border-radius: 12px; }
+  .campus-welcome-card label img { width: 64px; height: 76px; }
+  .campus-welcome-card button[type=submit], .campus-welcome-card button[type=submit]:not(:disabled) { font-size: 13px; min-height: 38px; }
+
+  /* Full-height route workspace; scrolling details never cover the actions. */
+  .campus-map-app .route-search-card { border-radius: 16px; padding: 10px 16px; min-height: 80px; }
+  .campus-map-app .route-search-card span { font-size: 13px; }
+  .campus-map-app .route-preview-sheet { top: 116px; bottom: 20px; height: auto; max-height: calc(100% - 136px); border-radius: 16px; }
+  .route-preview-sheet h2 { text-align: left; font-size: 23px; }
+  .route-preview-sheet .route-mode-tab { min-height: 42px; font-size: 13px; border-radius: 12px; }
+  .campus-map-app .route-preview-details { flex: 1 1 auto; padding-block: 16px; margin-inline: 16px; }
+  .route-preview-details > div { flex-direction: column; gap: 12px; }
+  .route-preview-details > div > p { font-size: 28px; line-height: 1.2; }
+  .route-preview-details > div > div { font-size: 13px; line-height: 1.7; }
+  .route-preview-details a { font-size: 12px; }
+  .campus-map-app .route-preview-actions { padding: 12px 16px 16px; border-top: 1px solid #e5e5e5; }
+  .route-preview-actions button { font-size: 13px; }
+  .route-preview-actions > button:first-child { min-height: 38px; }
+  .campus-map-app .walk-journey { top: 96px; bottom: 20px; height: auto; max-height: calc(100% - 116px); border-radius: 16px; padding-inline: 16px; }
+  .campus-map-app .walk-sheet-header { padding-top: 10px; padding-bottom: 14px; }
+  .walk-sheet-header h2 { font-size: 23px; }
+  .walk-stop { min-height: 62px; }
+  .walk-stop h3 { font-size: 14px; }
+  .walk-stop p { font-size: 13px; }
+  .walk-stop:first-child::after { top: 43px; height: 36px; }
+  .campus-map-app .walk-summary { padding: 16px 0; margin-block: 14px; }
+  .walk-summary h3 { font-size: 14px; }
+  .walk-eta strong { font-size: 26px; }
+  .walk-location-row { min-height: 38px; }
+  .walk-location-row > span:nth-child(2) { font-size: 13px; }
+  .walk-actions { padding-block: 12px; border-top: 1px solid #e5e5e5; }
+  .walk-actions button { font-size: 13px; min-height: 38px; }
+  .campus-map-app > div:has(> .campus-arrival-card) { inset: 0; display: grid; place-items: center; padding: 40px; pointer-events: none; }
+  .campus-map-app .campus-arrival-card { width: min(440px, 100%); max-width: 440px; padding: 12px 16px; border-radius: 20px; pointer-events: auto; border: 1px solid #e2e2e2; }
+  .campus-arrival-card h3 { font-size: 28px; }
+  .campus-arrival-card p { font-size: 14px; line-height: 1.6; }
+
+  /* A desktop preferences dialog with a permanent footer. */
+  .campus-settings { width: min(800px, calc(100vw - 96px)); height: min(600px, calc(100dvh - 72px)); max-height: calc(100dvh - 72px); border-radius: 20px; }
+  .campus-settings header { padding: 18px 24px; border-bottom: 1px solid #e5e5e5; }
+  .campus-settings #settings-title { font-size: 28px; }
+  .settings-subtitle { font-size: 13px; }
+  .campus-settings .settings-content { display: grid; grid-template-columns: 1fr 1fr; align-content: start; gap: 18px 24px; padding: 20px 24px; }
+  .settings-content > :not(:last-child) { margin: 0; }
+  .settings-content > section { grid-column: 1; grid-row: 1 / 3; padding-right: 20px; border-right: 1px solid #e4e4e4; border-bottom: 0; }
+  .settings-content > fieldset { grid-column: 2; }
+  .settings-content > p:last-child { grid-column: 1 / -1; text-align: left; margin: 0; }
+  .settings-section { padding: 0 0 14px; }
+  .settings-section h3, .settings-section legend { font-size: 13px; }
+  .campus-settings .settings-option { font-size: 13px; min-height: 40px; padding: 8px 10px; border-radius: 12px; }
+  .campus-settings footer { justify-content: flex-end; padding: 14px 24px; }
+  .campus-settings footer button { min-width: 96px; min-height: 36px; font-size: 13px; }
+  .campus-settings footer button[type=submit] { flex: 0 0 160px; }
+
+  /* Administration keeps its full tool set and uses the available width. */
+  .campus-admin > header { position: sticky; top: 0; z-index: 60; border-bottom: 1px solid #e3e3e3; }
+  .campus-admin > header > div, .campus-admin > div { max-width: 1680px; padding-inline: 24px; }
+  .campus-admin > div { padding-block: 20px; }
+  .campus-admin article, .campus-admin section { border-radius: 16px; }
+  .campus-admin h1 { font-size: 24px; }
+  .campus-admin h2 { font-size: 22px; }
+  .campus-admin input:not([type=range]):not([type=checkbox]):not([type=color]), .campus-admin select, .campus-admin textarea { font-size: 13px; }
+}
+
+@media (min-width: 1024px) {
+  .campus-map-app .google-action-button { min-height: 34px; padding: 7px 12px; gap: 6px; font-size: 13px; }
+  .campus-map-app .google-round-button { width: 32px; height: 32px; min-width: 32px; }
+  .campus-map-app .desktop-map-chips button { height: 30px; padding-inline: 9px; font-size: 11px; }
+  .campus-map-app .search-bar { min-height: 38px; padding: 8px 12px; }
+  .campus-map-app .search-bar input { font-size: 13px; }
+  .campus-search-card > button { width: 38px; height: 38px; }
+  .campus-place-details > div:nth-child(3) { margin-top: 16px; }
+  .campus-place-details > div:first-child p { font-size: 12px; }
+  .event-home-header { min-height: 38px; }
+  .event-brand { padding-block: 0; }
+  .event-map-return button { min-height: 36px; padding: 8px 14px; font-size: 13px; }
+  .campus-map-app .navigation-round-control, .campus-map-app .walk-back { width: 36px; height: 36px; }
+  .campus-welcome-card button[type=submit], .campus-settings footer button { padding-block: 8px; }
+  .campus-arrival-card button { min-height: 36px; padding-block: 8px; font-size: 13px; }
+}

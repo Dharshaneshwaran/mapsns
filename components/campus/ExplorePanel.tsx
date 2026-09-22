@@ -7,31 +7,28 @@ import type { CampusLocation } from "@/types/campus";
 import CampusAd from "./CampusAd";
 import { useSavedPlaces } from "./PlaceActions";
 
-const events = [
-  { title: "Registration", venue: "CGC", names: ["cgc", "cgc building"] },
-  { title: "Inauguration", venue: "Open Auditorium", names: ["open auditorium", "sns open auditorium", "sns open autorium"] },
-  { title: "Panel session one", venue: "Open Auditorium", names: ["open auditorium", "sns open auditorium", "sns open autorium"] },
-  { title: "Panel session two", venue: "RM Hall", names: ["rm hall", "r m hall"] },
-  { title: "Panel session three", venue: "DT Playhouse", names: ["dtplayhouse", "dt playhouse"] },
-  { title: "Panel session four", venue: "Spine · Bioscope", names: ["spine", "spine bioscope"] },
-];
+import { conferenceEvents, normalizePlaceName } from "@/data/majorPlaces";
+
 type Props = { onSelect: (location: CampusLocation) => void; onOpenSettings: () => void; name: string; gender: "male" | "female" };
 export default function ExplorePanel({ onSelect, onOpenSettings, name, gender }: Props) {
   const places = useCampusPlaces();
   const saved = useSavedPlaces();
   const [tab, setTab] = useState("events");
   const [showMap, setShowMap] = useState(false);
-  const normalize = (value: string) => value.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const normalize = normalizePlaceName;
   const cards = tab === "saved"
     ? places.filter(place => saved.includes(place.id)).map(place => ({ title: place.name, venue: "Saved place", place }))
-    : events.map(event => ({ ...event, place: places.find(place => event.names.some(alias => normalize(alias) === normalize(place.name))) }));
+    : conferenceEvents.map(event => ({ ...event, place: places.find(place => event.names.some(alias => normalize(alias) === normalize(place.name))) }));
   if (showMap) return <div className="event-map-return"><button onClick={() => setShowMap(false)}><ArrowLeft size={17} /> Back to event guide</button></div>;
   return <section className="event-landing" aria-label="SNS event guide">
     <div className="event-home">
       <header className="event-home-header">
-        <button className="event-avatar" onClick={onOpenSettings} aria-label="Open profile settings"><Image src={gender === "female" ? "/female/1.png" : "/idel.png"} alt="" width={36} height={44} unoptimized /></button>
+        <button className="event-avatar" onClick={onOpenSettings} aria-label="Open profile settings"><Image src={gender === "female" ? "/female_v_2/image%201.0.png" : "/idel.png"} alt="" width={36} height={44} unoptimized /></button>
         <div className="event-brand"><span><b>D</b> CONFERENCE ’26</span><p>SNS Institutions · Campus guide</p></div>
       </header>
+      <div className="conference-artwork">
+        <Image src="/web%20image%20copy.png" alt="Colourful collage of Indian cultural landmarks, dance, and traditions" fill sizes="(min-width: 1440px) 660px, (min-width: 1024px) 46vw, 100vw" className="object-cover object-top" />
+      </div>
       <div className="event-greeting">
         <div className="conference-intro"><p className="conference-welcome">{name.trim() ? `Welcome, ${name.trim()}` : "Welcome to D Conference 2026"}</p><h1>Chaos <span>&amp;</span> Clarity</h1><p className="conference-tagline">Driving Progress with Design Thinking</p><p className="conference-date">September 29 &amp; 30, 2026 · SNS Institutions</p></div>
         <div className="event-header-actions">
