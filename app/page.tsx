@@ -339,7 +339,7 @@ function CampusMapApp({ initialProfile }: { initialProfile: UserProfile }) {
         setWalkingPosition(nextPosition);
         const currentRoute = routeRef.current;
         const arrivalPoint = currentRoute && (currentRoute.destinationGapMeters ?? 0) > 30 ? currentRoute.points[currentRoute.points.length - 1] : end;
-        if (pos.coords.accuracy <= 15 && haversineDistance(nextPosition.lat, nextPosition.lng, arrivalPoint.lat, arrivalPoint.lng) < 15) { disposed = true; request?.abort(); handleArrived(); return; }
+        if (pos.coords.accuracy <= 15 && haversineDistance(nextPosition.lat, nextPosition.lng, arrivalPoint.lat, arrivalPoint.lng) <= 2) { disposed = true; request?.abort(); handleArrived(); return; }
         const heading = pos.coords.heading !== null && Number.isFinite(pos.coords.heading) ? pos.coords.heading : anchor && displacement >= 3 ? getBearing(anchor, nextPosition) : null;
         const route = routeRef.current;
         if (route) {
