@@ -15,7 +15,7 @@ import { majorPlaceLabel } from "@/data/majorPlaces";
 const journeyMessages: Record<string, string> = {
   Registration: "Your conference journey begins here!",
   "Inauguration + Panel session one": "Get ready for the opening conversations!",
-  "Panel session two": "Fresh ideas and new perspectives await!",
+  "Panel session two": "Head to RM Hall on the 1st floor. Fresh ideas and new perspectives await!",
   "Panel session three": "Your next inspiring conversation awaits!",
   "Panel session four": "Keep exploring ideas that drive progress!",
 };
@@ -132,7 +132,7 @@ export default function RoutePreviewOverlay({ destination, destinationGapMeters,
 
         <div className="grid shrink-0 grid-cols-2 border-b border-[#dadce0] px-2">
           <button onClick={() => onModeChange("walking")} className={`route-mode-tab ${mode === "walking" ? "active" : ""}`}><PersonStanding className="h-[18px] w-[18px]" /><span>Walk</span></button>
-          <button onClick={() => onModeChange("vehicle")} className={`route-mode-tab ${mode === "vehicle" ? "active" : ""}`}><Image src="/uploads/map-images/bullet%20cart/photo%201.png" alt="" width={28} height={28} unoptimized className="h-7 w-7 object-contain" /><span>Vehicle</span></button>
+          <button onClick={() => onModeChange("vehicle")} className={`route-mode-tab ${mode === "vehicle" ? "active" : ""}`}><Image src="/bullet_cart_v1/11.png" alt="" width={28} height={28} unoptimized className="h-7 w-7 object-contain" /><span>Vehicle</span></button>
         </div>
 
         <div className="route-preview-details px-5 py-3">

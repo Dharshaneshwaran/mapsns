@@ -10,7 +10,7 @@ import { majorPlaceLabel } from "@/data/majorPlaces";
 const conferenceDescriptions: Record<string, string> = {
   Registration: "Your conference journey starts here. Head to CGC for registration and get ready to explore Chaos & Clarity.",
   "Inauguration + Panel session one": "Join us at the Open Auditorium for the conference inauguration and Panel session one. Let the conversations on Chaos & Clarity begin.",
-  "Panel session two": "Your next conference conversation awaits at RM Hall. Join Panel session two and explore new perspectives on design thinking.",
+  "Panel session two": "Head to RM Hall on the 1st floor for Panel session two. Explore new perspectives on design thinking.",
   "Panel session three": "Head to DT Playhouse for Panel session three. Connect with ideas and conversations around Chaos & Clarity.",
   "Panel session four": "Continue your conference journey at Spine · Bioscope for Panel session four. Discover fresh perspectives on driving progress with design thinking.",
 };

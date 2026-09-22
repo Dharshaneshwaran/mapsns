@@ -6,7 +6,7 @@ import type { Gender } from "./SettingsDialog";
 const WALK_FRAMES = ["/step_1.png", "/step_3.png", "/step_4.png", "/step_5.png", "/step_6.png"];
 const IDLE_FRAME = "/idel.png";
 const FEMALE_FRAMES = Array.from({ length: 8 }, (_, index) => `/female_v_2/${encodeURIComponent(`image ${index + 1}.0.png`)}`);
-const CART_FRAMES = ["photo 1.png", "photo 2.png", "photo 3.png", "photo 4.png", "photo 5.png", "photo 6.png", "photos 8.png"].map((name) => `/uploads/map-images/bullet%20cart/${encodeURIComponent(name)}`);
+const CART_FRAMES = Array.from({ length: 8 }, (_, index) => `/bullet_cart_v1/${index + 11}.png`);
 const FRAME_DURATION = 150;
 const CHARACTER_SIZE = 64;
 const SPRITE_SCALE = CHARACTER_SIZE / 112;
