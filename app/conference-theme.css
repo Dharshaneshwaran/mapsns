@@ -1,0 +1,89 @@
+/* Poster-inspired typography. Body copy uses a readable, non-condensed face. */
+:root { --conf-ink: #292927; --conf-muted: #625f58; --conf-yellow: #ffbf00; --conf-paper: #faf9f5; --conf-line: #ded9cd; }
+.campus-map-app, .campus-settings, .campus-admin { --campus-ink: var(--conf-ink); --campus-muted: var(--conf-muted); --campus-surface: linear-gradient(145deg, #fffefa, #f4f1e8); color: var(--conf-ink); font-family: Arial, Helvetica, sans-serif; background-color: #f0ede5; }
+.campus-map-app h1, .campus-map-app h2, .campus-settings #settings-title, .campus-admin h1, .campus-admin h2, .campus-place-name, .walk-eta strong, .event-brand > span { font-family: var(--font-conference), Impact, "Arial Narrow", sans-serif; font-weight: 400; letter-spacing: .01em; }
+.campus-map-app button:focus-visible, .campus-settings button:focus-visible, .campus-admin button:focus-visible { outline: 2px solid #8a6100; outline-offset: 3px; }
+.event-brand { background: none; padding-left: 8px; }
+.event-brand > span { font-size: 21px; color: var(--conf-ink); letter-spacing: -.3px; white-space: nowrap; }
+.event-brand b { display: inline-block; padding: 2px 5px; margin-right: 2px; background: var(--conf-yellow); font-weight: inherit; }
+.event-brand p { font-size: 11px; color: var(--conf-muted); }
+.event-avatar { background: #e9e4d6; border-color: #eee8da; }
+.event-greeting { position: relative; margin: 32px 0 22px; display: block; }
+.conference-intro { min-width: 0; }
+.conference-welcome { max-width: calc(100% - 92px); font-size: 12px; color: var(--conf-muted); margin-bottom: 18px; overflow-wrap: anywhere; }
+.event-greeting .event-header-actions { position: absolute; top: -10px; right: 0; }
+.event-greeting h1 { font-size: clamp(38px, 10vw, 55px); line-height: 1.1; letter-spacing: -.6px; }
+.event-greeting h1 > span { display: inline; margin: 0; color: var(--conf-ink); font-family: Arial, sans-serif; font-weight: 800; font-size: .55em; vertical-align: .12em; }
+.conference-tagline { display: inline-block; max-width: 100%; margin-top: 10px; padding: 6px 8px; border-radius: 5px 0 0 5px; background: var(--conf-yellow); font-size: clamp(11px, 3.1vw, 14px); line-height: 1.45; color: #292927; }
+.conference-date { font-size: 11px; line-height: 1.6; color: var(--conf-muted); margin-top: 12px; }
+.event-header-actions button, .event-map-link { background: #eee9dd; color: #49443c; box-shadow: none; }
+.event-header-actions button[aria-pressed=true] { background: var(--conf-yellow); color: #292927; }
+.event-map-pill { font-size: 12px; background: var(--conf-ink); color: #fff9e8; }
+.event-map-caption { color: #665329; font-size: 11px; }
+.event-section-label h2 { font-family: Arial, sans-serif; font-weight: 600; font-size: 12px; color: #514b41; }
+.event-section-label > span { font-size: 11px; color: #625a4e; }
+.campus-place-tile { background: #eee9dd; border-color: #ded7c7; box-shadow: none; border-radius: 18px; }
+.campus-place-tile:hover { background: #f4e4af; }
+.event-tile .campus-place-name, .campus-place-name { font-size: 20px; line-height: 1.25; color: #292927; }
+.event-tile .campus-place-caption, .campus-place-caption { font-size: 12px; line-height: 1.5; color: #5f574a; }
+.event-unmapped { font-size: 11px; color: #6a5a38; }
+.campus-place-art, .campus-place-tile:nth-child(n) .campus-place-art { background: radial-gradient(ellipse, #e2d4ab66, transparent 72%); color: #8b805f; }
+.campus-tile-arrow, .event-footer, .event-empty, .campus-eyebrow, .campus-muted-heading { color: #665f53; }
+.event-footer { font-size: 11px; }.event-footer > span { background: #ffbf00; color: #433818; }
+.campus-welcome-card h1 { font-size: clamp(34px, 8vw, 44px); letter-spacing: 0; }
+.campus-welcome-card label { background: #eee9dd; border-color: #ddd6c6; box-shadow: none; }
+.campus-welcome-card label:has(input:checked) { background: #ffe7a0; border-color: #b08721; }
+.campus-map-app .search-bar, .campus-map-app .search-dropdown, .campus-map-app .route-search-card { background: #faf7ef; border-color: #d9d0bd; }
+.campus-map-app .search-dropdown button:hover, .desktop-map-chips button:hover { background: #f5e4b2; }
+.campus-map-app .campus-search-card > button, .desktop-map-chips button { background: #f1ecdf; border-color: #d9d0bd; color: #554b37; }
+.campus-map-app .event-landing, .campus-map-app .explore-panel, .campus-map-app .route-preview-sheet, .campus-map-app .campus-map-canvas { border-color: #ded7c7; }
+.campus-place-details h2 { font-size: 30px; letter-spacing: 0; }
+.campus-place-details > div:nth-child(3) { background: radial-gradient(ellipse, #e0d6b9, #ece7db); border-color: #d8ceb8; }
+.campus-map-app .google-action-button.border { background: #eee8d9; border-color: #d6ccb6; color: #5b4e33; }
+.campus-map-app .google-action-button[aria-pressed=true] { background: #ffdf7d; border-color: #af8a2a; }
+.campus-map-app .route-mode-tab { font-size: 13px; background: #ebe5d8; color: #574d39; }
+.campus-map-app .route-mode-tab.active { background: #ffe49a; box-shadow: inset 0 0 0 1px #b79337; color: #292927; }
+.route-preview-sheet h2, .walk-sheet-header h2 { font-size: 24px; letter-spacing: .01em; }
+.route-preview-sheet .route-preview-details { border-color: #d9d0bd; }
+.route-preview-details > div > p { font-family: var(--font-conference), Impact, sans-serif; font-size: 28px; }
+.route-preview-details a, .route-preview-details > div > div { color: #625a4e; }
+.campus-settings { background: linear-gradient(140deg, #fffdfa, #f0ebdf); }
+.campus-settings #settings-title { font-size: 36px; letter-spacing: .01em; }
+.campus-settings header > div:first-child, .campus-settings .google-round-button { background: #eee6d1; color: #51462b; box-shadow: none; border-color: #ded4ba; }
+.settings-subtitle, .campus-settings .settings-eyebrow { color: #6b5e42; }
+.settings-section { border-color: #d8cfb9; }
+.settings-section h3, .settings-section legend { font-size: 14px; color: #292927; }
+.settings-section h3 svg, .settings-section legend svg { color: #7d651e; }
+.settings-section p, .settings-section label[for], .settings-section fieldset legend { color: #635b4c; font-size: 13px; }
+.campus-settings #profile-name { background: #eee8d9; border-color: #d4c9b0; font-size: 15px; }
+.campus-settings #profile-name:focus { border-color: #95731d; box-shadow: 0 0 0 3px #ffdf7d; }
+.campus-settings .settings-option { background: #eee8db; border-color: #d6ccb8; color: #554b39; font-size: 13px; }
+.campus-settings .settings-option:hover { background: #f5e7be; }
+.campus-settings .settings-option:has(input:checked) { background: #ffe49a; border-color: #b08b2d; color: #292927; }
+.campus-settings .settings-option svg { color: #716030; }.campus-settings .settings-option input { accent-color: #765a15; }
+.campus-settings .settings-option:has(input:focus-visible) { outline-color: #765a15; }
+.campus-settings .settings-content > p:last-child { font-size: 11px; color: #665e50; }
+.campus-settings footer { background: #eee7d8; border-color: #d8cdb5; }.campus-settings footer button { font-size: 13px; }
+.campus-settings footer button[type=button] { border-color: #cdbf9e; color: #5f5032; }
+.walk-map-label, .walk-back { background: #f8f2e3; color: #625437; border-color: #d9cdb2; }
+.walk-map-label > span, .walk-live-label { background: #ffbf00; color: #3d331d; }.walk-live-label { font-size: 11px; }
+.walk-journey { border-color: #ddd2b8; }.walk-sheet-handle { background: #c7b995; }
+.walk-stop:first-child > div, .walk-summary { border-color: #d8cdb5; }
+.walk-stop p, .walk-summary p, .walk-path-note { color: #655b48; font-size: 12px; }
+.walk-stop h3, .walk-summary h3 { font-size: 14px; }
+.walk-origin, .walk-destination, .walk-mode-illustration { background: #f3dea2; color: #7b6022; }
+.walk-eta strong { font-size: 28px; }.walk-eta p { font-size: 11px; }
+.walk-location-row { background: #eee5d0; border-color: #d5c6a3; }
+.walk-location-row > span:nth-child(2), .walk-location-icon, .walk-location-row > svg { color: #635230; font-size: 12px; }
+.walk-actions button { font-size: 13px; }.walk-overview { color: #67522c; border-color: #cdbc92; }
+.campus-landmark-dot { background: #ded5bf; color: #756441; border-color: #faf6ec; }
+.campus-map-app .campus-landmark { color: #6c604b; }.campus-landmark.is-selected .campus-landmark-dot { background: #ffbf00; color: #292927; border-color: #fff0c0; }
+.campus-map-app .campus-landmark.is-selected { color: #292927; }
+.campus-map-app > [role=status], .campus-map-app .campus-ad-card { background: #f4edde; color: #665537; border-color: #ddd0b3; }
+.campus-ad-card img { background: #eee4cb; }.campus-ad-card span { color: #705719; }
+.campus-arrival-card > div:first-child > div { background: #ffe49a; border-color: #e7c868; }.campus-arrival-card > div:first-child > div svg { color: #786019; }
+.campus-arrival-card h3 { font-family: var(--font-conference), Impact, sans-serif; font-size: 28px; }
+.campus-admin { background: linear-gradient(140deg, #faf8f0, #ede5d1); }.campus-admin article, .campus-admin section { background: #f0eadc; border-color: #ddd1b7; }
+.campus-admin h1 { font-size: 28px; }.campus-admin h2 { font-size: 24px; }
+@media (min-width: 1024px) { .campus-map-app { background: #e9e2d2; } .event-greeting { margin-top: 34px; } .event-greeting h1 { font-size: clamp(40px, 3.5vw, 53px); } .event-tile .campus-place-name { font-size: 21px; } }
+@media (max-width: 359px) { .event-home { padding-inline: 14px; } .event-brand > span { font-size: 18px; } .event-greeting h1 { font-size: 38px; } .event-tile .campus-place-name { font-size: 18px; } .event-map-pill { padding-inline: 10px; } }

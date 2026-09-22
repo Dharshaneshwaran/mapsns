@@ -30,10 +30,10 @@ export default function ExplorePanel({ onSelect, onOpenSettings, name, gender }:
     <div className="event-home">
       <header className="event-home-header">
         <button className="event-avatar" onClick={onOpenSettings} aria-label="Open profile settings"><Image src={gender === "female" ? "/female/1.png" : "/idel.png"} alt="" width={36} height={44} unoptimized /></button>
-        <div className="event-brand"><span>SNS</span><p>Campus event guide</p></div>
+        <div className="event-brand"><span><b>D</b> CONFERENCE ’26</span><p>SNS Institutions · Campus guide</p></div>
       </header>
       <div className="event-greeting">
-        <h1>{name.trim() ? `Hey ${name.trim()},` : "Hey there,"}<span>Welcome to SNS!</span></h1>
+        <div className="conference-intro"><p className="conference-welcome">{name.trim() ? `Welcome, ${name.trim()}` : "Welcome to D Conference 2026"}</p><h1>Chaos <span>&amp;</span> Clarity</h1><p className="conference-tagline">Driving Progress with Design Thinking</p><p className="conference-date">September 29 &amp; 30, 2026 · SNS Institutions</p></div>
         <div className="event-header-actions">
           <button onClick={() => setTab(tab === "saved" ? "events" : "saved")} aria-label={tab === "saved" ? "Show event sessions" : "Saved places"} aria-pressed={tab === "saved"}><Bookmark size={17} /></button>
           <button onClick={onOpenSettings} aria-label="Open settings"><Settings size={17} /></button>

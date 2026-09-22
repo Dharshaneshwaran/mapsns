@@ -1,6 +1,10 @@
 import type { Metadata, Viewport } from "next";
+import localFont from "next/font/local";
 import "./globals.css";
 import "./campus-ui.css";
+import "./conference-theme.css";
+
+const conferenceDisplay = localFont({ src: "../public/fonts/Anton-Regular.ttf", variable: "--font-conference", weight: "400", display: "swap" });
 
 export const metadata: Metadata = {
   title: "SNS Campus Navigator",
@@ -27,7 +31,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className="h-full antialiased"
+      className={`h-full antialiased ${conferenceDisplay.variable}`}
     >
       <body className="h-full w-full overflow-hidden touch-manipulation">{children}</body>
     </html>
