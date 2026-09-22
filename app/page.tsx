@@ -15,6 +15,7 @@ import SettingsDialog, { UserProfile } from "@/components/campus/SettingsDialog"
 import ExplorePanel from "@/components/campus/ExplorePanel";
 import { CampusRouteError, requestRoute } from "@/lib/requestRoute";
 import { routeDeviation } from "@/lib/routeDeviation";
+import { majorPlaceLabel } from "@/data/majorPlaces";
 
 type Coordinate = { lat: number; lng: number };
 const WALKING_MOVEMENT_THRESHOLD_METERS = 3;
@@ -70,7 +71,7 @@ export default function CampusMapPage() {
   if (initialProfile) return <CampusMapApp initialProfile={initialProfile} />;
 
   return (
-    <main className="campus-map-app relative isolate overflow-hidden bg-[#e8eaed] text-[#202124]">
+    <main className="campus-map-app campus-welcome relative isolate overflow-hidden bg-[#e8eaed] text-[#202124]">
       <div className="welcome-map absolute inset-0 pointer-events-none" aria-hidden="true" inert>
         <SNSCampusMap onLocationSelect={() => {}} selectedLocation={null} activeRoute={null} mapTypeId="roadmap" walkingPosition={null} walkingBearing={0} isWalking={false} isFollowingLocation={false} onMapInteraction={() => {}} isWalkingMode walkingState="idle" pointerStyle="character" gender={gender ?? "male"} />
       </div>
@@ -79,7 +80,7 @@ export default function CampusMapPage() {
         <span className="text-base font-medium">SNS Campus</span>
         <span className="ml-auto text-sm text-[#5f6368]">Explore & navigate</span>
       </div>
-      <form className="absolute bottom-0 left-0 right-0 max-h-[calc(100%-88px-env(safe-area-inset-top))] overflow-y-auto overscroll-contain rounded-t-[28px] bg-white px-6 pb-[max(24px,env(safe-area-inset-bottom))] pt-3 shadow-[0_-4px_24px_#00000018] sm:bottom-6 sm:left-6 sm:right-auto sm:w-[400px] sm:rounded-[24px] sm:p-7"
+      <form className="campus-welcome-card absolute bottom-0 left-0 right-0 max-h-[calc(100%-88px-env(safe-area-inset-top))] overflow-y-auto overscroll-contain rounded-t-[28px] bg-white px-6 pb-[max(24px,env(safe-area-inset-bottom))] pt-3 shadow-[0_-4px_24px_#00000018] sm:bottom-6 sm:left-6 sm:right-auto sm:w-[400px] sm:rounded-[24px] sm:p-7"
         onSubmit={(event) => {
           event.preventDefault();
           if (!gender) return;
@@ -89,8 +90,9 @@ export default function CampusMapPage() {
         }}>
         <div className="mx-auto mb-5 h-1 w-9 rounded-full bg-[#dadce0] sm:hidden" aria-hidden="true" />
         <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-full bg-[#e8f0fe] text-[#1a73e8]"><Navigation size={22} /></div>
-        <h1 className="text-[26px] font-medium tracking-tight">Make your way around</h1>
-        <p className="mt-2 text-sm leading-6 text-[#5f6368]">Choose your character to start exploring campus.</p>
+        <p className="campus-eyebrow">YOUR CAMPUS, AT YOUR PACE</p>
+        <h1 className="text-[26px] font-medium tracking-tight">Hello, explorer.<br /><span className="campus-muted-heading">Welcome to SNS.</span></h1>
+        <p className="mt-2 text-sm leading-6 text-[#5f6368]">Find your next stop, from classrooms to campus favourites. Choose your map character to begin.</p>
         <fieldset className="mt-5">
           <legend className="sr-only">Select male or female</legend>
           <div className="mt-3 grid grid-cols-2 gap-3">
@@ -407,14 +409,14 @@ function CampusMapApp({ initialProfile }: { initialProfile: UserProfile }) {
 
       {!isWalking && !isRoutePreview && (
         <div className="desktop-map-chips pointer-events-auto absolute left-[424px] right-4 top-[18px] z-30 hidden items-center gap-2 overflow-x-auto pb-2 lg:flex">
-          {places.filter((location) => location.showInShortcuts !== false).map((location) => (
+          {places.filter((location) => location.showInShortcuts !== false && majorPlaceLabel(location.name)).map((location) => (
             <button
               key={location.id}
               type="button"
               onClick={() => handleLocationSelect(location)}
               className="flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-[#dadce0] bg-white px-3 text-sm font-medium text-[#3c4043] shadow-sm transition hover:bg-[#f8f9fa] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#008b92]"
             >
-              <MapPin className="h-4 w-4" /> {location.name}
+              <MapPin className="h-4 w-4" /> {majorPlaceLabel(location.name)}
             </button>
           ))}
         </div>
@@ -515,7 +517,7 @@ function CampusMapApp({ initialProfile }: { initialProfile: UserProfile }) {
         />
       )}
 
-      {!selectedLocation && !isWalking && !isRoutePreview && <ExplorePanel onSelect={handleLocationSelect} />}
+      {!selectedLocation && !isWalking && !isRoutePreview && <ExplorePanel onSelect={handleLocationSelect} onOpenSettings={() => setShowSettings(true)} name={profile.name} gender={profile.gender} />}
 
 
       {showSettings && (
@@ -533,7 +535,7 @@ function CampusMapApp({ initialProfile }: { initialProfile: UserProfile }) {
       {/* Arrival card */}
       {walkingState === "arrived" && selectedLocation && (
         <div className="absolute bottom-0 left-0 right-0 z-40 p-4 pb-6 safe-bottom">
-          <div className="bg-white rounded-3xl shadow-2xl max-w-md mx-auto overflow-hidden">
+          <div className="campus-arrival-card bg-white rounded-3xl shadow-2xl max-w-md mx-auto overflow-hidden">
             <div className="p-6 text-center">
               <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-50 border border-green-100 flex items-center justify-center">
                 <Check className="w-8 h-8 text-green-500" />

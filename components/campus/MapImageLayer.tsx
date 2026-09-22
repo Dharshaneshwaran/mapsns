@@ -10,6 +10,7 @@ type Props = {
   image: MapImage;
   editable?: boolean;
   selected?: boolean;
+  label?: string;
   onSelect?: (id: string) => void;
   onChange?: (image: MapImage) => void;
   onClick?: (image: MapImage) => void;
@@ -34,6 +35,7 @@ export default function MapImageLayer(props: Props) {
       if (!center) return;
       element.style.left = `${center.x}px`;
       element.style.top = `${center.y}px`;
+      element.style.transform = latest.current.label ? "translate(-15px,-50%)" : "translate(-50%,-100%)";
       element.style.zIndex = selected ? "100" : "10";
     };
     redraw.current = draw;
@@ -82,8 +84,8 @@ export default function MapImageLayer(props: Props) {
 
   return host ? createPortal(
     <button type="button" aria-label={props.image.name} aria-pressed={props.editable ? !!props.selected : undefined} title={props.image.name}
-      className={`flex items-end justify-center rounded-lg bg-transparent transition-transform hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-600 ${props.selected ? "h-12 w-11" : "h-9 w-9"}`}
+      className={props.label ? `campus-landmark ${props.selected ? "is-selected" : ""}` : `flex items-end justify-center rounded-lg bg-transparent transition-transform hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-600 ${props.selected ? "h-12 w-11" : "h-9 w-9"}`}
       style={{ cursor: props.editable ? "grab" : "pointer" }}>
-      <MapPin size={props.selected ? 44 : 26} strokeWidth={1.25} aria-hidden="true" className="pointer-events-none fill-[#ea4335] stroke-white drop-shadow-sm [&_circle]:fill-white [&_circle]:stroke-none" />
+      {props.label ? <><span className="campus-landmark-dot"><MapPin size={13} strokeWidth={1.6} aria-hidden="true" /></span><span>{props.label}</span></> : <MapPin size={props.selected ? 44 : 26} strokeWidth={1.25} aria-hidden="true" className="pointer-events-none fill-[#ea4335] stroke-white drop-shadow-sm [&_circle]:fill-white [&_circle]:stroke-none" />}
     </button>, host) : null;
 }

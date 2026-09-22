@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import "./campus-ui.css";
 
 export const metadata: Metadata = {
   title: "SNS Campus Navigator",

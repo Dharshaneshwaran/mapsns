@@ -115,7 +115,7 @@ export default function RoutePreviewOverlay({ destination, destinationGapMeters,
           onClick={(event) => { if (event.detail === 0 || !moved.current) setExpanded((value) => !value); moved.current = false; }}
         ><span className="h-1 w-10 rounded-full bg-[#dadce0]" /></button>
         <div className="flex shrink-0 items-center gap-2 px-5 pb-2 pt-2">
-          <h2 className="min-w-0 flex-1 truncate text-[20px] font-medium">{mode === "vehicle" ? "Vehicle" : "Walking"}</h2>
+          <h2 className="min-w-0 flex-1 truncate text-[20px] font-medium">Your campus journey</h2>
           <button onClick={onClose} aria-label="Close route preview" className="google-round-button"><X className="h-[18px] w-[18px]" /></button>
         </div>
         </div>
@@ -129,7 +129,7 @@ export default function RoutePreviewOverlay({ destination, destinationGapMeters,
           <div className="flex items-start gap-4">
             <p className="shrink-0 whitespace-nowrap text-[20px] font-medium leading-6 text-[#188038]">{durationLabel(duration)}</p>
             <div className="min-w-0 flex-1 text-xs leading-4 text-[#5f6368]">
-              <p><span className="font-medium text-[#202124]">Estimated journey</span> · Route estimate</p>
+              <p><span className="font-medium text-[#202124]">{mode === "vehicle" ? "By vehicle" : "On foot"}</span> · Estimated journey</p>
               <p>{distanceLabel}</p>
               {destinationGapMeters !== undefined && <a className="text-xs underline" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">Campus roads © OpenStreetMap contributors</a>}
               {!!destinationGapMeters && destinationGapMeters > 30 && <p className="mt-1 text-xs">Route ends on a campus path, {Math.round(destinationGapMeters)} m from the pin. Check the entrance from there.</p>}
@@ -139,7 +139,7 @@ export default function RoutePreviewOverlay({ destination, destinationGapMeters,
           </div>
         </div>
           <div className="route-preview-actions flex shrink-0 flex-wrap gap-2 border-t border-zinc-100 bg-white px-5 pt-3">
-            <button type="button" onClick={onStart} className="google-action-button relative z-10 bg-[#008c95] text-white hover:bg-[#007b83]"><Navigation className="h-4 w-4 fill-current" /> Start</button>
+            <button type="button" onClick={onStart} className="google-action-button relative z-10 bg-[#008c95] text-white hover:bg-[#007b83]"><Navigation className="h-4 w-4 fill-current" /> Start navigation</button>
             <PlaceActions location={location} />
           </div>
       </div>

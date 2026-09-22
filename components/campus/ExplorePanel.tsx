@@ -1,30 +1,64 @@
 "use client";
-import { useEffect, useState } from "react";
-import { MapPin, Bookmark } from "lucide-react";
+import { useState } from "react";
+import { ArrowUpRight, Bookmark, Building2, MapPin, Navigation, Settings, ArrowLeft } from "lucide-react";
+import Image from "next/image";
 import { useCampusPlaces } from "@/components/campus/useCampusPlaces";
 import type { CampusLocation } from "@/types/campus";
-import { DEFAULT_LANDING } from "@/lib/landing";
-import SlidePanel from "./SlidePanel";
 import CampusAd from "./CampusAd";
 import { useSavedPlaces } from "./PlaceActions";
-export default function ExplorePanel({ onSelect }: { onSelect: (location: CampusLocation) => void }) {
-  const CAMPUS_LOCATIONS = useCampusPlaces();
-  const [config, setConfig] = useState(DEFAULT_LANDING);
-  useEffect(() => {
-    const controller = new AbortController();
-    const refresh = async () => {
-      if (document.hidden) return;
-      try { const response = await fetch("/api/landing", { cache: "no-store", signal: controller.signal }); if (response.ok) { const data = await response.json(); if (!controller.signal.aborted) setConfig(data); } } catch {}
-    };
-    void refresh(); const timer = setInterval(refresh, 10000);
-    window.addEventListener("focus", refresh);
-    return () => { controller.abort(); clearInterval(timer); window.removeEventListener("focus", refresh); };
-  }, []);
-  const [tab, setTab] = useState("explore"); const saved = useSavedPlaces();
-  const places = tab === "saved" ? CAMPUS_LOCATIONS.filter((place) => saved.includes(place.id)) : config.placeIds.flatMap((id) => CAMPUS_LOCATIONS.filter((place) => place.id === id));
-  return <SlidePanel label="Explore SNS campus"><div className="p-5"><p className="text-xs font-semibold uppercase tracking-[.18em] text-teal-700">{config.brand}</p><h1 className="mt-2 text-2xl font-semibold tracking-tight">{config.heading}</h1><p className="mt-2 text-sm leading-6 text-zinc-500">{config.description}</p>
-    <div className="my-4 flex gap-2" role="group" aria-label="Browse places"><button aria-pressed={tab === "explore"} onClick={() => setTab("explore")} className={`google-action-button ${tab === "explore" ? "bg-teal-700 text-white" : "bg-zinc-100"}`}><MapPin size={16} />Explore</button><button aria-pressed={tab === "saved"} onClick={() => setTab("saved")} className={`google-action-button ${tab === "saved" ? "bg-teal-700 text-white" : "bg-zinc-100"}`}><Bookmark size={16} />Saved places</button></div>
-    <h2 className="mb-2 text-sm font-semibold">{tab === "saved" ? "Your saved places" : config.sectionTitle}</h2>{places.length === 0 && <p className="py-4 text-sm text-zinc-500">Save a place to find it here later.</p>}
-    {places.map((place) => <button key={place.id} onClick={() => onSelect(place)} className="flex w-full items-center gap-3 rounded-xl px-2 py-3 text-left hover:bg-teal-50"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-700"><MapPin size={20} /></span><span className="min-w-0"><span className="block truncate text-sm font-medium">{place.name}</span><span className="text-xs capitalize text-zinc-500">{place.category} · View place</span></span><span className="ml-auto text-zinc-400">›</span></button>)}<CampusAd placement="landing" />
-  </div></SlidePanel>;
+
+const events = [
+  { title: "Registration", venue: "CGC", names: ["cgc", "cgc building"] },
+  { title: "Inauguration", venue: "Open Auditorium", names: ["open auditorium", "sns open auditorium", "sns open autorium"] },
+  { title: "Panel session one", venue: "Open Auditorium", names: ["open auditorium", "sns open auditorium", "sns open autorium"] },
+  { title: "Panel session two", venue: "RM Hall", names: ["rm hall", "r m hall"] },
+  { title: "Panel session three", venue: "DT Playhouse", names: ["dtplayhouse", "dt playhouse"] },
+  { title: "Panel session four", venue: "Spine · Bioscope", names: ["spine", "spine bioscope"] },
+];
+type Props = { onSelect: (location: CampusLocation) => void; onOpenSettings: () => void; name: string; gender: "male" | "female" };
+export default function ExplorePanel({ onSelect, onOpenSettings, name, gender }: Props) {
+  const places = useCampusPlaces();
+  const saved = useSavedPlaces();
+  const [tab, setTab] = useState("events");
+  const [showMap, setShowMap] = useState(false);
+  const normalize = (value: string) => value.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const cards = tab === "saved"
+    ? places.filter(place => saved.includes(place.id)).map(place => ({ title: place.name, venue: "Saved place", place }))
+    : events.map(event => ({ ...event, place: places.find(place => event.names.some(alias => normalize(alias) === normalize(place.name))) }));
+  if (showMap) return <div className="event-map-return"><button onClick={() => setShowMap(false)}><ArrowLeft size={17} /> Back to event guide</button></div>;
+  return <section className="event-landing" aria-label="SNS event guide">
+    <div className="event-home">
+      <header className="event-home-header">
+        <button className="event-avatar" onClick={onOpenSettings} aria-label="Open profile settings"><Image src={gender === "female" ? "/female/1.png" : "/idel.png"} alt="" width={36} height={44} unoptimized /></button>
+        <div className="event-brand"><span>SNS</span><p>Campus event guide</p></div>
+      </header>
+      <div className="event-greeting">
+        <h1>{name.trim() ? `Hey ${name.trim()},` : "Hey there,"}<span>Welcome to SNS!</span></h1>
+        <div className="event-header-actions">
+          <button onClick={() => setTab(tab === "saved" ? "events" : "saved")} aria-label={tab === "saved" ? "Show event sessions" : "Saved places"} aria-pressed={tab === "saved"}><Bookmark size={17} /></button>
+          <button onClick={onOpenSettings} aria-label="Open settings"><Settings size={17} /></button>
+        </div>
+      </div>
+      <button className="event-map-link" onClick={() => setShowMap(true)}>
+        <span className="event-mini-map" aria-hidden="true"><MapPin size={21} /></span>
+        <span className="event-map-pill">Explore campus</span>
+        <span className="event-map-caption"><Navigation size={12} /> View map</span>
+      </button>
+      <div className="event-section-label"><h2>{tab === "saved" ? "Your saved places" : "Your event, your next stop"}</h2><span>{cards.length} {tab === "saved" ? "places" : "sessions"}</span></div>
+      <div className="campus-place-grid event-grid">
+        {cards.map((card, index) => <button key={`${card.title}-${index}`} className="campus-place-tile event-tile" onClick={() => card.place && onSelect(card.place)} disabled={!card.place}>
+          <span className="campus-place-art">
+            {card.place?.customIcon ? <Image src={card.place.customIcon} alt="" width={160} height={100} unoptimized /> : <Building2 size={48} strokeWidth={1.2} />}
+            {card.place && <ArrowUpRight className="campus-tile-arrow" size={15} aria-hidden="true" />}
+          </span>
+          <span className="campus-place-name">{card.title}</span>
+          <span className="campus-place-caption">{card.venue}</span>
+          {!card.place && <span className="event-unmapped">Location coming soon</span>}
+        </button>)}
+      </div>
+      {tab === "saved" && cards.length === 0 && <p className="event-empty">Save a campus place to find it here.</p>}
+      <p className="event-footer"><span><MapPin size={15} /></span> A little guidance. A great day on campus.</p>
+      <CampusAd placement="landing" />
+    </div>
+  </section>;
 }

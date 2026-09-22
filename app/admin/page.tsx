@@ -14,7 +14,7 @@ const managedPlaces = [
 
 export default function AdminPage() {
   return (
-    <main className="fixed inset-0 overflow-y-auto bg-[#f7f9fc] text-[#202124]">
+    <main className="campus-admin fixed inset-0 overflow-y-auto bg-[#f7f9fc] text-[#202124]">
       <header className="border-b border-[#e3e7ee] bg-white">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 lg:px-8">
           <div className="flex items-center gap-3">

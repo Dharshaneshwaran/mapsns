@@ -1,7 +1,6 @@
 "use client";
 
-
-import { ArrowUp, CarFront, Footprints, ListTree, Navigation } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, CarFront, Footprints, MapPin, Navigation, Route, X } from "lucide-react";
 import type { TravelMode } from "@/types/campus";
 
 type Props = {
@@ -21,37 +20,39 @@ export default function NavigationOverlay({ destination, destinationGapMeters, d
   const distanceLabel = distance < 1000 ? `${Math.round(distance)} m` : `${(distance / 1000).toFixed(1)} km`;
 
   return (
-    <div className="pointer-events-none absolute inset-0 z-40 text-[#202124]">
-      <div className="navigation-instruction pointer-events-auto absolute left-1.5 right-1.5 top-1.5 overflow-hidden rounded-[18px] bg-[#007b7e] text-white shadow-lg safe-top sm:left-4 sm:right-auto sm:top-4 sm:w-[420px]">
-        <div className="flex min-h-[80px] items-center gap-4 px-5 py-3">
-          <ArrowUp className="h-9 w-9 shrink-0" strokeWidth={2.6} />
-          <div className="min-w-0 flex-1">
-            <p className="text-sm text-white/85">towards</p>
-            <p className="truncate text-[18px] font-medium">{destination}</p>
-            {!!destinationGapMeters && destinationGapMeters > 30 && <p className="text-xs">To campus path · {Math.round(destinationGapMeters)} m from pin</p>}
+    <div className="walk-experience pointer-events-none absolute inset-0 z-40">
+      <button onClick={onOverview} aria-label="Route overview" className="walk-back pointer-events-auto"><ArrowLeft size={20} /></button>
+      <div className="walk-map-label"><span />{mode === "walking" ? "Walking navigation" : "Vehicle navigation"}</div>
+      <section className="walk-journey pointer-events-auto" aria-label="Current journey">
+        <div className="walk-sheet-handle" aria-hidden="true" />
+        <header className="walk-sheet-header">
+          <h2>{mode === "walking" ? "Your campus walk" : "Your campus journey"}</h2>
+          <span className="walk-live-label">In progress</span>
+        </header>
+        <div className="walk-sheet-content">
+          <div className="walk-stops">
+            <div className="walk-stop">
+              <span className="walk-stop-icon walk-origin"><Navigation size={15} /></span>
+              <div><p>From</p><h3>Your current location</h3></div>
+            </div>
+            <div className="walk-stop">
+              <span className="walk-stop-icon walk-destination"><MapPin size={16} /></span>
+              <div><p>Heading to</p><h3>{destination}</h3></div>
+            </div>
           </div>
-          <div className="rounded-lg bg-[#fdd663] px-2 py-1 text-sm font-bold text-[#5f4b00]">SNS</div>
-        </div>
-      </div>
-
-      <div className="pointer-events-auto absolute right-3 top-[42%] flex -translate-y-1/2 flex-col gap-2.5">
-        {!isFollowingLocation && <button onClick={onRecenter} aria-label="Recenter on my location" className="flex min-h-12 items-center gap-2 rounded-full bg-white px-4 py-3 text-sm font-semibold text-teal-700 shadow-lg"><Navigation className="h-5 w-5 fill-current" />Recenter</button>}
-        <button onClick={onOverview} aria-label="Route overview" className="navigation-round-control"><ListTree className="h-6 w-6" /></button>
-      </div>
-
-      <div className="navigation-status pointer-events-auto absolute bottom-0 left-0 right-0 flex min-h-[112px] items-center gap-3 border-t border-zinc-200 bg-white px-3 pb-[max(14px,var(--sab))] pt-3 text-[#202124] shadow-lg sm:left-4 sm:right-auto sm:bottom-4 sm:w-[420px] sm:rounded-[22px] sm:pb-3">
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2 text-[23px] font-medium text-[#188038]">
-            <span>{minutes} min</span>
-            {mode === "walking" ? <Footprints className="h-5 w-5" /> : <CarFront className="h-5 w-5" />}
+          <div className="walk-summary">
+            <span className="walk-mode-illustration">{mode === "walking" ? <Footprints size={33} strokeWidth={1.4} /> : <CarFront size={33} strokeWidth={1.4} />}</span>
+            <div className="walk-summary-copy"><h3>{mode === "walking" ? "On foot" : "By vehicle"}</h3><p>{distanceLabel} remaining</p></div>
+            <div className="walk-eta"><strong>{minutes} <span>min</span></strong><p>Estimated arrival</p></div>
           </div>
-          <p className="mt-1 truncate text-sm text-[#5f6368]">{distanceLabel} · {destination}</p>
+          {!!destinationGapMeters && destinationGapMeters > 30 && <p className="walk-path-note">The mapped path ends {Math.round(destinationGapMeters)} m from the destination pin. Check the entrance from there.</p>}
+          <button onClick={onRecenter} aria-label="Recenter on my location" className="walk-location-row"><span className="walk-location-icon"><Navigation size={17} /></span><span>{isFollowingLocation ? "Following your location" : "Recenter on your location"}</span><ArrowUpRight size={17} /></button>
         </div>
-        <div className="flex h-13 w-13 items-center justify-center rounded-full bg-[#e8f0fe] text-[#1a73e8]">
-          <Navigation className="h-6 w-6 fill-current" />
-        </div>
-        <button onClick={onExit} className="flex h-13 w-13 items-center justify-center rounded-full bg-[#ea4335] text-sm font-medium text-white hover:bg-[#d93025]">Exit</button>
-      </div>
+        <footer className="walk-actions">
+          <button onClick={onOverview} className="walk-overview"><Route size={18} /> View route</button>
+          <button onClick={onExit} className="walk-end"><X size={18} /> End navigation</button>
+        </footer>
+      </section>
     </div>
   );
 }

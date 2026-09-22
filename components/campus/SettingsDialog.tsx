@@ -14,7 +14,7 @@ const POINTERS: { value: PointerStyle; label: string; color: string }[] = [
   { value: "red", label: "Red", color: "#ea4335" },
   { value: "green", label: "Green", color: "#34a853" },
 ];
-const optionClass = "relative flex cursor-pointer items-center gap-3 rounded-xl border border-zinc-200 bg-white p-3 text-sm text-zinc-700 transition-colors hover:bg-zinc-50 has-checked:border-teal-700 has-checked:bg-teal-50 has-checked:text-teal-800 has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-teal-700";
+const optionClass = "settings-option relative flex cursor-pointer items-center gap-3 rounded-xl border border-zinc-200 bg-white p-3 text-sm text-zinc-700 transition-colors has-focus-visible:outline-2 has-focus-visible:outline-offset-2";
 
 export default function SettingsDialog({ profile, onSave, onClose }: Props) {
   const [draft, setDraft] = useState(profile);
@@ -30,11 +30,11 @@ export default function SettingsDialog({ profile, onSave, onClose }: Props) {
     <form className="flex h-full min-h-0 flex-col" onSubmit={(event) => { event.preventDefault(); onSave({ ...draft, name: draft.name.trim() }); }}>
       <header className="flex shrink-0 items-center gap-3 border-b border-zinc-200 px-5 py-4 sm:px-6">
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-700"><Settings2 size={22} /></div>
-        <div className="min-w-0 flex-1"><p className="text-[10px] font-semibold uppercase tracking-widest text-teal-700">SNS Campus</p><h2 id="settings-title" className="text-xl font-semibold text-zinc-900">Settings</h2></div>
+        <div className="min-w-0 flex-1"><p className="settings-eyebrow">MAKE IT YOURS</p><h2 id="settings-title" className="text-xl font-semibold text-zinc-900">Settings</h2><p className="settings-subtitle">Your campus. Your way.</p></div>
         <button autoFocus type="button" onClick={onClose} aria-label="Close settings" className="google-round-button shrink-0"><X size={20} /></button>
       </header>
-      <div className="min-h-0 flex-1 space-y-7 overflow-y-auto overscroll-contain px-5 py-5 sm:px-6">
-        <section aria-labelledby="profile-heading">
+      <div className="settings-content min-h-0 flex-1 space-y-7 overflow-y-auto overscroll-contain px-5 py-5 sm:px-6">
+        <section className="settings-section" aria-labelledby="profile-heading">
           <h3 id="profile-heading" className="flex items-center gap-2 text-sm font-semibold text-zinc-900"><UserRound size={17} className="text-teal-700" />Your profile</h3>
           <label className="mt-4 block text-sm text-zinc-600" htmlFor="profile-name">Your name</label>
           <input id="profile-name" name="name" autoComplete="given-name" maxLength={80} value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} placeholder="Enter your name" className="mt-2 h-12 w-full rounded-xl border border-zinc-300 bg-white px-3 text-base text-zinc-900 outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100" />
@@ -42,7 +42,7 @@ export default function SettingsDialog({ profile, onSave, onClose }: Props) {
             {(["male", "female"] as const).map((gender) => <label key={gender} className={optionClass}><input type="radio" name="gender" value={gender} checked={draft.gender === gender} onChange={() => setDraft({ ...draft, gender })} className="h-4 w-4 accent-teal-700" /><span className="capitalize">{gender}</span></label>)}
           </div></fieldset>
         </section>
-        <fieldset className="border-t border-zinc-100 pt-5"><legend className="flex items-center gap-2 text-sm font-semibold text-zinc-900"><Navigation size={17} className="text-teal-700" />Navigation pointer</legend>
+        <fieldset className="settings-section"><legend className="flex items-center gap-2 text-sm font-semibold text-zinc-900"><Navigation size={17} className="text-teal-700" />Navigation pointer</legend>
           <p className="mb-3 text-xs leading-5 text-zinc-500">Choose how your position appears during navigation.</p>
           <div className="grid grid-cols-2 gap-3">{POINTERS.map((pointer) => <label key={pointer.value} className={optionClass}>
             <input type="radio" name="pointer" value={pointer.value} checked={draft.pointerStyle === pointer.value} onChange={() => setDraft({ ...draft, pointerStyle: pointer.value })} className="sr-only" />
@@ -50,7 +50,7 @@ export default function SettingsDialog({ profile, onSave, onClose }: Props) {
             <span className="flex-1">{pointer.label}</span>{draft.pointerStyle === pointer.value && <Check size={15} aria-hidden="true" className="shrink-0" />}
           </label>)}</div>
         </fieldset>
-        <fieldset className="border-t border-zinc-100 pt-5"><legend className="flex items-center gap-2 text-sm font-semibold text-zinc-900"><Map size={17} className="text-teal-700" />Map appearance</legend>
+        <fieldset className="settings-section"><legend className="flex items-center gap-2 text-sm font-semibold text-zinc-900"><Map size={17} className="text-teal-700" />Map appearance</legend>
           <p className="mb-3 text-xs leading-5 text-zinc-500">Choose the view that helps you find your way.</p>
           <div className="grid grid-cols-2 gap-3">{([{ value: "roadmap", label: "Normal", description: "Roads and buildings", Icon: Map }, { value: "satellite", label: "Satellite", description: "Satellite imagery", Icon: Satellite }] as const).map(({ value, label, description, Icon }) => <label key={value} className={`${optionClass} flex-col items-start gap-2`}>
             <input type="radio" name="map-view" value={value} checked={draft.mapStyle === value} onChange={() => setDraft({ ...draft, mapStyle: value })} className="sr-only" />

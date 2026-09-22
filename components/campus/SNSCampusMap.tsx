@@ -81,8 +81,7 @@ export default function SNSCampusMap({
         center: CAMPUS_CENTER,
         zoom: 17,
         mapTypeId: initialMapType.current,
-        renderingType: google.maps.RenderingType.VECTOR,
-        headingInteractionEnabled: true,
+        renderingType: google.maps.RenderingType.RASTER,
         tiltInteractionEnabled: false,
         tilt: 0,
         mapTypeControl: false,
@@ -93,7 +92,18 @@ export default function SNSCampusMap({
         disableDefaultUI: true,
         minZoom: 15,
         maxZoom: 21,
-        // Vector maps use cloud styling; inline styles are unsupported.
+        clickableIcons: false,
+        // Raster rendering supports embedded styles without a cloud map ID.
+        styles: [
+          { featureType: "poi", stylers: [{ visibility: "off" }] },
+          { featureType: "transit", stylers: [{ visibility: "off" }] },
+          { featureType: "administrative", elementType: "labels", stylers: [{ visibility: "off" }] },
+          { featureType: "landscape", elementType: "geometry", stylers: [{ color: "#eeebef" }] },
+          { featureType: "road", elementType: "geometry", stylers: [{ color: "#faf9fb" }] },
+          { featureType: "road", elementType: "labels.icon", stylers: [{ visibility: "off" }] },
+          { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#98929d" }] },
+          { featureType: "water", elementType: "geometry", stylers: [{ color: "#dbe2e8" }] },
+        ],
       });
 
       map.fitBounds(bounds, 0);
@@ -104,11 +114,11 @@ export default function SNSCampusMap({
         paths: CAMPUS_BOUNDARY.map(
           (c) => new google.maps.LatLng(c.lat, c.lng)
         ),
-        strokeColor: "#10b981",
-        strokeOpacity: 0.8,
-        strokeWeight: 2.5,
-        fillColor: "#10b981",
-        fillOpacity: 0.08,
+        strokeColor: "#b2a7bd",
+        strokeOpacity: 0.35,
+        strokeWeight: 1,
+        fillColor: "#e7e0ed",
+        fillOpacity: 0.02,
         clickable: false,
       });
       boundary.setMap(map);
@@ -372,11 +382,11 @@ export default function SNSCampusMap({
 
   if (mapError) {
     return (
-      <div className="absolute inset-0 flex items-center justify-center bg-zinc-900 text-white">
+      <div className="campus-map-canvas relative flex h-full w-full items-center justify-center bg-[#e9e4ed] text-[#5d5368]">
         <div className="text-center p-8 max-w-md">
           <div className="text-5xl mb-4">🗺️</div>
           <h2 className="text-xl font-semibold mb-2">Map unavailable</h2>
-          <p className="text-zinc-400 text-sm">{mapError}</p>
+          <p className="text-[#81758c] text-sm">{mapError}</p>
         </div>
       </div>
     );
@@ -385,7 +395,7 @@ export default function SNSCampusMap({
   return (
     <div className="campus-map-canvas relative w-full h-full">
       <div ref={mapContainerRef} className="absolute inset-0" />
-      {mapInstance && <PublishedMapImages map={mapInstance} selectedLocation={isWalking ? null : selectedLocation} onClick={(image) => {
+      {mapInstance && <PublishedMapImages map={mapInstance} selectedLocation={selectedLocation} onClick={(image) => {
         const location = publishedPlaces([image]).find((item) => item.id === (image.locationId || image.id));
         if (location) onLocationSelect(location);
       }} />}
@@ -400,10 +410,10 @@ export default function SNSCampusMap({
         />
       )}
       {!isMapLoaded && (
-        <div className="absolute inset-0 flex items-center justify-center bg-zinc-900">
+        <div className="absolute inset-0 flex items-center justify-center bg-[#e9e4ed]">
           <div className="flex flex-col items-center gap-3">
-            <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-            <p className="text-zinc-400 text-sm">Loading campus map...</p>
+            <div className="w-8 h-8 border-2 border-[#92809f] border-t-transparent rounded-full animate-spin" />
+            <p className="text-[#81758c] text-sm">Loading campus map...</p>
           </div>
         </div>
       )}

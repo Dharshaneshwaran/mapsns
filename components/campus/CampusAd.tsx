@@ -10,7 +10,7 @@ function AdCard({ banner }: { banner: AdBanner }) {
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="mt-5 block overflow-hidden rounded-2xl border border-zinc-200 bg-white hover:border-teal-500"
+      className="campus-ad-card mt-5 block overflow-hidden rounded-2xl border border-zinc-200 bg-white hover:border-teal-500"
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       {src && <img
