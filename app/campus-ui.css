@@ -80,7 +80,8 @@
 @media (prefers-reduced-motion: reduce) { .campus-map-app button { transition: none; } }
 
 /* The event landing fills the phone, with the live map one tap away. */
-.event-landing { position: absolute; inset: 0; z-index: 55; overflow-y: auto; overscroll-behavior: contain; background: var(--campus-surface); }
+.event-landing { position: absolute; inset: 0; z-index: 55; overflow-y: auto; overscroll-behavior: contain; background: var(--campus-surface); scrollbar-width: none; }
+.event-landing::-webkit-scrollbar { display: none; }
 .event-home { width: 100%; max-width: 480px; min-height: 100%; margin: auto; padding: max(24px, env(safe-area-inset-top)) 18px max(20px, env(safe-area-inset-bottom)); }
 .event-home-header { display: flex; align-items: center; justify-content: space-between; }
 .event-avatar { width: 46px; height: 46px; display: grid; place-items: center; border: 2px solid #fff; border-radius: 50%; background: #e8e6df; box-shadow: 0 4px 18px #3834440c; overflow: hidden; }
@@ -122,6 +123,11 @@
   .event-map-return { right: auto; width: 404px; }
 }
 @media (max-height: 740px) { .event-greeting { margin-top: 38px; } }
+
+/* More tile in event grid */
+.event-more-tile { border-style: dashed; border-color: #c4bfaa; background: linear-gradient(135deg, #f5f0e6, #ede8dc); }
+.event-more-tile:hover { background: linear-gradient(135deg, #ede8dc, #e5e0d4); border-color: #b0a990; }
+.event-more-art { color: #9a9380; background: radial-gradient(ellipse at center, #e8e2d4, #ffffff00 72%); }
 
 /* Settings and secondary screens use the same palette as the event guide. */
 .campus-settings {
