@@ -23,7 +23,7 @@ export default function ExplorePanel({ onSelect, onOpenSettings, name, gender }:
   return <section className="event-landing" aria-label="SNS event guide">
     <div className="event-home">
       <header className="event-home-header">
-        <button className="event-avatar" onClick={onOpenSettings} aria-label="Open profile settings"><Image src={gender === "female" ? "/female_v_2/image%201.0.png" : "/idel.png"} alt="" width={36} height={44} unoptimized /></button>
+        <button className="event-avatar" onClick={onOpenSettings} aria-label="Open profile settings"><Image src={gender === "female" ? "/female_v_2/w%201.png" : "/idel.png"} alt="" width={36} height={44} unoptimized /></button>
         <div className="event-brand"><span><b>D</b> CONFERENCE ’26</span><p>SNS Institutions · Campus guide</p></div>
       </header>
       <div className="conference-artwork">
@@ -41,7 +41,7 @@ export default function ExplorePanel({ onSelect, onOpenSettings, name, gender }:
         <span className="event-map-pill">Explore campus</span>
         <span className="event-map-caption"><Navigation size={12} /> View map</span>
       </button>
-      <div className="event-section-label"><h2>{tab === "saved" ? "Your saved places" : "Your event, your next stop"}</h2><span>{cards.length} {tab === "saved" ? "places" : "sessions"}</span></div>
+      <div className="event-section-label"><h2>{tab === "saved" ? "Your saved places" : "Your event, your next stop"}</h2><span>{cards.length} {tab === "saved" ? "places" : "stops"}</span></div>
       <div className="campus-place-grid event-grid">
         {cards.map((card, index) => <button key={`${card.title}-${index}`} className="campus-place-tile event-tile" onClick={() => card.place && onSelect(card.place)} disabled={!card.place}>
           <span className="campus-place-art">

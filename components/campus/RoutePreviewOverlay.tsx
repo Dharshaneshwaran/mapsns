@@ -13,11 +13,10 @@ import type { CampusLocation, TravelMode } from "@/types/campus";
 import { majorPlaceLabel } from "@/data/majorPlaces";
 
 const journeyMessages: Record<string, string> = {
+  "Panel sessions two + three + four": "Head to DT Playhouse. Fresh ideas and new perspectives await!",
+  Spin: "Enjoy your next campus stop!",
   Registration: "Your conference journey begins here!",
   "Inauguration + Panel session one": "Get ready for the opening conversations!",
-  "Panel session two": "Head to RM Hall on the 1st floor. Fresh ideas and new perspectives await!",
-  "Panel session three": "Your next inspiring conversation awaits!",
-  "Panel session four": "Keep exploring ideas that drive progress!",
 };
 
 type Props = {
@@ -141,6 +140,7 @@ export default function RoutePreviewOverlay({ destination, destinationGapMeters,
             <div className="min-w-0 flex-1 text-xs leading-4 text-[#5f6368]">
               <p><span className="font-medium text-[#202124]">{mode === "vehicle" ? "By vehicle" : "On foot"}</span> · Estimated journey</p>
               <p>{distanceLabel}</p>
+              {mode === "vehicle" && <p className="mt-1">Vehicle routes follow nearby drivable roads. Join the marked road before starting.</p>}
               <p className="mt-1 font-medium text-[#202124]">On your way to {eventLabel ?? destination} — {journeyMessages[eventLabel ?? ""] ?? "Your next campus stop awaits!"}</p>
               {!!destinationGapMeters && destinationGapMeters > 30 && <p className="mt-1 text-xs">Route ends on a campus path, {Math.round(destinationGapMeters)} m from the pin. Check the entrance from there.</p>}
             </div>

@@ -8,11 +8,10 @@ import CampusAd from "./CampusAd";
 import { majorPlaceLabel } from "@/data/majorPlaces";
 
 const conferenceDescriptions: Record<string, string> = {
+  "Panel sessions two + three + four": "Head to DT Playhouse for Panel sessions two, three, and four. Explore fresh perspectives on Chaos & Clarity and design thinking.",
+  Spin: "Explore Spin during your conference visit. Continue to DT Playhouse for Panel sessions two, three, and four.",
   Registration: "Your conference journey starts here. Head to CGC for registration and get ready to explore Chaos & Clarity.",
   "Inauguration + Panel session one": "Join us at the Open Auditorium for the conference inauguration and Panel session one. Let the conversations on Chaos & Clarity begin.",
-  "Panel session two": "Head to RM Hall on the 1st floor for Panel session two. Explore new perspectives on design thinking.",
-  "Panel session three": "Head to DT Playhouse for Panel session three. Connect with ideas and conversations around Chaos & Clarity.",
-  "Panel session four": "Continue your conference journey at Spine · Bioscope for Panel session four. Discover fresh perspectives on driving progress with design thinking.",
 };
 type Props = { location: CampusLocation; distance: number | null; walkingTime: number | null; onClose: () => void; onStartWalking: () => void };
 export default function BottomSheet({ location, distance, walkingTime, onClose, onStartWalking }: Props) {

@@ -8,9 +8,5 @@ export function publishedPlaces(images: MapImage[]): CampusLocation[] {
     const original = CAMPUS_LOCATIONS.find((place) => place.id === locationId);
     places.set(locationId, { ...original, id: locationId, name: image.name, showInShortcuts: image.showInShortcuts ?? true, category: original?.category || "other", isVerified: original?.isVerified ?? false, position: { lat: image.lat, lng: image.lng }, customIcon: image.src === "lucide:map-pin" ? undefined : image.src, description: original?.description || "Published campus destination. Directions lead to the marker; place it at the accessible entrance." });
   }
-  return [...places.values()].map(place => place.name.toLowerCase().replace(/[^a-z0-9]/g, "") === "aicampus" ? {
-    ...place,
-    name: "RM Hall · AI Campus · 1st floor",
-    description: "Panel session two takes place in RM Hall on the 1st floor of AI Campus. Directions lead to the AI Campus building; continue to the 1st floor for RM Hall.",
-  } : place);
+  return [...places.values()].map(place => ["spin", "spine", "spinebioscope"].includes(place.name.toLowerCase().replace(/[^a-z0-9]/g, "")) ? { ...place, name: "Spin" } : place);
 }
