@@ -10,6 +10,15 @@ import PlaceActions from "./PlaceActions";
 import Image from "next/image";
 import { useEffect, useRef, useState, type PointerEvent } from "react";
 import type { CampusLocation, TravelMode } from "@/types/campus";
+import { majorPlaceLabel } from "@/data/majorPlaces";
+
+const journeyMessages: Record<string, string> = {
+  Registration: "Your conference journey begins here!",
+  "Inauguration + Panel session one": "Get ready for the opening conversations!",
+  "Panel session two": "Fresh ideas and new perspectives await!",
+  "Panel session three": "Your next inspiring conversation awaits!",
+  "Panel session four": "Keep exploring ideas that drive progress!",
+};
 
 type Props = {
   destination: string;
@@ -33,6 +42,7 @@ function durationLabel(seconds: number) {
 }
 
 export default function RoutePreviewOverlay({ destination, destinationGapMeters, distance, duration, mode, onModeChange, onStart, onClose, onLayers, location }: Props) {
+  const eventLabel = majorPlaceLabel(location.name);
   const distanceLabel = distance < 1000 ? `${Math.round(distance)} m` : `${(distance / 1000).toFixed(1)} km`;
   const sheet = useRef<HTMLDivElement>(null);
   const [expanded, setExpanded] = useState(false);
@@ -131,16 +141,15 @@ export default function RoutePreviewOverlay({ destination, destinationGapMeters,
             <div className="min-w-0 flex-1 text-xs leading-4 text-[#5f6368]">
               <p><span className="font-medium text-[#202124]">{mode === "vehicle" ? "By vehicle" : "On foot"}</span> · Estimated journey</p>
               <p>{distanceLabel}</p>
-              {destinationGapMeters !== undefined && <a className="text-xs underline" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">Campus roads © OpenStreetMap contributors</a>}
+              <p className="mt-1 font-medium text-[#202124]">On your way to {eventLabel ?? destination} — {journeyMessages[eventLabel ?? ""] ?? "Your next campus stop awaits!"}</p>
               {!!destinationGapMeters && destinationGapMeters > 30 && <p className="mt-1 text-xs">Route ends on a campus path, {Math.round(destinationGapMeters)} m from the pin. Check the entrance from there.</p>}
-              <p className="mt-1">Check the marked route before starting.</p>
-              <p className="mt-1">Route: <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap contributors</a> · <a href="https://www.openstreetmap.org/fixthemap" target="_blank" rel="noreferrer">Fix the map</a></p>
             </div>
           </div>
         </div>
           <div className="route-preview-actions flex shrink-0 flex-wrap gap-2 border-t border-zinc-100 bg-white px-5 pt-3">
             <button type="button" onClick={onStart} className="google-action-button relative z-10 bg-[#008c95] text-white hover:bg-[#007b83]"><Navigation className="h-4 w-4 fill-current" /> Start navigation</button>
             <PlaceActions location={location} />
+            <a className="w-full text-[10px] text-zinc-500 underline" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">? OpenStreetMap contributors</a>
           </div>
       </div>
     </div>

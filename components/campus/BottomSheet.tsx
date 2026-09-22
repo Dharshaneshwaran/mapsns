@@ -5,13 +5,22 @@ import type { CampusLocation } from "@/types/campus";
 import SlidePanel from "./SlidePanel";
 import PlaceActions from "./PlaceActions";
 import CampusAd from "./CampusAd";
+import { majorPlaceLabel } from "@/data/majorPlaces";
+
+const conferenceDescriptions: Record<string, string> = {
+  Registration: "Your conference journey starts here. Head to CGC for registration and get ready to explore Chaos & Clarity.",
+  "Inauguration + Panel session one": "Join us at the Open Auditorium for the conference inauguration and Panel session one. Let the conversations on Chaos & Clarity begin.",
+  "Panel session two": "Your next conference conversation awaits at RM Hall. Join Panel session two and explore new perspectives on design thinking.",
+  "Panel session three": "Head to DT Playhouse for Panel session three. Connect with ideas and conversations around Chaos & Clarity.",
+  "Panel session four": "Continue your conference journey at Spine · Bioscope for Panel session four. Discover fresh perspectives on driving progress with design thinking.",
+};
 type Props = { location: CampusLocation; distance: number | null; walkingTime: number | null; onClose: () => void; onStartWalking: () => void };
 export default function BottomSheet({ location, distance, walkingTime, onClose, onStartWalking }: Props) {
   return <SlidePanel key={location.id} initiallyExpanded label={location.name + " details"}><div className="campus-place-details p-4 sm:p-5">
     <div className="flex items-start gap-3"><div className="min-w-0 flex-1"><p className="text-xs font-semibold uppercase tracking-widest text-teal-700">SNS Campus</p><h2 className="mt-2 break-words text-xl font-semibold sm:text-2xl">{location.name}</h2><p className="mt-1 text-sm capitalize text-zinc-500">{location.category} · {location.isVerified ? "Verified location" : "Approximate location"}</p></div><button onClick={onClose} aria-label="Close location details" className="google-round-button shrink-0"><X size={18} /></button></div>
     <div className="my-4 flex flex-wrap gap-2"><button onClick={onStartWalking} className="google-action-button bg-teal-700 text-white"><Navigation size={16} />Directions</button><PlaceActions location={location} /></div>
     <div className="relative h-44 overflow-hidden rounded-2xl bg-zinc-50"><Image src={location.customIcon || "/place-placeholder.svg"} alt={location.name} fill sizes="380px" className="object-contain p-3" /></div>
-    <p className="mt-4 text-sm leading-6 text-zinc-600">{location.description || "Explore this location on the SNS campus."}</p>
+    <p className="mt-4 text-sm leading-6 text-zinc-600">{conferenceDescriptions[majorPlaceLabel(location.name) ?? ""] || location.description || "Explore this location on the SNS campus."}</p>
     {distance !== null && <p className="mt-3 flex items-center gap-2 text-sm text-teal-700"><MapPin size={16} />{Math.round(distance)} m away{walkingTime !== null ? " · About " + Math.max(1, Math.ceil(walkingTime / 60)) + " min walk" : ""}</p>}
     <CampusAd placement="placeCard" />
   </div></SlidePanel>;
