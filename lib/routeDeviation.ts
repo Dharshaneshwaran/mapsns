@@ -1,4 +1,14 @@
 type Point = { lat: number; lng: number };
+// Visual alignment only: navigation and rerouting continue to use the GPS fix.
+export function routePointerPosition(position: Point, points: Point[]) {
+  if (points.length < 2) return position;
+  const projection = routeDeviation(position, points, null);
+  if (projection.distance > 15) return position;
+  const index = Math.min(Math.floor(projection.segmentProgress), points.length - 2);
+  const fraction = projection.segmentProgress - index;
+  const a = points[index], b = points[index + 1];
+  return { lat: a.lat + (b.lat - a.lat) * fraction, lng: a.lng + (b.lng - a.lng) * fraction };
+}
 export function routeDeviation(position: Point, points: Point[], heading: number | null) {
   const scaleX = 111320 * Math.cos(position.lat * Math.PI / 180);
   let distance = Infinity, direction = 0, progress = 0, total = 0;

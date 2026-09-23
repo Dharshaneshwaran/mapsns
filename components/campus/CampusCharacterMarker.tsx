@@ -82,10 +82,13 @@ export default function CampusCharacterMarker({
     img.style.imageRendering = "auto";
     img.draggable = false;
     if (!vehicle && gender === "female") {
-      img.style.width = "80px";
-      img.style.height = "80px";
-      img.style.left = "-8px";
-      img.style.top = "-8px";
+      // Center the shared artwork bounds across all eight 767 × 776 frames.
+      // Keep one scale and anchor so the walk cycle does not jump between frames.
+      const scale = 96 / 776;
+      img.style.width = `${767 * scale}px`;
+      img.style.height = "96px";
+      img.style.left = `${CHARACTER_SIZE / 2 - 441 * scale}px`;
+      img.style.top = `${CHARACTER_SIZE / 2 - 397.5 * scale}px`;
       img.style.objectFit = "contain";
       visual.style.overflow = "visible";
     }

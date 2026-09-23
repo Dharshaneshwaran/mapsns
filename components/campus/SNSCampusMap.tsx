@@ -7,7 +7,7 @@ import { CampusLocation, WalkingRoute, WalkingState } from "@/types/campus";
 import CampusCharacterMarker from "./CampusCharacterMarker";
 import PublishedMapImages from "./PublishedMapImages";
 import { publishedPlaces } from "@/lib/publishedPlaces";
-import { remainingRoute } from "@/lib/routeDeviation";
+import { remainingRoute, routePointerPosition } from "@/lib/routeDeviation";
 import type { Gender, PointerStyle } from "./SettingsDialog";
 
 type Props = {
@@ -402,7 +402,7 @@ export default function SNSCampusMap({
       {isWalking && walkingPosition && mapInstance && (!isWalkingMode || pointerStyle === "character") && (
         <CampusCharacterMarker
           map={mapInstance}
-          position={walkingPosition}
+          position={activeRoute ? routePointerPosition(walkingPosition, activeRoute.points) : walkingPosition}
           bearing={walkingBearing}
           isMoving={walkingState === "walking"}
           vehicle={!isWalkingMode}
