@@ -4,16 +4,24 @@ import { useEffect, useRef, useState } from "react";
 import { Check, Map, Satellite, UserRound, X, Navigation, Settings2 } from "lucide-react";
 
 export type Gender = "male" | "female";
-export type PointerStyle = "character" | "blue" | "red" | "green";
+export type PointerStyle = "character" | "terracotta" | "gold" | "olive" | "mint" | "green" | "aqua" | "blue" | "red";
 export type MapStyle = "roadmap" | "satellite";
 export type UserProfile = { name: string; gender: Gender; pointerStyle: PointerStyle; mapStyle: MapStyle };
 type Props = { profile: UserProfile; onSave: (profile: UserProfile) => void; onClose: () => void };
-const POINTERS: { value: PointerStyle; label: string; color: string }[] = [
+export const POINTER_PALETTE = ["#b77753", "#c7ad4d", "#abb64f", "#9bc6b4", "#5aa759", "#78bec4", "#4f7ea2", "#bd5b5b"] as const;
+
+export const POINTERS: { value: PointerStyle; label: string; color: string }[] = [
   { value: "character", label: "Character", color: "#007b7e" },
-  { value: "blue", label: "Blue", color: "#4285f4" },
-  { value: "red", label: "Red", color: "#ea4335" },
-  { value: "green", label: "Green", color: "#34a853" },
+  { value: "terracotta", label: "Terracotta", color: POINTER_PALETTE[0] },
+  { value: "gold", label: "Gold", color: POINTER_PALETTE[1] },
+  { value: "olive", label: "Olive", color: POINTER_PALETTE[2] },
+  { value: "mint", label: "Mint", color: POINTER_PALETTE[3] },
+  { value: "green", label: "Green", color: POINTER_PALETTE[4] },
+  { value: "aqua", label: "Aqua", color: POINTER_PALETTE[5] },
+  { value: "blue", label: "Blue", color: POINTER_PALETTE[6] },
+  { value: "red", label: "Red", color: POINTER_PALETTE[7] },
 ];
+export const POINTER_COLOR_BY_STYLE = Object.fromEntries(POINTERS.map((pointer) => [pointer.value, pointer.color])) as Record<PointerStyle, string>;
 const optionClass = "settings-option relative flex cursor-pointer items-center gap-3 rounded-xl border border-zinc-200 bg-white p-3 text-sm text-zinc-700 transition-colors has-focus-visible:outline-2 has-focus-visible:outline-offset-2";
 
 export default function SettingsDialog({ profile, onSave, onClose }: Props) {
