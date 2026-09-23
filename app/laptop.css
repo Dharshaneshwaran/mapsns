@@ -21,9 +21,9 @@
   .event-section-label h2 { font-size: 13px; }
   .event-section-label > span { font-size: 12px; }
   .event-grid { grid-column: 1 / -1; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
-  .event-tile { padding: 10px; min-height: 160px; border-radius: 14px; }
-  .event-tile .campus-place-art { height: 90px; margin-bottom: 10px; }
-  .event-tile .campus-place-art img { max-width: 96%; height: 90px; }
+  .event-tile { padding: 10px; min-height: 128px; border-radius: 14px; }
+  .event-tile .campus-place-art { height: 62px; margin-bottom: 10px; }
+  .event-tile .campus-place-art img { height: 62px; }
   .event-tile .campus-place-name { font-size: clamp(17px, 1.4vw, 20px); }
   .event-tile .campus-place-caption { font-size: 12px; line-height: 1.5; }
   .event-footer, .event-empty, .event-home > .campus-ad-card { grid-column: 1 / -1; }

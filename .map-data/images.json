@@ -1,5 +1,5 @@
 {
-  "revision": "11c080c5-5619-481e-8c61-ac2c97df75ab",
+  "revision": "9647c781-cd67-40fd-a2e9-0c686553401c",
   "images": [
     {
       "id": "9caa12d8-dfcb-4c32-b265-9f33e5c069d6",
@@ -15,8 +15,21 @@
       "locationId": "9caa12d8-dfcb-4c32-b265-9f33e5c069d6"
     },
     {
+      "id": "fcbf85ec-e8d8-4135-ae84-87c02582f69e",
+      "name": "SNS Lawn",
+      "src": "/uploads/map-images/b7e1881292e995d3442f08498f3427877cd31199f16a8257c02bb1cdbeb5fe82.png",
+      "lat": 11.100751487023379,
+      "lng": 77.0265450379525,
+      "width": 0.00041945795189224236,
+      "height": 0.0003602411377671846,
+      "rotation": 0,
+      "opacity": 1,
+      "showInShortcuts": false,
+      "locationId": "fcbf85ec-e8d8-4135-ae84-87c02582f69e"
+    },
+    {
       "id": "547b960f-4ad2-4ed2-b9b0-c3b305e248b7",
-      "name": "ai campus",
+      "name": "AI Campus",
       "src": "/uploads/map-images/a24fd17d0f8cad9f20468e03aa882b5b08d9018cad4a741f72e0111c835f5d59.png",
       "lat": 11.103599404401642,
       "lng": 77.02725500961176,
@@ -29,7 +42,7 @@
     },
     {
       "id": "79999ce7-d83c-4eeb-b811-c61d0d7fb451",
-      "name": "Dtplayhouse",
+      "name": "parallel panel sessions",
       "src": "/uploads/map-images/8f5b50c8ed91c1db2ee532d54a541a6362b505d2eafabcf611e25d3a064ef5ca.png",
       "lat": 11.104079480735122,
       "lng": 77.02763507837543,
@@ -42,7 +55,7 @@
     },
     {
       "id": "8bcc1bfe-69c9-4f9e-8b65-a8cbe7554b9e",
-      "name": "spine",
+      "name": "Spine",
       "src": "/uploads/map-images/34affe2d07967d48b1e0f4c45839f13788ab376dc5c850a08055389e27aab32f.png",
       "lat": 11.103998415482833,
       "lng": 77.02642567046976,
@@ -94,7 +107,7 @@
     },
     {
       "id": "1133b886-1dee-4f39-9e62-9e90609e9a4b",
-      "name": "chanakya hall",
+      "name": "Chanakya block",
       "src": "/uploads/map-images/efedc3b82a2fcd33074abae186ce9d73373ee2f77f0f9da27de4109b05b02b13.png",
       "lat": 11.100711909521081,
       "lng": 77.02709493159597,
@@ -107,9 +120,9 @@
     },
     {
       "id": "a4b04246-3348-4ce1-b521-d6b4f3e5490b",
-      "name": "sns open autorium",
+      "name": "Main hall",
       "src": "/uploads/map-images/15ee30aefd4e93c3cae803c6a2bd8edbdc8c7f0a51b84d54ee0e72c51a776a2e.png",
-      "lat": 11.102638976055092,
+      "lat": 11.102828480587064,
       "lng": 77.02789944124163,
       "width": 0.0009922111296031624,
       "height": 0.0007461113567161683,

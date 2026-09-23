@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { DEFAULT_MAP_IMAGES } from "@/data/mapImages";
