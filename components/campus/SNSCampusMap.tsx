@@ -8,7 +8,7 @@ import CampusCharacterMarker from "./CampusCharacterMarker";
 import PublishedMapImages from "./PublishedMapImages";
 import { publishedPlaces } from "@/lib/publishedPlaces";
 import { remainingRoute } from "@/lib/routeDeviation";
-import type { Gender, PointerStyle } from "./SettingsDialog";
+import { POINTER_COLOR_BY_STYLE, type Gender, type PointerStyle } from "./SettingsDialog";
 
 type Props = {
   onLocationSelect: (location: CampusLocation) => void;
@@ -64,7 +64,7 @@ export default function SNSCampusMap({
   const [isMapLoaded, setIsMapLoaded] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [mapInstance, setMapInstance] = useState<any>(null);
-  const pointerColor = pointerStyle === "red" ? "#EA4335" : pointerStyle === "green" ? "#34A853" : "#4285F4";
+  const pointerColor = POINTER_COLOR_BY_STYLE[pointerStyle] ?? POINTER_COLOR_BY_STYLE.blue;
 
   const initMap = useCallback(async () => {
     if (!mapContainerRef.current) return;

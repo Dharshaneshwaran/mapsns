@@ -1,8 +1,30 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { createElement, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { MapPin } from "lucide-react";
+import {
+  Bike,
+  BookOpen,
+  Building2,
+  BusFront,
+  CarFront,
+  ClipboardCheck,
+  Cross,
+  DoorOpen,
+  Dumbbell,
+  GraduationCap,
+  Landmark,
+  MapPin,
+  Plane,
+  PersonStanding,
+  Presentation,
+  RotateCwFadingClock,
+  School,
+  Theater,
+  TreePine,
+  Utensils,
+  type LucideIcon,
+} from "lucide-react";
 import type { MapImage } from "@/types/mapImage";
 
 type Props = {
@@ -11,10 +33,44 @@ type Props = {
   editable?: boolean;
   selected?: boolean;
   label?: string;
+  showLabelText?: boolean;
+  largeIcon?: boolean;
+  markerColor?: string;
   onSelect?: (id: string) => void;
   onChange?: (image: MapImage) => void;
   onClick?: (image: MapImage) => void;
 };
+
+const PLACE_ICONS: { terms: string[]; icon: LucideIcon }[] = [
+  { terms: ["registration", "reception", "regestion"], icon: ClipboardCheck },
+  { terms: ["plane view", "plane", "flight", "airport"], icon: Plane },
+  { terms: ["clinic", "hospital", "medical"], icon: Cross },
+  { terms: ["car parking", "parking area", "car park"], icon: CarFront },
+  { terms: ["bike", "cycle"], icon: Bike },
+  { terms: ["shuttle", "bus", "transport"], icon: BusFront },
+  { terms: ["library", "book"], icon: BookOpen },
+  { terms: ["canteen", "mess", "food", "cafe"], icon: Utensils },
+  { terms: ["playground", "sports", "court", "ground"], icon: Dumbbell },
+  { terms: ["cloak room", "cloakroom", "clock room", "clockroom", "cloak", "clock"], icon: RotateCwFadingClock },
+  { terms: ["panel", "inauguration", "auditorium", "theatre", "theater"], icon: Theater },
+  { terms: ["certificate", "presentation"], icon: Presentation },
+  { terms: ["buddha"], icon: PersonStanding },
+  { terms: ["temple", "heritage"], icon: Landmark },
+  { terms: ["gate", "entrance"], icon: DoorOpen },
+  { terms: ["admin", "office"], icon: Building2 },
+  { terms: ["ai campus", "college", "academic", "school"], icon: GraduationCap },
+  { terms: ["lawn", "garden", "park"], icon: TreePine },
+  { terms: ["hall", "building", "block", "hub", "spine"], icon: School },
+];
+
+function placeIcon(name: string): LucideIcon {
+  const normalizedName = name.toLowerCase();
+  return PLACE_ICONS.find(({ terms }) => terms.some((term) => normalizedName.includes(term)))?.icon ?? MapPin;
+}
+
+function renderPlaceIcon(name: string, large = false) {
+  return createElement(placeIcon(name), { size: large ? 18 : 13, strokeWidth: 1.8, "aria-hidden": true });
+}
 
 export default function MapImageLayer(props: Props) {
   const latest = useRef(props);
@@ -86,6 +142,6 @@ export default function MapImageLayer(props: Props) {
     <button type="button" aria-label={props.image.name} aria-pressed={props.editable ? !!props.selected : undefined} title={props.image.name}
       className={props.label ? `campus-landmark ${props.selected ? "is-selected" : ""}` : `flex items-end justify-center rounded-lg bg-transparent transition-transform hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-600 ${props.selected ? "h-12 w-11" : "h-9 w-9"}`}
       style={{ cursor: props.editable ? "grab" : "pointer" }}>
-      {props.label ? <><span className="campus-landmark-dot"><MapPin size={13} strokeWidth={1.6} aria-hidden="true" /></span><span>{props.label}</span></> : <MapPin size={props.selected ? 44 : 26} strokeWidth={1.25} aria-hidden="true" className="pointer-events-none fill-[#ea4335] stroke-white drop-shadow-sm [&_circle]:fill-white [&_circle]:stroke-none" />}
+      {props.label ? <><span className="campus-landmark-dot" style={{ backgroundColor: props.markerColor, color: "white" }}>{renderPlaceIcon(props.label, props.largeIcon)}</span>{props.showLabelText && <span>{props.label}</span>}</> : <MapPin size={props.selected ? 44 : 26} strokeWidth={1.25} aria-hidden="true" className="pointer-events-none stroke-white drop-shadow-sm [&_circle]:fill-white [&_circle]:stroke-none" style={{ fill: props.markerColor || "#bd5b5b" }} />}
     </button>, host) : null;
 }
