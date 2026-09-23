@@ -81,7 +81,8 @@ export default function SNSCampusMap({
         center: CAMPUS_CENTER,
         zoom: 17,
         mapTypeId: initialMapType.current,
-        renderingType: google.maps.RenderingType.RASTER,
+        renderingType: google.maps.RenderingType.VECTOR,
+        headingInteractionEnabled: true,
         tiltInteractionEnabled: false,
         tilt: 0,
         mapTypeControl: false,
@@ -93,7 +94,7 @@ export default function SNSCampusMap({
         minZoom: 15,
         maxZoom: 21,
         clickableIcons: false,
-        // Raster rendering supports embedded styles without a cloud map ID.
+        // Embedded styles only apply to raster maps; vector maps need cloud map styling.
         styles: [
           { featureType: "poi", stylers: [{ visibility: "off" }] },
           { featureType: "transit", stylers: [{ visibility: "off" }] },
@@ -358,6 +359,12 @@ export default function SNSCampusMap({
 
   useEffect(() => {
     if (mapInstance && isWalking) mapInstance.setZoom(20);
+  }, [mapInstance, isWalking]);
+
+  // Return to north-up when navigation ends.
+  useEffect(() => {
+    if (!mapInstance || isWalking) return;
+    if (mapInstance.getHeading?.()) mapInstance.moveCamera({ heading: 0, tilt: 0 });
   }, [mapInstance, isWalking]);
 
   // Cleanup
