@@ -3,7 +3,10 @@ export const conferenceEvents = [
   { title: "Registration", venue: "CGC", names: ["cgc", "cgc building"] },
   { title: "Inauguration + Panel session one", venue: "Open Auditorium", names: ["open auditorium", "sns open auditorium", "sns open autorium"] },
   { title: "Panel sessions two + three + four", venue: "DT Playhouse", names: ["dtplayhouse", "dt playhouse"] },
-  { title: "Spin", venue: "Spin", names: ["spin", "spine", "spine bioscope"] },
+  { title: "Spine", venue: "Spine", names: ["spine", "spine", "spine bioscope"] },
+  { title: "Cloak room", venue: "Alumni lounge", names: ["alumni lounge", "sns alumni lounge", "cloak room", "cloakroom"] },
+  { title: "Certificate corner", venue: "iHub", names: ["ihub", "i hub", "sns ihub", "sns i hub"] },
+  { title: "Car parking & bike parking", venue: "Parking", names: ["car parking & bike parking", "car parking", "bike parking", "parking"] },
 ];
 
 export function normalizePlaceName(name: string): string {

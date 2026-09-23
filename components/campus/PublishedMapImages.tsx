@@ -38,7 +38,7 @@ export default function PublishedMapImages({ map, onClick, selectedLocation }: {
     width: 0.0001, height: 0.0001, rotation: 0, opacity: 1,
   } : null;
   return <>
-    {images.filter(image => majorPlaceLabel(image.name) || (image.locationId || image.id) === selectedLocation?.id).map((image) => <MapImageLayer key={image.id} map={map} image={image} label={majorPlaceLabel(image.name) || image.name} selected={(image.locationId || image.id) === selectedLocation?.id} onClick={onClick} />)}
+    {images.map((image) => <MapImageLayer key={image.id} map={map} image={image} label={majorPlaceLabel(image.name) || image.name} selected={(image.locationId || image.id) === selectedLocation?.id} onClick={onClick} />)}
     {fallback && <MapImageLayer key={`selected-${fallback.id}`} map={map} image={fallback} label={fallback.name} selected onClick={onClick} />}
   </>;
 }

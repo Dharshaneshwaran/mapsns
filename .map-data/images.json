@@ -1,5 +1,5 @@
 {
-  "revision": "181464f9-6df4-4bce-9c73-eef3b0af7c3b",
+  "revision": "4a94f443-3639-4984-a736-6edf14824d58",
   "images": [
     {
       "id": "9caa12d8-dfcb-4c32-b265-9f33e5c069d6",
@@ -195,6 +195,45 @@
       "opacity": 1,
       "showInShortcuts": false,
       "locationId": "a4b04246-3348-4ce1-b521-d6b4f3e5490b"
+    },
+    {
+      "id": "1d55c52f-000c-4bf6-9d1d-f7b6428c51e0",
+      "name": "Alumni lounge",
+      "src": "lucide:map-pin",
+      "lat": 11.101206918886655,
+      "lng": 77.02686732556793,
+      "width": 0.0001,
+      "height": 0.0001,
+      "rotation": 0,
+      "opacity": 1,
+      "showInShortcuts": true,
+      "locationId": "1d55c52f-000c-4bf6-9d1d-f7b6428c51e0"
+    },
+    {
+      "id": "dc157a99-d8a7-4cd1-b6c8-a40e11cb25f9",
+      "name": "Shuttle service",
+      "src": "lucide:map-pin",
+      "lat": 11.101080581844075,
+      "lng": 77.02710470106575,
+      "width": 0.0001,
+      "height": 0.0001,
+      "rotation": 0,
+      "opacity": 1,
+      "showInShortcuts": true,
+      "locationId": "dc157a99-d8a7-4cd1-b6c8-a40e11cb25f9"
+    },
+    {
+      "id": "a6827f45-55fa-4935-8031-a5cc9dc9145f",
+      "name": "car parking & bike parking",
+      "src": "/uploads/map-images/abc123c22af7606ce5b7faee6576dcb3db5fab08badb6b3e2edf353c1e73873b.jpeg",
+      "lat": 11.099977515776615,
+      "lng": 77.02611805781702,
+      "width": 0.0001,
+      "height": 0.0001,
+      "rotation": 0,
+      "opacity": 1,
+      "showInShortcuts": true,
+      "locationId": "a6827f45-55fa-4935-8031-a5cc9dc9145f"
     }
   ]
 }

@@ -23,7 +23,7 @@ export default function ExplorePanel({ onSelect, onOpenSettings, name, gender }:
   return <section className="event-landing" aria-label="SNS event guide">
     <div className="event-home">
       <header className="event-home-header">
-        <button className="event-avatar" onClick={onOpenSettings} aria-label="Open profile settings"><Image src={gender === "female" ? "/female_v_2/w%201.png" : "/idel.png"} alt="" width={36} height={44} unoptimized /></button>
+        <button className="event-avatar" onClick={onOpenSettings} aria-label="Open profile settings"><Image src="/uploads/map-images/gdta_logo.png" alt="GDTA" width={46} height={46} unoptimized /></button>
         <div className="event-brand"><span><b>D</b> CONFERENCE ’26</span><p>SNS Institutions · Campus guide</p></div>
       </header>
       <div className="conference-artwork">

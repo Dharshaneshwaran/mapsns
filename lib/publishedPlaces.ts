@@ -8,5 +8,5 @@ export function publishedPlaces(images: MapImage[]): CampusLocation[] {
     const original = CAMPUS_LOCATIONS.find((place) => place.id === locationId);
     places.set(locationId, { ...original, id: locationId, name: image.name, showInShortcuts: image.showInShortcuts ?? true, category: original?.category || "other", isVerified: original?.isVerified ?? false, position: { lat: image.lat, lng: image.lng }, customIcon: image.src === "lucide:map-pin" ? undefined : image.src, description: original?.description || "Published campus destination. Directions lead to the marker; place it at the accessible entrance." });
   }
-  return [...places.values()].map(place => ["spin", "spine", "spinebioscope"].includes(place.name.toLowerCase().replace(/[^a-z0-9]/g, "")) ? { ...place, name: "Spin" } : place);
+  return [...places.values()].map(place => ["spine", "spine", "spinebioscope"].includes(place.name.toLowerCase().replace(/[^a-z0-9]/g, "")) ? { ...place, name: "Spine" } : place);
 }

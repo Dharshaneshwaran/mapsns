@@ -13,10 +13,13 @@ import type { CampusLocation, TravelMode } from "@/types/campus";
 import { majorPlaceLabel } from "@/data/majorPlaces";
 
 const journeyMessages: Record<string, string> = {
+  "Cloak room": "The conference cloak room is at the Alumni lounge.",
+  "Certificate corner": "Head to iHub for your conference certificate!",
   "Panel sessions two + three + four": "Head to DT Playhouse. Fresh ideas and new perspectives await!",
   Spin: "Enjoy your next campus stop!",
   Registration: "Your conference journey begins here!",
   "Inauguration + Panel session one": "Get ready for the opening conversations!",
+  "Car parking & bike parking": "Park your vehicle and head to your next stop!",
 };
 
 type Props = {
