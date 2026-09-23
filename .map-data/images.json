@@ -1,5 +1,5 @@
 {
-  "revision": "4a94f443-3639-4984-a736-6edf14824d58",
+  "revision": "11c080c5-5619-481e-8c61-ac2c97df75ab",
   "images": [
     {
       "id": "9caa12d8-dfcb-4c32-b265-9f33e5c069d6",
@@ -199,7 +199,7 @@
     {
       "id": "1d55c52f-000c-4bf6-9d1d-f7b6428c51e0",
       "name": "Alumni lounge",
-      "src": "lucide:map-pin",
+      "src": "/uploads/map-images/93b4309a93093f8afcae5971a27f9cdba4ee95d44c4ab3b45d16b8ba16a34cec.png",
       "lat": 11.101206918886655,
       "lng": 77.02686732556793,
       "width": 0.0001,
@@ -234,6 +234,19 @@
       "opacity": 1,
       "showInShortcuts": true,
       "locationId": "a6827f45-55fa-4935-8031-a5cc9dc9145f"
+    },
+    {
+      "id": "f8c141d9-5a30-4eb0-b3ac-2576571ca7fd",
+      "name": "Food court",
+      "src": "/uploads/map-images/f7b8922dad2d41dea56b5ba36c4e66d91e190756007518785ae21a44acfd7c6c.png",
+      "lat": 11.100838211110146,
+      "lng": 77.0275608270716,
+      "width": 0.0001,
+      "height": 0.0001,
+      "rotation": 0,
+      "opacity": 1,
+      "showInShortcuts": true,
+      "locationId": "f8c141d9-5a30-4eb0-b3ac-2576571ca7fd"
     }
   ]
 }

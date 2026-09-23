@@ -7,7 +7,7 @@ import type { CampusLocation } from "@/types/campus";
 import CampusAd from "./CampusAd";
 import { useSavedPlaces } from "./PlaceActions";
 
-import { conferenceEvents, morePlaces, normalizePlaceName } from "@/data/majorPlaces";
+import { conferenceEvents, majorPlaceLabel, normalizePlaceName } from "@/data/majorPlaces";
 
 type Props = { onSelect: (location: CampusLocation) => void; onOpenSettings: () => void; name: string; gender: "male" | "female" };
 export default function ExplorePanel({ onSelect, onOpenSettings, name }: Props) {
@@ -28,20 +28,17 @@ export default function ExplorePanel({ onSelect, onOpenSettings, name }: Props) 
           <ArrowLeft size={17} /> Back
         </button>
       </div>
-      <div className="event-section-label"><h2>More places on campus</h2><span>{morePlaces.length} places</span></div>
+      <div className="event-section-label"><h2>More places on campus</h2><span>{places.length} places</span></div>
       <div className="campus-place-grid event-grid">
-        {morePlaces.map((item, index) => {
-          const matchedPlace = places.find(place => item.names.some(alias => normalize(alias) === normalize(place.name)));
-          return <button key={`${item.title}-${index}`} className="campus-place-tile event-tile" onClick={() => matchedPlace && onSelect(matchedPlace)} disabled={!matchedPlace}>
-            <span className="campus-place-art">
-              {(matchedPlace?.customIcon || item.icon) ? <Image src={matchedPlace?.customIcon || item.icon} alt="" width={160} height={100} style={{ width: "auto" }} unoptimized className="object-cover rounded-xl" /> : <Building2 size={48} strokeWidth={1.2} />}
-              {matchedPlace && <ArrowUpRight className="campus-tile-arrow" size={15} aria-hidden="true" />}
-            </span>
-            <span className="campus-place-name">{item.title}</span>
-            <span className="campus-place-caption">{item.venue}</span>
-            {!matchedPlace && <span className="event-unmapped">Location coming soon</span>}
-          </button>;
-        })}
+        {places.map(place => <button key={place.id} className="campus-place-tile event-tile" onClick={() => onSelect(place)}>
+          <span className="campus-place-art">
+            {place.customIcon ? <Image src={place.customIcon} alt="" width={160} height={100} style={{ width: "auto" }} unoptimized /> : <Building2 size={48} strokeWidth={1.2} />}
+            <ArrowUpRight className="campus-tile-arrow" size={15} aria-hidden="true" />
+          </span>
+          <span className="campus-place-name">{place.name}</span>
+          <span className="campus-place-caption">{majorPlaceLabel(place.name) || "View on map"}</span>
+        </button>)}
+
       </div>
       <p className="event-footer"><span><MapPin size={15} /></span> Discover more of SNS campus.</p>
     </div>

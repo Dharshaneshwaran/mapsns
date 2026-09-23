@@ -9,16 +9,6 @@ export const conferenceEvents = [
   { title: "Car parking & bike parking", venue: "Parking", names: ["car parking & bike parking", "car parking", "bike parking", "parking"] },
 ];
 
-// Additional places, images, and highlights for the "More" tab.
-export const morePlaces = [
-  { title: "Library", venue: "SNS Library · Ground floor", names: ["library", "sns library"], icon: "/place-placeholder.svg" },
-  { title: "Cafeteria", venue: "Food Court · 2nd floor", names: ["cafeteria", "food court", "canteen"], icon: "/place-placeholder.svg" },
-  { title: "Innovation Hub", venue: "iHub · 3rd floor", names: ["ihub", "innovation hub", "i hub", "sns ihub", "sns i hub"], icon: "/place-placeholder.svg" },
-  { title: "Open Auditorium", venue: "Open Air Theatre", names: ["open air theatre", "oat", "open auditorium", "sns open auditorium", "sns open autorium"], icon: "/place-placeholder.svg" },
-  { title: "Sports Complex", venue: "SNS Sports Zone", names: ["sports", "sports complex", "sports zone"], icon: "/place-placeholder.svg" },
-  { title: "Heritage Block", venue: "Heritage Building · 1st floor", names: ["heritage", "heritage block", "heritage building"], icon: "/place-placeholder.svg" },
-];
-
 export function normalizePlaceName(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9]/g, "");
 }
