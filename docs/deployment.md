@@ -19,6 +19,12 @@ During a quiet period, run `node scripts/backup.mjs` with the same storage envir
 
 To restore, stop the server, preserve the current storage as a separate recovery copy, copy `map-data/` into the configured metadata directory and `map-images/` into the configured upload directory, restore `ads.json` to `data/ads.json`, then restart. Test a public image, sidebar and admin sign-in. Do not restore a `publish.lock` left by an interrupted operation.
 
+## Live visitor activity
+
+Public pages send anonymous browser heartbeats every 20 seconds while visible. The admin panel refreshes counts and the heatmap every 10 seconds; visitors expire after 2 minutes. Admin pages are excluded. Sharing is off by default and can be enabled or stopped under More → Campus activity map, separately from navigation location permission. Locations are rounded to roughly 55-metre cells; fixes with accuracy worse than 150 metres are omitted. No names or location history are stored. HTTPS is required for geolocation outside localhost.
+
+Presence lives only in memory in one Node.js process, with periodic expiry cleanup. It resets on restart and fills again as browsers send heartbeats. Run a single Node.js process for accurate counts. Multiple workers, replicas, or serverless instances require a shared TTL store before using this feature in that configuration. The summary endpoint uses existing admin authentication. Counts estimate browser activity, not verified attendance; separate devices or private sessions may count separately.
+
 ## Routing
 
 Route preparation requires a fresh GPS fix and a valid mapped route. Failed requests display an error and Retry rather than an artificial path. Distance and duration come from the routing service; remaining distance/ETA are estimated by progress along its polyline. Uploaded images can be made searchable in the admin editor; their centre is the navigation destination, so position them at an accessible entrance. Accuracy and path coverage still depend on GPS and mapped data.

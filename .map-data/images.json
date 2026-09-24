@@ -1,5 +1,5 @@
 {
-  "revision": "0c4a9b22-d476-40cd-8e02-47d65ad262a9",
+  "revision": "e1b60552-9ac3-4cb6-af3b-82f0e1383b1b",
   "images": [
     {
       "id": "9caa12d8-dfcb-4c32-b265-9f33e5c069d6",
@@ -52,19 +52,6 @@
       "opacity": 1,
       "showInShortcuts": true,
       "locationId": "79999ce7-d83c-4eeb-b811-c61d0d7fb451"
-    },
-    {
-      "id": "8bcc1bfe-69c9-4f9e-8b65-a8cbe7554b9e",
-      "name": "Spine",
-      "src": "/uploads/map-images/34affe2d07967d48b1e0f4c45839f13788ab376dc5c850a08055389e27aab32f.png",
-      "lat": 11.103998415482833,
-      "lng": 77.02642567046976,
-      "width": 0.0003833636918166916,
-      "height": 0.00039742933181674995,
-      "rotation": 54.513522118874334,
-      "opacity": 1,
-      "showInShortcuts": false,
-      "locationId": "8bcc1bfe-69c9-4f9e-8b65-a8cbe7554b9e"
     },
     {
       "id": "e35386a1-ac4a-4faa-b497-1fc1b27bfd83",
@@ -182,6 +169,32 @@
       "opacity": 1,
       "showInShortcuts": true,
       "locationId": "f8c141d9-5a30-4eb0-b3ac-2576571ca7fd"
+    },
+    {
+      "id": "543523b1-7bb3-4661-a751-733b680cafc4",
+      "name": "Washroom",
+      "src": "lucide:map-pin",
+      "lat": 11.103695071434867,
+      "lng": 77.02767836503537,
+      "width": 0.0001,
+      "height": 0.0001,
+      "rotation": 0,
+      "opacity": 1,
+      "showInShortcuts": true,
+      "locationId": "543523b1-7bb3-4661-a751-733b680cafc4"
+    },
+    {
+      "id": "7a931b08-66c2-4835-9f86-bafcc8862bc5",
+      "name": "SNS Institutions",
+      "src": "/uploads/map-images/728c018b69ba982566d249b4ce7536177220a87af03a876804cc7e9d8c628b29.png",
+      "lat": 11.100716026968067,
+      "lng": 77.02595425476585,
+      "width": 0.0001,
+      "height": 0.0001,
+      "rotation": 0,
+      "opacity": 1,
+      "showInShortcuts": true,
+      "locationId": "7a931b08-66c2-4835-9f86-bafcc8862bc5"
     }
   ]
 }

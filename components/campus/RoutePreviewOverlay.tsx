@@ -32,6 +32,7 @@ type Props = {
   onStart: () => void;
   onClose: () => void;
   onLayers: () => void;
+  mapStyle: "roadmap" | "satellite";
   location: CampusLocation;
 };
 
@@ -43,7 +44,7 @@ function durationLabel(seconds: number) {
   return remaining ? `${hours} hr ${remaining} min` : `${hours} hr`;
 }
 
-export default function RoutePreviewOverlay({ destination, destinationGapMeters, distance, duration, mode, onModeChange, onStart, onClose, onLayers, location }: Props) {
+export default function RoutePreviewOverlay({ destination, destinationGapMeters, distance, duration, mode, onModeChange, onStart, onClose, onLayers, mapStyle, location }: Props) {
   const eventLabel = majorPlaceLabel(location.name);
   const distanceLabel = distance < 1000 ? `${Math.round(distance)} m` : `${(distance / 1000).toFixed(1)} km`;
   const sheet = useRef<HTMLDivElement>(null);
@@ -95,7 +96,7 @@ export default function RoutePreviewOverlay({ destination, destinationGapMeters,
   };
 
   return (
-    <div className="pointer-events-none absolute inset-0 z-40 text-[#202124]">
+    <div className="route-preview-overlay pointer-events-none absolute inset-0 z-40 text-[#202124]">
       <div className="route-search-card pointer-events-auto absolute left-3 right-3 top-3 rounded-[18px] bg-white px-4 py-2 shadow-[0_2px_8px_rgba(0,0,0,0.28)] safe-top sm:left-4 sm:right-auto sm:top-4 sm:w-[420px]">
         <div className="flex items-center gap-3 border-b border-[#e8eaed] py-1.5">
           <span className="h-3 w-3 rounded-full border-[3px] border-[#8ab4f8] bg-[#1a73e8]" />
@@ -107,10 +108,11 @@ export default function RoutePreviewOverlay({ destination, destinationGapMeters,
         </div>
       </div>
 
-      <button onClick={onLayers} aria-label="Map layers" className="navigation-round-control pointer-events-auto absolute right-4 top-28 bg-white text-[#3c4043] hover:bg-[#f1f3f4]"><Layers className="h-6 w-6" /></button>
+      <button type="button" onClick={onLayers} aria-label="Satellite view" aria-pressed={mapStyle === "satellite"} title={mapStyle === "satellite" ? "Switch to normal view" : "Switch to satellite view"} className="navigation-round-control pointer-events-auto absolute right-4 top-28 bg-white text-[#3c4043] hover:bg-[#f1f3f4]"><Layers className="h-6 w-6" /></button>
 
       <div
         ref={sheet}
+        data-expanded={expanded}
         style={{ height: dragHeight ?? (expanded ? "100%" : undefined) }}
         className="route-preview-sheet pointer-events-auto absolute bottom-0 left-0 right-0 overflow-hidden rounded-t-[24px] bg-white shadow-[0_-3px_16px_rgba(0,0,0,0.2)] sm:bottom-4 sm:left-4 sm:right-auto sm:w-[420px] sm:rounded-[22px]"
         onPointerDown={(event) => event.stopPropagation()}
@@ -123,10 +125,10 @@ export default function RoutePreviewOverlay({ destination, destinationGapMeters,
           onPointerCancel={() => finishDrag(true)}
           onLostPointerCapture={() => finishDrag(true)}
         >
-        <button type="button" className="flex h-8 w-full cursor-ns-resize items-center justify-center" aria-label={expanded ? "Collapse route panel" : "Expand route panel"} aria-expanded={expanded}
+        <button type="button" className="route-preview-grip flex h-8 w-full cursor-ns-resize items-center justify-center" aria-label={expanded ? "Collapse route panel" : "Expand route panel"} aria-expanded={expanded}
           onClick={(event) => { if (event.detail === 0 || !moved.current) setExpanded((value) => !value); moved.current = false; }}
         ><span className="h-1 w-10 rounded-full bg-[#dadce0]" /></button>
-        <div className="flex shrink-0 items-center gap-2 px-5 pb-2 pt-2">
+        <div className="route-preview-heading flex shrink-0 items-center gap-2 px-5 pb-2 pt-2">
           <h2 className="min-w-0 flex-1 truncate text-[20px] font-medium">Your campus journey</h2>
           <button onClick={onClose} aria-label="Close route preview" className="google-round-button"><X className="h-[18px] w-[18px]" /></button>
         </div>
@@ -144,7 +146,7 @@ export default function RoutePreviewOverlay({ destination, destinationGapMeters,
               <p><span className="font-medium text-[#202124]">{mode === "vehicle" ? "By vehicle" : "On foot"}</span> · Estimated journey</p>
               <p>{distanceLabel}</p>
               {mode === "vehicle" && <p className="mt-1">Vehicle routes follow nearby drivable roads. Join the marked road before starting.</p>}
-              <p className="mt-1 font-medium text-[#202124]">On your way to {eventLabel ?? destination} — {journeyMessages[eventLabel ?? ""] ?? "Your next campus stop awaits!"}</p>
+              <p className="route-preview-message mt-1 font-medium text-[#202124]">On your way to {eventLabel ?? destination} — {journeyMessages[eventLabel ?? ""] ?? "Your next campus stop awaits!"}</p>
               {!!destinationGapMeters && destinationGapMeters > 30 && <p className="mt-1 text-xs">Route ends on a campus path, {Math.round(destinationGapMeters)} m from the pin. Check the entrance from there.</p>}
             </div>
           </div>

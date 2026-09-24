@@ -4,6 +4,7 @@ import { CAMPUS_LOCATIONS } from "@/data/campusLocations";
 import MapImageEditor from "@/components/admin/MapImageEditor";
 import LandingEditor from "@/components/admin/LandingEditor";
 import AdBannerEditor from "@/components/admin/AdBannerEditor";
+import LiveVisitors from "@/components/admin/LiveVisitors";
 
 const managedPlaces = [
   { label: "Registration Office", locationId: "admin-building" },
@@ -33,6 +34,7 @@ export default function AdminPage() {
       </header>
 
       <div className="mx-auto max-w-7xl px-5 py-7 lg:px-8">
+        <LiveVisitors />
         <MapImageEditor />
         <AdBannerEditor />
         <LandingEditor />

@@ -2,6 +2,7 @@
 
 import { ArrowLeft, ArrowUpRight, CarFront, Footprints, MapPin, Navigation, Route, X } from "lucide-react";
 import type { TravelMode } from "@/types/campus";
+import { useRef, useState } from "react";
 
 type Props = {
   destination: string;
@@ -16,6 +17,20 @@ type Props = {
 };
 
 export default function NavigationOverlay({ destination, destinationGapMeters, distance, duration, mode, onExit, onRecenter, onOverview, isFollowingLocation }: Props) {
+  const [collapsed, setCollapsed] = useState(false);
+  const sheet = useRef<HTMLElement>(null);
+  const drag = useRef<{ y: number; height: number; delta: number; pointer: number } | null>(null);
+  const moved = useRef(false);
+  const finishDrag = (cancelled = false) => {
+    const current = drag.current;
+    if (!current) return;
+    drag.current = null;
+    if (sheet.current) {
+      sheet.current.removeAttribute("data-dragging");
+      sheet.current.style.removeProperty("height");
+    }
+    if (!cancelled && moved.current) setCollapsed(current.delta > 0);
+  };
   const minutes = Math.max(1, Math.ceil(duration / 60));
   const distanceLabel = distance < 1000 ? `${Math.round(distance)} m` : `${(distance / 1000).toFixed(1)} km`;
 
@@ -23,8 +38,29 @@ export default function NavigationOverlay({ destination, destinationGapMeters, d
     <div className="walk-experience pointer-events-none absolute inset-0 z-40">
       <button onClick={onOverview} aria-label="Route overview" className="walk-back pointer-events-auto"><ArrowLeft size={20} /></button>
       <div className="walk-map-label"><span />{mode === "walking" ? "Walking navigation" : "Vehicle navigation"}</div>
-      <section className="walk-journey pointer-events-auto" aria-label="Current journey">
-        <div className="walk-sheet-handle" aria-hidden="true" />
+      <section ref={sheet} data-collapsed={collapsed} className="walk-journey pointer-events-auto" aria-label="Current journey">
+        <button type="button" className="walk-sheet-grip" aria-label={collapsed ? "Expand navigation panel" : "Collapse navigation panel"} aria-expanded={!collapsed}
+          onPointerDown={event => {
+            if (event.button !== 0 || !sheet.current) return;
+            moved.current = false;
+            drag.current = { y: event.clientY, height: sheet.current.getBoundingClientRect().height, delta: 0, pointer: event.pointerId };
+            event.currentTarget.setPointerCapture(event.pointerId);
+          }}
+          onPointerMove={event => {
+            const current = drag.current;
+            if (!current || current.pointer !== event.pointerId || !sheet.current) return;
+            current.delta = event.clientY - current.y;
+            if (Math.abs(current.delta) < 5 && !moved.current) return;
+            moved.current = true;
+            sheet.current.dataset.dragging = "true";
+            const maximum = Math.min(310, (sheet.current.parentElement?.clientHeight || window.innerHeight) * 0.44);
+            sheet.current.style.height = `${Math.max(120, Math.min(maximum, current.height - current.delta))}px`;
+          }}
+          onPointerUp={() => finishDrag()}
+          onPointerCancel={() => finishDrag(true)}
+          onLostPointerCapture={() => finishDrag(true)}
+          onClick={event => { if (event.detail === 0 || !moved.current) setCollapsed(value => !value); moved.current = false; }}
+        ><span className="walk-sheet-handle" /></button>
         <header className="walk-sheet-header">
           <h2>{mode === "walking" ? "Your campus walk" : "Your campus journey"}</h2>
           <span className="walk-live-label">In progress</span>

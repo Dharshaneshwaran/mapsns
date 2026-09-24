@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
+import { VisitorPresenceProvider } from "@/components/campus/VisitorPresence";
 import "./globals.css";
 import "./campus-ui.css";
 import "./conference-theme.css";
@@ -34,7 +35,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`h-full antialiased ${conferenceDisplay.variable}`}
     >
-      <body className="h-full w-full overflow-hidden touch-manipulation">{children}</body>
+      <body className="h-full w-full overflow-hidden touch-manipulation"><VisitorPresenceProvider>{children}</VisitorPresenceProvider></body>
     </html>
   );
 }

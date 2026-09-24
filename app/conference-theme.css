@@ -106,3 +106,78 @@
 .campus-map-app .campus-landmark-dot { background: #eeeeee; color: #666666; border-color: #ffffff; }
 .campus-map-app .campus-landmark.is-selected .campus-landmark-dot { background: #ffbf00; color: #292927; }
 .campus-admin > header, .campus-admin article, .campus-admin section { background: #ffffff; }
+
+/* Compact route preview keeps the route visible on phones and tablets. */
+.walk-sheet-grip { display: none; }
+@media (max-width: 1023px) {
+  .walk-journey .walk-sheet-grip { display: flex; align-items: center; justify-content: center; flex-shrink: 0; height: 24px; min-height: 24px; width: 100%; touch-action: none; cursor: ns-resize; }
+  .walk-journey .walk-sheet-grip .walk-sheet-handle { background: #c8cccf; margin: 0; }
+  .campus-map-app.navigation-active:has(.walk-journey[data-collapsed="true"]) { --walk-sheet-height: calc(120px + env(safe-area-inset-bottom)); }
+  .walk-journey[data-collapsed="true"] .walk-sheet-content { display: none; }
+  .walk-journey[data-collapsed="true"] .walk-actions { margin-top: auto; }
+  @media (prefers-reduced-motion: no-preference) {
+    .campus-map-app .walk-journey:not([data-dragging="true"]) { transition: height 300ms cubic-bezier(0.22, 1, 0.36, 1); }
+    .campus-map-app.navigation-active .campus-map-canvas { transition: height 300ms cubic-bezier(0.22, 1, 0.36, 1); }
+  }
+  .campus-map-app.navigation-active { --walk-sheet-height: min(310px, 44dvh); }
+  .campus-map-app .walk-journey { height: var(--walk-sheet-height); padding-inline: 12px; border-radius: 20px 20px 0 0; }
+  .walk-journey .walk-sheet-handle { margin: 6px auto; }
+  .walk-journey .walk-sheet-header { padding: 0 2px 6px; }
+  .walk-journey .walk-sheet-header h2 { font-size: 20px; }
+  .walk-journey .walk-live-label { font-size: 10px; padding: 4px 7px; }
+  .walk-journey .walk-stops { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 0; }
+  .walk-journey .walk-stop { min-height: 44px; gap: 5px; }
+  .walk-journey .walk-stop > div { padding: 4px 0; border: 0; }
+  .walk-journey .walk-stop:first-child::after { display: none; }
+  .walk-journey .walk-stop-icon { width: 22px; height: 22px; }
+  .walk-journey .walk-stop p { font-size: 10px; margin-bottom: 2px; }
+  .walk-journey .walk-stop h3 { font-size: 12px; }
+  .walk-journey .walk-summary { padding: 7px 2px; margin: 6px 0; gap: 8px; }
+  .walk-journey .walk-mode-illustration { width: 32px; height: 32px; }
+  .walk-journey .walk-mode-illustration svg { width: 24px; height: 24px; }
+  .walk-journey .walk-summary h3 { font-size: 12px; }
+  .walk-journey .walk-summary p { font-size: 10px; margin-top: 2px; }
+  .walk-journey .walk-eta strong { font-size: 24px; }
+  .walk-journey .walk-location-row { min-height: 44px; padding: 6px 9px; border-radius: 12px; }
+  .walk-journey .walk-actions { padding: 8px 0 max(8px, env(safe-area-inset-bottom)); gap: 8px; }
+  .walk-journey .walk-actions button { min-height: 44px; font-size: 12px; }
+  .campus-map-app .route-preview-overlay .route-search-card {
+    padding: 6px 12px;
+    border-radius: 16px;
+  }
+  .route-preview-overlay .route-search-card > div { padding-block: 3px; gap: 10px; }
+  .route-preview-overlay .route-search-card span { font-size: 12px; }
+  .campus-map-app .route-preview-overlay .navigation-round-control {
+    top: calc(84px + env(safe-area-inset-top, 0px));
+    width: 44px;
+    height: 44px;
+  }
+  .route-preview-overlay .navigation-round-control svg { width: 20px; height: 20px; }
+  .campus-map-app .route-preview-sheet { border-radius: 20px 20px 0 0; }
+  .route-preview-sheet .route-preview-grip { height: 24px; min-height: 24px; }
+  .route-preview-sheet .route-preview-heading { padding: 0 12px 2px; }
+  .route-preview-sheet h2 { font-size: 20px; text-align: left; }
+  .route-preview-sheet .google-round-button { width: 44px; height: 44px; }
+  .route-preview-sheet .route-mode-tab { min-height: 44px; margin: 2px 4px; border-radius: 12px; padding: 6px 10px; }
+  .route-preview-sheet .route-mode-tab img { width: 22px; height: 22px; }
+  .campus-map-app .route-preview-sheet .route-preview-details {
+    margin: 0 14px 8px;
+    padding: 10px 0;
+    border-top: 0;
+  }
+  .route-preview-sheet .route-preview-details > div { align-items: center; gap: 12px; }
+  .route-preview-sheet .route-preview-details > div > p { font-size: 24px; line-height: 1.2; }
+  .route-preview-sheet[data-expanded="false"] .route-preview-message { display: none; }
+  .campus-map-app .route-preview-sheet .route-preview-actions {
+    gap: 6px;
+    padding: 0 12px max(10px, env(safe-area-inset-bottom));
+  }
+  .route-preview-sheet .route-preview-actions .google-action-button {
+    min-height: 44px;
+    padding: 8px 10px;
+    gap: 5px;
+    font-size: 12px;
+  }
+  .route-preview-sheet .route-preview-actions > button:first-child { flex: 1 1 auto; min-height: 44px; }
+  .route-preview-sheet .route-preview-actions > a { min-height: 0; line-height: 14px; }
+}

@@ -202,9 +202,20 @@ function CampusMapApp({ initialProfile }: { initialProfile: UserProfile }) {
     setWalkingState("idle");
     setWalkingPosition(null);
     setActiveRoute(null);
-    setSelectedLocation(null);
     setLocationStatus("idle");
     setIsRoutePreview(false);
+    if (watchIdRef.current !== null) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+      watchIdRef.current = null;
+    }
+  }, []);
+
+  const handleReturnToRoutePreview = useCallback(() => {
+    setIsWalking(false);
+    setWalkingState("idle");
+    setRerouteMessage("");
+    setLocationStatus("idle");
+    setIsRoutePreview(true);
     if (watchIdRef.current !== null) {
       navigator.geolocation.clearWatch(watchIdRef.current);
       watchIdRef.current = null;
@@ -432,10 +443,10 @@ function CampusMapApp({ initialProfile }: { initialProfile: UserProfile }) {
           distance={distance ?? 0}
           duration={travelTime ?? 0}
           mode={travelMode}
-          onExit={handleStopWalking}
+          onExit={handleReturnToRoutePreview}
           isFollowingLocation={isFollowingLocation}
           onRecenter={() => { setIsFollowingLocation(true); mapInstance?.moveCamera({ center: walkingPosition, zoom: 20, heading: walkingBearing, tilt: 0 }); }}
-          onOverview={() => { setIsWalking(false); setIsRoutePreview(true); }}
+          onOverview={handleReturnToRoutePreview}
         />
       )}
 
@@ -449,7 +460,12 @@ function CampusMapApp({ initialProfile }: { initialProfile: UserProfile }) {
           onModeChange={handlePrepareRoute}
           onStart={handleBeginNavigation}
           onClose={handleStopWalking}
-          onLayers={() => setShowSettings(true)}
+          mapStyle={profile.mapStyle}
+          onLayers={() => {
+            const nextProfile: UserProfile = { ...profile, mapStyle: profile.mapStyle === "roadmap" ? "satellite" : "roadmap" };
+            setProfile(nextProfile);
+            try { window.localStorage.setItem("sns-campus-profile", JSON.stringify(nextProfile)); } catch { /* Keep the selected view when storage is unavailable. */ }
+          }}
           location={selectedLocation}
         />
       )}
