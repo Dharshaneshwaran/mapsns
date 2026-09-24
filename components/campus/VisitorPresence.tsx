@@ -47,24 +47,29 @@ export function VisitorPresenceProvider({ children }: { children: React.ReactNod
     let busy = false;
     let stopped = false;
     let pending = false;
-    const send = async () => {
+    let lastSentAt = 0;
+    const send = async (force = false) => {
       if (document.hidden || stopped) return;
+      if (!force && Date.now() - lastSentAt < 8_000) return;
       if (busy) { pending = true; return; }
       busy = true;
+      lastSentAt = Date.now();
       const current = fix.current;
       const location = current && Date.now() - current.at < 60_000
         ? { lat: current.lat, lng: current.lng, accuracy: current.accuracy } : null;
       try {
         await fetch("/api/visitors", { method: "POST", headers: { "Content-Type": "application/json", "X-Visitor-Id": id }, body: JSON.stringify({ location }), cache: "no-store", signal: AbortSignal.timeout(8000) });
       } catch { /* Retry without interrupting navigation. */ }
-      finally { busy = false; if (pending) { pending = false; void send(); } }
+      finally { busy = false; if (pending) { pending = false; void send(true); } }
     };
-    const refresh = () => { void send(); };
+    const refresh = () => { void send(true); };
     report.current = refresh;
     refresh();
     const timer = setInterval(refresh, 20_000);
+    const onMove = () => { if (!document.hidden && fix.current) void send(); };
     document.addEventListener("visibilitychange", refresh);
-    return () => { stopped = true; clearInterval(timer); document.removeEventListener("visibilitychange", refresh); report.current = () => {}; };
+    window.addEventListener("campus-location-updated", onMove);
+    return () => { stopped = true; clearInterval(timer); document.removeEventListener("visibilitychange", refresh); window.removeEventListener("campus-location-updated", onMove); report.current = () => {}; };
   }, [pathname]);
 
   useEffect(() => {
@@ -83,13 +88,14 @@ export function VisitorPresenceProvider({ children }: { children: React.ReactNod
         if (!active || document.hidden) return;
         fix.current = { lat: position.coords.latitude, lng: position.coords.longitude, accuracy: position.coords.accuracy, at: position.timestamp };
         setMessage(position.coords.accuracy > 150 ? "Waiting for a more accurate location." : "Sharing your approximate area while this page is open.");
+        window.dispatchEvent(new Event("campus-location-updated"));
       }, error => {
         if (!active) return;
         fix.current = null;
         setMessage(error.code === 1 ? "Location permission was denied. Sharing is off." : "Location unavailable. Waiting for a GPS signal.");
         if (error.code === 1) { setSharing(false); writeSharingPreference(false); }
         report.current();
-      }, { enableHighAccuracy: true, maximumAge: 20_000, timeout: 15_000 });
+      }, { enableHighAccuracy: true, maximumAge: 5_000, timeout: 15_000 });
     };
     startWatch();
     document.addEventListener("visibilitychange", startWatch);

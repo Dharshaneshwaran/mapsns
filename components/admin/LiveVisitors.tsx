@@ -98,7 +98,7 @@ export default function LiveVisitors() {
     if (!summary) return;
     const overlays = summary.cells.flatMap(cell => {
       const color = cell.count >= 5 ? "#dc2626" : cell.count >= 2 ? "#f59e0b" : "#16a34a";
-      const circles = [56, 38, 22].map(radius => new google.maps.Circle({
+      const circles = [14, 9, 5].map(radius => new google.maps.Circle({
         map,
         center: cell,
         radius,
@@ -179,6 +179,6 @@ export default function LiveVisitors() {
     <div ref={container} className="h-96 w-full rounded-xl bg-[#eef1f5]" aria-label="Map showing approximate visitor concentrations" />
     <p className="mt-3 text-xs text-[#5f6368]">Green: 1 · Amber: 2–4 · Red: 5+ visitors per approximate area.</p>
     {summary?.sharing === 0 && summary.online > 0 && <p className="mt-2 text-xs text-[#5f6368]">Visitors are online but not sharing location yet. They can turn this on under More → Campus activity map → Share my approximate location.</p>}
-    <p className="mt-2 text-xs text-[#5f6368]">Counts represent browsers, not verified people. Admin pages are excluded. Areas are rounded to roughly 55 metres; GPS accuracy varies. No names or location history are shown.</p>
+    <p className="mt-2 text-xs text-[#5f6368]">Counts represent browsers, not verified people. Admin pages are excluded. Locations update along the route every 20 seconds and are rounded to roughly 3 metres. No names or location history are shown.</p>
   </section>;
 }

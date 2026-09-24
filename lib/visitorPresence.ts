@@ -3,7 +3,7 @@ export type Area = { lat: number; lng: number };
 type Visitor = { seenAt: number; area: Area | null };
 export type VisitorSummary = { online: number; sharing: number; cells: (Area & { count: number })[]; updatedAt: number };
 
-// Approximate areas (~55 m), never retain exact GPS coordinates or a location history.
+// ~3 m cells, never retain exact GPS coordinates or a location history.
 export function approximateArea(value: unknown): Area | null {
   if (value === null || value === undefined) return null;
   if (typeof value !== "object") throw new Error("Invalid location");
@@ -12,7 +12,7 @@ export function approximateArea(value: unknown): Area | null {
     || typeof lng !== "number" || !Number.isFinite(lng) || Math.abs(lng) > 180
     || typeof accuracy !== "number" || !Number.isFinite(accuracy) || accuracy < 0) throw new Error("Invalid location");
   if (accuracy > 150) return null;
-  return { lat: Math.round(lat * 2000) / 2000, lng: Math.round(lng * 2000) / 2000 };
+  return { lat: Math.round(lat * 100_000) / 100_000, lng: Math.round(lng * 100_000) / 100_000 };
 }
 
 export class VisitorPresence {

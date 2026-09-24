@@ -19,7 +19,7 @@ test("inactive visitors and their locations expire at two minutes", () => {
 test("locations are rounded, aggregated, replaced when moving, and removed on opt-out", () => {
   const store = new VisitorPresence();
   const area = approximateArea({ lat: 11.10012, lng: 77.02713, accuracy: 20 });
-  assert.deepEqual(area, { lat: 11.1, lng: 77.027 });
+  assert.deepEqual(area, { lat: 11.10012, lng: 77.02713 });
   store.heartbeat("a", area, 1000);
   store.heartbeat("b", area, 1000);
   assert.deepEqual(store.summary(1000).cells, [{ ...area, count: 2 }]);
