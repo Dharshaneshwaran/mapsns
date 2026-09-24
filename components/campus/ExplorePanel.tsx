@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { ArrowUpRight, Bookmark, Building2, MapPin, Navigation, Settings, ArrowLeft, CircleHelp } from "lucide-react";
+import { ArrowUpRight, Bookmark, Building2, MapPin, Navigation, Settings, ArrowLeft, CircleHelp, Ellipsis } from "lucide-react";
 import Image from "next/image";
 import { useCampusPlaces } from "@/components/campus/useCampusPlaces";
 import type { CampusLocation } from "@/types/campus";
@@ -17,18 +17,20 @@ export default function ExplorePanel({ onSelect, onOpenSettings, name }: Props) 
   const [showMap, setShowMap] = useState(false);
   const [showMore, setShowMore] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
+  const eventPlaceIds = new Set(conferenceEvents.map(event => findEventPlace(event, places)?.id));
+  const otherPlaces = places.filter(place => !eventPlaceIds.has(place.id));
   const cards = tab === "saved"
     ? places.filter(place => saved.includes(place.id)).map(place => ({ title: place.name, venue: "Saved place", place, image: place.customIcon }))
     : conferenceEvents.map(event => ({ ...event, place: findEventPlace(event, places) }));
   if (showMap) return <div className="event-map-return"><button onClick={() => setShowMap(false)}><ArrowLeft size={17} /> Back to event guide</button></div>;
-  if (showMore) return <section className="event-landing" aria-label="Help">
+  if (showMore) return <section className="event-landing" aria-label="More">
     <div className="event-home">
       <div className="event-greeting" style={{ marginTop: "clamp(16px, 4vh, 40px)" }}>
         <button onClick={() => setShowMore(false)} style={{ background: "none", border: "none", padding: 0, cursor: "pointer", color: "#74777b", display: "flex", alignItems: "center", gap: 4, fontSize: 12 }}>
           <ArrowLeft size={17} /> Back
         </button>
       </div>
-      <div className="event-section-label"><h2>Help</h2><span>How to use this guide</span></div>
+      <div className="event-section-label"><h2>More</h2><span>Help and campus places</span></div>
       <div className="campus-place-grid event-grid">
         <button className="campus-place-tile event-tile" style={{ gridColumn: "1 / -1", minHeight: "auto" }} onClick={() => setHelpOpen((value) => !value)} aria-expanded={helpOpen}>
           <span className="campus-place-art event-more-art"><CircleHelp size={36} strokeWidth={1.5} /></span>
@@ -49,6 +51,20 @@ export default function ExplorePanel({ onSelect, onOpenSettings, name }: Props) 
           </ul>
         </div>
       )}
+      <div className="event-section-label"><h2>Other places</h2><span>{otherPlaces.length} places</span></div>
+      <div className="campus-place-grid event-grid">
+        {otherPlaces.map(place => (
+          <button key={place.id} className="campus-place-tile event-tile" onClick={() => onSelect(place)}>
+            <span className="campus-place-art">
+              {place.customIcon ? <Image src={place.customIcon} alt="" width={160} height={100} style={{ width: "auto" }} unoptimized /> : <MapPin size={48} strokeWidth={1.2} />}
+              <ArrowUpRight className="campus-tile-arrow" size={15} aria-hidden="true" />
+            </span>
+            <span className="campus-place-name">{place.name}</span>
+            <span className="campus-place-caption">View place and directions</span>
+          </button>
+        ))}
+      </div>
+      {otherPlaces.length === 0 && <p className="event-empty">No additional campus places available yet.</p>}
       <p className="event-footer"><span><MapPin size={15} /></span> Need more help? Ask any SNS volunteer on campus.</p>
     </div>
   </section>;
@@ -85,9 +101,9 @@ export default function ExplorePanel({ onSelect, onOpenSettings, name }: Props) 
           {!card.place && <span className="event-unmapped">Location coming soon</span>}
         </button>)}
         {tab === "events" && <button className="campus-place-tile event-tile event-more-tile" onClick={() => setShowMore(true)}>
-          <span className="campus-place-art event-more-art"><CircleHelp size={36} strokeWidth={1.5} /></span>
-          <span className="campus-place-name">Help</span>
-          <span className="campus-place-caption">How to use this guide</span>
+          <span className="campus-place-art event-more-art"><Ellipsis size={36} strokeWidth={1.5} /></span>
+          <span className="campus-place-name">More</span>
+          <span className="campus-place-caption">Help and other places</span>
         </button>}
       </div>
       {tab === "saved" && cards.length === 0 && <p className="event-empty">Save a campus place to find it here.</p>}
