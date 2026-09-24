@@ -11,7 +11,7 @@ const conferenceDescriptions: Record<string, string> = {
   "Cloak room": "Head to the Alumni lounge for the conference cloak room.",
   "Certificate corner": "Visit the Certificate corner at iHub for your conference certificate.",
   "Panel sessions two + three + four": "Head to DT Playhouse for Panel sessions two, three, and four. Explore fresh perspectives on Chaos & Clarity and design thinking.",
-  Spin: "Explore Spin during your conference visit. Continue to DT Playhouse for Panel sessions two, three, and four.",
+  Spine: "Explore Spine during your conference visit. Continue to DT Playhouse for Panel sessions two, three, and four.",
   Registration: "Your conference journey starts here. Head to CGC for registration and get ready to explore Chaos & Clarity.",
   "Inauguration + Panel session one": "Join us at the Open Auditorium for the conference inauguration and Panel session one. Let the conversations on Chaos & Clarity begin.",
   "Car parking & bike parking": "Park your car or bike here and continue to your conference stops on campus.",

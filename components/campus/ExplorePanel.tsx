@@ -7,7 +7,7 @@ import type { CampusLocation } from "@/types/campus";
 import CampusAd from "./CampusAd";
 import { useSavedPlaces } from "./PlaceActions";
 
-import { conferenceEvents, normalizePlaceName } from "@/data/majorPlaces";
+import { conferenceEvents, findEventPlace } from "@/data/majorPlaces";
 
 type Props = { onSelect: (location: CampusLocation) => void; onOpenSettings: () => void; name: string; gender: "male" | "female" };
 export default function ExplorePanel({ onSelect, onOpenSettings, name }: Props) {
@@ -17,10 +17,9 @@ export default function ExplorePanel({ onSelect, onOpenSettings, name }: Props) 
   const [showMap, setShowMap] = useState(false);
   const [showMore, setShowMore] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
-  const normalize = normalizePlaceName;
   const cards = tab === "saved"
-    ? places.filter(place => saved.includes(place.id)).map(place => ({ title: place.name, venue: "Saved place", place }))
-    : conferenceEvents.map(event => ({ ...event, place: places.find(place => event.names.some(alias => normalize(alias) === normalize(place.name))) }));
+    ? places.filter(place => saved.includes(place.id)).map(place => ({ title: place.name, venue: "Saved place", place, image: place.customIcon }))
+    : conferenceEvents.map(event => ({ ...event, place: findEventPlace(event, places) }));
   if (showMap) return <div className="event-map-return"><button onClick={() => setShowMap(false)}><ArrowLeft size={17} /> Back to event guide</button></div>;
   if (showMore) return <section className="event-landing" aria-label="Help">
     <div className="event-home">
@@ -78,7 +77,7 @@ export default function ExplorePanel({ onSelect, onOpenSettings, name }: Props) 
       <div className="campus-place-grid event-grid">
         {cards.map((card, index) => <button key={`${card.title}-${index}`} className="campus-place-tile event-tile" onClick={() => card.place && onSelect(card.place)} disabled={!card.place}>
           <span className="campus-place-art">
-            {card.place?.customIcon ? <Image src={card.place.customIcon} alt="" width={160} height={100} style={{ width: "auto" }} unoptimized /> : <Building2 size={48} strokeWidth={1.2} />}
+            {(card.place?.customIcon || card.image) ? <Image src={(card.place?.customIcon || card.image)!} alt="" width={160} height={100} style={{ width: "auto" }} unoptimized /> : <Building2 size={48} strokeWidth={1.2} />}
             {card.place && <ArrowUpRight className="campus-tile-arrow" size={15} aria-hidden="true" />}
           </span>
           <span className="campus-place-name">{card.title}</span>

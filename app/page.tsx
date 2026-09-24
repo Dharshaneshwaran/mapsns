@@ -15,7 +15,7 @@ import SettingsDialog, { UserProfile } from "@/components/campus/SettingsDialog"
 import ExplorePanel from "@/components/campus/ExplorePanel";
 import { CampusRouteError, requestRoute } from "@/lib/requestRoute";
 import { routeDeviation } from "@/lib/routeDeviation";
-import { conferenceEvents, normalizePlaceName } from "@/data/majorPlaces";
+import { conferenceEvents, findEventPlace } from "@/data/majorPlaces";
 
 type Coordinate = { lat: number; lng: number };
 const WALKING_MOVEMENT_THRESHOLD_METERS = 3;
@@ -405,7 +405,7 @@ function CampusMapApp({ initialProfile }: { initialProfile: UserProfile }) {
       {!isWalking && !isRoutePreview && (
         <div className="desktop-map-chips pointer-events-auto absolute left-[424px] right-4 top-[18px] z-30 hidden items-center gap-2 overflow-x-auto pb-2 lg:flex">
           {conferenceEvents.map((event) => {
-            const location = places.find(place => place.showInShortcuts !== false && event.names.some(alias => normalizePlaceName(alias) === normalizePlaceName(place.name)));
+            const location = findEventPlace(event, places.filter(place => place.showInShortcuts !== false));
             if (!location) return null;
             return (
             <button
