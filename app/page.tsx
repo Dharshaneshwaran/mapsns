@@ -95,7 +95,7 @@ export default function CampusMapPage() {
               <label key={option} className="relative flex cursor-pointer flex-col items-center gap-2 rounded-2xl border-2 border-[#e8eaed] bg-[#f8f9fa] px-4 py-3 transition-colors hover:bg-[#f1f3f4] has-checked:border-[#1a73e8] has-checked:bg-[#e8f0fe] has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-[#1a73e8]">
                 <input type="radio" name="gender" value={option} required checked={gender === option} onChange={() => setGender(option)} className="sr-only" />
                 <span className={`absolute right-3 top-3 flex h-5 w-5 items-center justify-center rounded-full border ${gender === option ? "border-[#1a73e8] bg-[#1a73e8] text-white" : "border-[#dadce0] bg-white"}`} aria-hidden="true">{gender === option && <Check size={13} strokeWidth={3} />}</span>
-                <Image src={option === "male" ? "/idel.png" : "/female_v_2/w%201.png"} alt="" width={72} height={80} unoptimized className="h-20 w-[72px] object-contain" />
+                <Image src={option === "male" ? "/idel.png" : "/fema__vv/11.png"} alt="" width={72} height={80} unoptimized className="h-20 w-[72px] object-contain" />
                 <span className="text-sm font-medium capitalize">{option}</span>
               </label>
             ))}

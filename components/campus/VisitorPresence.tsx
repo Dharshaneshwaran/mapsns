@@ -4,6 +4,18 @@ import { usePathname } from "next/navigation";
 
 type Fix = { lat: number; lng: number; accuracy: number; at: number };
 const SharingContext = createContext({ sharing: false, message: "", toggle: () => {} });
+const SHARING_STORAGE_KEY = "campus-location-sharing";
+
+function readSharingPreference(): boolean {
+  try { return localStorage.getItem(SHARING_STORAGE_KEY) === "1"; } catch { return false; }
+}
+
+function writeSharingPreference(enabled: boolean) {
+  try {
+    if (enabled) localStorage.setItem(SHARING_STORAGE_KEY, "1");
+    else localStorage.removeItem(SHARING_STORAGE_KEY);
+  } catch { /* Preference is best-effort. */ }
+}
 
 export function VisitorPresenceProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -13,6 +25,13 @@ export function VisitorPresenceProvider({ children }: { children: React.ReactNod
   const report = useRef<() => void>(() => {});
   useEffect(() => {
     if (pathname.startsWith("/admin") || window.location.hostname === "admin.localhost") return;
+    if (readSharingPreference()) {
+      const restore = Promise.resolve().then(() => {
+        setSharing(true);
+        setMessage("Sharing your approximate area while this page is open.");
+      });
+      void restore;
+    }
     let id = crypto.randomUUID() as string;
     try {
       const stored = localStorage.getItem("campus-visitor-id");
@@ -62,7 +81,7 @@ export function VisitorPresenceProvider({ children }: { children: React.ReactNod
         if (!active) return;
         fix.current = null;
         setMessage(error.code === 1 ? "Location permission was denied. Sharing is off." : "Location unavailable. Waiting for a GPS signal.");
-        if (error.code === 1) setSharing(false);
+        if (error.code === 1) { setSharing(false); writeSharingPreference(false); }
         report.current();
       }, { enableHighAccuracy: true, maximumAge: 20_000, timeout: 15_000 });
     };
@@ -75,6 +94,7 @@ export function VisitorPresenceProvider({ children }: { children: React.ReactNod
     if (sharing) {
       fix.current = null;
       setSharing(false);
+      writeSharingPreference(false);
       setMessage("Location sharing is off.");
       report.current();
     } else if (!navigator.geolocation || !window.isSecureContext) {
@@ -82,6 +102,7 @@ export function VisitorPresenceProvider({ children }: { children: React.ReactNod
     } else {
       setMessage("Waiting for location permission and a GPS signal.");
       setSharing(true);
+      writeSharingPreference(true);
     }
   };
   return <SharingContext.Provider value={{ sharing, message, toggle }}>{children}</SharingContext.Provider>;
@@ -91,8 +112,8 @@ export function VisitorSharingControl() {
   const { sharing, message, toggle } = useContext(SharingContext);
   return <div className="my-4 rounded-2xl border border-[#e3e7ee] bg-white p-4">
     <h3 className="font-semibold">Campus activity map</h3>
-    <p className="mt-2 text-sm text-[#5f6368]">Help organisers see busy areas by sharing your approximate location on the admin heatmap. Optional, with no names or location history. Locations expire after 2 minutes without updates.</p>
-    <button type="button" onClick={toggle} aria-pressed={sharing} className="mt-3 rounded-full border border-[#dadce0] px-4 py-2 text-sm font-medium">{sharing ? "Stop sharing location" : "Share my approximate location"}</button>
-    <p role="status" className="mt-2 text-sm text-[#5f6368]">{message || "Sharing is off. Anonymous online counts do not require location access."}</p>
+    <p className="mt-2 text-xs text-[#5f6368]">Help organisers see busy areas by sharing your approximate location on the admin heatmap. Optional, with no names or location history. Locations expire after 2 minutes without updates.</p>
+    <button type="button" onClick={toggle} aria-pressed={sharing} className="mt-3 rounded-full border border-[#dadce0] px-4 py-2 text-xs font-medium">{sharing ? "Stop sharing location" : "Share my approximate location"}</button>
+    <p role="status" className="mt-2 text-xs text-[#5f6368]">{message || "Sharing is off. Anonymous online counts do not require location access."}</p>
   </div>;
 }

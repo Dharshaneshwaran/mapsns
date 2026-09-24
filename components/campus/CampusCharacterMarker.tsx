@@ -5,7 +5,7 @@ import type { Gender } from "./SettingsDialog";
 
 const WALK_FRAMES = ["/step_1.png", "/step_3.png", "/step_4.png", "/step_5.png", "/step_6.png"];
 const IDLE_FRAME = "/idel.png";
-const FEMALE_FRAMES = ["w 1.png", "w2.png", "w3.png", "w4.png"].map(name => `/female_v_2/${encodeURIComponent(name)}`);
+const FEMALE_FRAMES = Array.from({ length: 8 }, (_, index) => `/fema__vv/${index + 11}.png`);
 const CART_FRAMES = Array.from({ length: 8 }, (_, index) => `/bullet_cart_v1/${index + 11}.png`);
 const FRAME_DURATION = 150;
 const CHARACTER_SIZE = 64;
@@ -82,13 +82,13 @@ export default function CampusCharacterMarker({
     img.style.imageRendering = "auto";
     img.draggable = false;
     if (!vehicle && gender === "female") {
-      // Center the shared artwork bounds across all four 767 × 776 frames.
+      // Center the character across all eight 767 × 776 frames.
       // Keep one scale and anchor so the walk cycle does not jump between frames.
       const scale = 96 / 776;
       img.style.width = `${767 * scale}px`;
       img.style.height = "96px";
-      img.style.left = `${CHARACTER_SIZE / 2 - 441 * scale}px`;
-      img.style.top = `${CHARACTER_SIZE / 2 - 397.5 * scale}px`;
+      img.style.left = `${CHARACTER_SIZE / 2 - 394 * scale}px`;
+      img.style.top = `${CHARACTER_SIZE / 2 - 375 * scale}px`;
       img.style.objectFit = "contain";
       visual.style.overflow = "visible";
     }

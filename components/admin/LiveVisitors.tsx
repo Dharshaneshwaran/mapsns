@@ -2,11 +2,19 @@
 import { useEffect, useRef, useState } from "react";
 import { Users } from "lucide-react";
 import { loadGoogleMapsApi } from "@/lib/googleMaps";
+import { CAMPUS_MAP_STYLES } from "@/lib/campusMapStyle";
 import { CAMPUS_BOUNDARY, CAMPUS_CENTER } from "@/data/campusBoundary";
 import type { VisitorSummary } from "@/lib/visitorPresence";
 
+type VisitorOverlay = {
+  circles: google.maps.Circle[];
+  marker: google.maps.Marker | null;
+};
+
 export default function LiveVisitors() {
   const container = useRef<HTMLDivElement>(null);
+  const overlayRef = useRef<VisitorOverlay[]>([]);
+  const boundaryRef = useRef<google.maps.Polygon | null>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [summary, setSummary] = useState<(VisitorSummary & { source?: string }) | null>(null);
   const [error, setError] = useState("");
@@ -36,28 +44,118 @@ export default function LiveVisitors() {
   }, []);
   useEffect(() => {
     let stopped = false;
-    let boundary: google.maps.Polygon | undefined;
-    void loadGoogleMapsApi().then(() => {
+    void loadGoogleMapsApi().then((google) => {
       if (stopped || !container.current) return;
-      const instance = new google.maps.Map(container.current, { center: CAMPUS_CENTER, zoom: 17, mapTypeId: "roadmap", streetViewControl: false, mapTypeControl: false, fullscreenControl: true, gestureHandling: "cooperative" });
-      boundary = new google.maps.Polygon({ map: instance, paths: CAMPUS_BOUNDARY, strokeColor: "#008b92", strokeWeight: 2, fillOpacity: 0 });
+      const bounds = new google.maps.LatLngBounds();
+      CAMPUS_BOUNDARY.forEach((point) => bounds.extend(point));
+      const instance = new google.maps.Map(container.current, {
+        center: CAMPUS_CENTER,
+        zoom: 17,
+        mapTypeId: "roadmap",
+        renderingType: google.maps.RenderingType.RASTER,
+        tilt: 0,
+        heading: 0,
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: true,
+        zoomControl: true,
+        gestureHandling: "greedy",
+        clickableIcons: false,
+        minZoom: 15,
+        maxZoom: 21,
+        styles: CAMPUS_MAP_STYLES,
+      });
+      instance.fitBounds(bounds, 40);
+      boundaryRef.current = new google.maps.Polygon({
+        map: instance,
+        paths: CAMPUS_BOUNDARY,
+        strokeColor: "#008b92",
+        strokeWeight: 2,
+        fillColor: "#008b92",
+        fillOpacity: 0.05,
+        clickable: false,
+      });
       setMap(instance);
     }).catch(() => { if (!stopped) setMapError("The map could not load. Check the Google Maps configuration or your connection. Visitor counts remain available."); });
-    return () => { stopped = true; boundary?.setMap(null); };
+    return () => {
+      stopped = true;
+      overlayRef.current.forEach(({ circles, marker }) => {
+        circles.forEach(circle => circle.setMap(null));
+        marker?.setMap(null);
+      });
+      overlayRef.current = [];
+      boundaryRef.current?.setMap(null);
+      boundaryRef.current = null;
+    };
   }, []);
   useEffect(() => {
-    if (!map || !summary) return;
-    const circles = summary.cells.flatMap(cell => {
-      const color = cell.count >= 5 ? "#dc2626" : cell.count >= 2 ? "#f59e0b" : "#16a34a";
-      return [48, 34, 20].map(radius => new google.maps.Circle({ map, center: cell, radius, strokeWeight: 0, fillColor: color, fillOpacity: 0.18, clickable: false }));
+    if (!map || !window.google) return;
+    overlayRef.current.forEach(({ circles, marker }) => {
+      circles.forEach(circle => circle.setMap(null));
+      marker?.setMap(null);
     });
-    return () => { circles.forEach(circle => circle.setMap(null)); };
+    overlayRef.current = [];
+    if (!summary) return;
+    const overlays = summary.cells.flatMap(cell => {
+      const color = cell.count >= 5 ? "#dc2626" : cell.count >= 2 ? "#f59e0b" : "#16a34a";
+      const circles = [56, 38, 22].map(radius => new google.maps.Circle({
+        map,
+        center: cell,
+        radius,
+        strokeColor: "#ffffff",
+        strokeOpacity: 0.85,
+        strokeWeight: 1,
+        fillColor: color,
+        fillOpacity: 0.28,
+        clickable: false,
+        zIndex: 20,
+      }));
+      const marker = new google.maps.Marker({
+        map,
+        position: cell,
+        zIndex: 30,
+        clickable: false,
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 10,
+          fillColor: color,
+          fillOpacity: 1,
+          strokeColor: "#ffffff",
+          strokeWeight: 3,
+          labelOrigin: new google.maps.Point(0, 0),
+        },
+        label: {
+          text: String(cell.count),
+          color: "#ffffff",
+          fontSize: "12px",
+          fontWeight: "700",
+          fontFamily: "system-ui, sans-serif",
+        },
+      });
+      return [{ circles, marker }];
+    });
+    overlayRef.current = overlays;
+    if (summary.cells.length) {
+      const bounds = new google.maps.LatLngBounds();
+      summary.cells.forEach(cell => bounds.extend(cell));
+      map.fitBounds(bounds, 80);
+      google.maps.event.addListenerOnce(map, "idle", () => {
+        if ((map.getZoom() ?? 0) > 18) map.setZoom(18);
+        if ((map.getZoom() ?? 0) < 16) map.setZoom(16);
+      });
+    }
   }, [map, summary]);
   const fitVisitors = () => {
-    if (!map || !summary?.cells.length) return;
+    if (!map) return;
+    if (!summary?.cells.length) {
+      const bounds = new google.maps.LatLngBounds();
+      CAMPUS_BOUNDARY.forEach(point => bounds.extend(point));
+      map.fitBounds(bounds, 40);
+      return;
+    }
     const bounds = new google.maps.LatLngBounds();
     summary.cells.forEach(cell => bounds.extend(cell));
-    map.fitBounds(bounds, 60);
+    map.fitBounds(bounds, 80);
     google.maps.event.addListenerOnce(map, "idle", () => { if ((map.getZoom() ?? 0) > 18) map.setZoom(18); });
   };
   return <section className="mb-7 rounded-2xl border border-[#e3e7ee] bg-white p-5 shadow-sm" aria-label="Live visitor activity">
@@ -67,14 +165,20 @@ export default function LiveVisitors() {
     </div>
     {summary?.source && <p className="mt-2 text-xs text-[#5f6368]">Data source: {summary.source}</p>}
     <div className="my-4 grid gap-3 sm:grid-cols-3" aria-live="polite">
-      {[{ label: "Online now", value: summary?.online }, { label: "Sharing location", value: summary?.sharing }, { label: "Without location", value: summary ? summary.online - summary.sharing : undefined }].map(item => <div key={item.label} className="rounded-xl bg-[#f7f9fc] p-4"><p className="text-sm text-[#5f6368]">{item.label}</p><p className="mt-1 text-3xl font-semibold">{item.value ?? "—"}</p></div>)}
+      {[{ label: "Online now", value: summary?.online }, { label: "Sharing location", value: summary?.sharing }, { label: "Without location", value: summary ? summary.online - summary.sharing : undefined }].map(item => <div key={item.label} className="rounded-xl bg-[#f7f9fc] p-4"><p className="text-xs text-[#5f6368]">{item.label}</p><p className="mt-1 text-3xl font-semibold">{item.value ?? "—"}</p></div>)}
     </div>
     {error && <p role="status" className="mb-3 text-sm text-red-700">{error} Retrying automatically.</p>}
-    <div className="mb-3 flex flex-wrap items-center justify-between gap-2"><h3 className="font-medium">Live activity heatmap</h3><button type="button" onClick={fitVisitors} disabled={!map || !summary?.cells.length} className="rounded-full border px-3 py-2 text-sm disabled:opacity-40">Show all active areas</button></div>
+    <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+      <div>
+        <h3 className="font-medium">Live activity heatmap</h3>
+        <p className="text-xs text-[#5f6368]">Numbered pins show how many visitors share a location in each area.</p>
+      </div>
+      <button type="button" onClick={fitVisitors} disabled={!map} className="rounded-full border px-3 py-2 text-sm disabled:opacity-40">{summary?.cells.length ? "Show all active areas" : "Fit campus"}</button>
+    </div>
     {mapError && <p role="status" className="mb-3 text-sm text-red-700">{mapError}</p>}
-    <div ref={container} className="h-80 w-full rounded-xl bg-[#eef1f5]" aria-label="Map showing approximate visitor concentrations" />
-    <p className="mt-3 text-sm text-[#5f6368]">Green: 1 · Amber: 2–4 · Red: 5+ visitors per approximate area.</p>
-    {summary?.sharing === 0 && <p className="mt-2 text-sm text-[#5f6368]">No visitors are currently sharing an accurate location. Visitors can opt in under More → Campus activity map.</p>}
+    <div ref={container} className="h-96 w-full rounded-xl bg-[#eef1f5]" aria-label="Map showing approximate visitor concentrations" />
+    <p className="mt-3 text-xs text-[#5f6368]">Green: 1 · Amber: 2–4 · Red: 5+ visitors per approximate area.</p>
+    {summary?.sharing === 0 && summary.online > 0 && <p className="mt-2 text-xs text-[#5f6368]">Visitors are online but not sharing location yet. They can turn this on under More → Campus activity map → Share my approximate location.</p>}
     <p className="mt-2 text-xs text-[#5f6368]">Counts represent browsers, not verified people. Admin pages are excluded. Areas are rounded to roughly 55 metres; GPS accuracy varies. No names or location history are shown.</p>
   </section>;
 }

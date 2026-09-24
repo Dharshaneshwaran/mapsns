@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useCallback, useState } from "react";
 import { loadGoogleMapsApi } from "@/lib/googleMaps";
+import { CAMPUS_MAP_STYLES } from "@/lib/campusMapStyle";
 import { CAMPUS_BOUNDARY, CAMPUS_CENTER } from "@/data/campusBoundary";
 import { CampusLocation, WalkingRoute, WalkingState } from "@/types/campus";
 import CampusCharacterMarker from "./CampusCharacterMarker";
@@ -94,16 +95,7 @@ export default function SNSCampusMap({
         maxZoom: 21,
         clickableIcons: false,
         // Raster rendering supports embedded styles without a cloud map ID.
-        styles: [
-          { featureType: "poi", stylers: [{ visibility: "off" }] },
-          { featureType: "transit", stylers: [{ visibility: "off" }] },
-          { featureType: "administrative", elementType: "labels", stylers: [{ visibility: "off" }] },
-          { featureType: "landscape", elementType: "geometry", stylers: [{ color: "#eeebef" }] },
-          { featureType: "road", elementType: "geometry", stylers: [{ color: "#faf9fb" }] },
-          { featureType: "road", elementType: "labels.icon", stylers: [{ visibility: "off" }] },
-          { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#98929d" }] },
-          { featureType: "water", elementType: "geometry", stylers: [{ color: "#dbe2e8" }] },
-        ],
+        styles: CAMPUS_MAP_STYLES,
       });
 
       map.fitBounds(bounds, 0);
