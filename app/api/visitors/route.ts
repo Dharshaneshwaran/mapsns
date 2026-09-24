@@ -1,5 +1,6 @@
 import { adminAccess } from "@/lib/adminAuth";
 import { approximateArea, VisitorPresence } from "@/lib/visitorPresence";
+import { readLiveVisitors } from "@/lib/liveVisitorSource";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -9,10 +10,20 @@ state.campusPresenceCleanup ??= setInterval(() => presence.prune(), 30_000);
 state.campusPresenceCleanup.unref();
 const headers = { "Cache-Control": "no-store" };
 
-export function GET(request: Request) {
+export async function GET(request: Request) {
   const denied = adminAccess(request);
   if (denied) return denied;
-  return Response.json(presence.summary(), { headers });
+  const origin = process.env.LIVE_VISITORS_ORIGIN?.trim().replace(/\/$/, "");
+  if (origin) {
+    if (request.headers.get("x-visitor-proxy")) return Response.json({ error: "Visitor proxy loop detected. Remove LIVE_VISITORS_ORIGIN from the live server." }, { status: 508, headers });
+    try {
+      return Response.json(await readLiveVisitors(origin, process.env.LIVE_VISITORS_ADMIN_TOKEN), { headers });
+    } catch (error) {
+      const message = error instanceof Error && error.name !== "TimeoutError" && error.message !== "fetch failed" ? error.message : "Cannot reach the live visitor server. Check your connection and try again.";
+      return Response.json({ error: message }, { status: 502, headers });
+    }
+  }
+  return Response.json({ ...presence.summary(), source: "Local server" }, { headers });
 }
 
 export async function POST(request: Request) {

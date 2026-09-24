@@ -27,4 +27,8 @@ Presence lives only in memory in one Node.js process, with periodic expiry clean
 
 ## Routing
 
+### Viewing live visitors from local admin
+
+In the local `.env.local` only, set `LIVE_VISITORS_ORIGIN=https://map.gdta2026.com` and `LIVE_VISITORS_ADMIN_TOKEN` to the live server's `ADMIN_MAP_TOKEN`, then restart Next.js. Keep using the local admin credentials to sign in at `http://admin.localhost:3000`. The local server authenticates the admin first, then fetches the live summary server-side. The live token is never sent to the browser. Missing credentials or connection errors show an error rather than misleading zero counts. Do not set these proxy variables on the live server itself. Other admin editors continue to manage local data.
+
 Route preparation requires a fresh GPS fix and a valid mapped route. Failed requests display an error and Retry rather than an artificial path. Distance and duration come from the routing service; remaining distance/ETA are estimated by progress along its polyline. Uploaded images can be made searchable in the admin editor; their centre is the navigation destination, so position them at an accessible entrance. Accuracy and path coverage still depend on GPS and mapped data.

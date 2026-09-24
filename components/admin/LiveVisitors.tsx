@@ -8,7 +8,7 @@ import type { VisitorSummary } from "@/lib/visitorPresence";
 export default function LiveVisitors() {
   const container = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
-  const [summary, setSummary] = useState<VisitorSummary | null>(null);
+  const [summary, setSummary] = useState<(VisitorSummary & { source?: string }) | null>(null);
   const [error, setError] = useState("");
   const [mapError, setMapError] = useState("");
   useEffect(() => {
@@ -19,7 +19,10 @@ export default function LiveVisitors() {
       busy = true;
       try {
         const response = await fetch("/api/visitors", { cache: "no-store", signal: AbortSignal.timeout(8000) });
-        if (!response.ok) throw new Error(response.status === 401 ? "Sign in again to view live activity." : "Live activity is temporarily unavailable.");
+        if (!response.ok) {
+          const failure = await response.json().catch(() => null);
+          throw new Error(response.status === 401 ? "Sign in again to view live activity." : failure?.error || "Live activity is temporarily unavailable.");
+        }
         const next = await response.json() as VisitorSummary;
         if (!stopped) { setSummary(next); setError(""); }
       } catch (cause) {
@@ -62,6 +65,7 @@ export default function LiveVisitors() {
       <div><h2 className="flex items-center gap-2 text-lg font-semibold"><Users className="h-5 w-5 text-[#008b92]" /> Live visitors</h2><p className="mt-1 text-sm text-[#5f6368]">Active in the last 2 minutes · refreshes every 10 seconds</p></div>
       <p className="text-xs text-[#5f6368]">{summary ? `Updated ${new Date(summary.updatedAt).toLocaleTimeString()}` : error ? "Disconnected" : "Connecting…"}</p>
     </div>
+    {summary?.source && <p className="mt-2 text-xs text-[#5f6368]">Data source: {summary.source}</p>}
     <div className="my-4 grid gap-3 sm:grid-cols-3" aria-live="polite">
       {[{ label: "Online now", value: summary?.online }, { label: "Sharing location", value: summary?.sharing }, { label: "Without location", value: summary ? summary.online - summary.sharing : undefined }].map(item => <div key={item.label} className="rounded-xl bg-[#f7f9fc] p-4"><p className="text-sm text-[#5f6368]">{item.label}</p><p className="mt-1 text-3xl font-semibold">{item.value ?? "—"}</p></div>)}
     </div>
