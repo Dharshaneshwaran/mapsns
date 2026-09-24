@@ -6,14 +6,18 @@ type Fix = { lat: number; lng: number; accuracy: number; at: number };
 const SharingContext = createContext({ sharing: false, message: "", toggle: () => {} });
 const SHARING_STORAGE_KEY = "campus-location-sharing";
 
-function readSharingPreference(): boolean {
-  try { return localStorage.getItem(SHARING_STORAGE_KEY) === "1"; } catch { return false; }
+function readSharingPreference(): "on" | "off" | "unset" {
+  try {
+    const value = localStorage.getItem(SHARING_STORAGE_KEY);
+    if (value === "1") return "on";
+    if (value === "0") return "off";
+  } catch { /* Preference is best-effort. */ }
+  return "unset";
 }
 
 function writeSharingPreference(enabled: boolean) {
   try {
-    if (enabled) localStorage.setItem(SHARING_STORAGE_KEY, "1");
-    else localStorage.removeItem(SHARING_STORAGE_KEY);
+    localStorage.setItem(SHARING_STORAGE_KEY, enabled ? "1" : "0");
   } catch { /* Preference is best-effort. */ }
 }
 
@@ -25,10 +29,12 @@ export function VisitorPresenceProvider({ children }: { children: React.ReactNod
   const report = useRef<() => void>(() => {});
   useEffect(() => {
     if (pathname.startsWith("/admin") || window.location.hostname === "admin.localhost") return;
-    if (readSharingPreference()) {
+    const preference = readSharingPreference();
+    if (preference !== "off") {
       const restore = Promise.resolve().then(() => {
         setSharing(true);
-        setMessage("Sharing your approximate area while this page is open.");
+        writeSharingPreference(true);
+        setMessage(preference === "on" ? "Sharing your approximate area while this page is open." : "Allow location to show your approximate area on the campus activity map.");
       });
       void restore;
     }
@@ -112,7 +118,7 @@ export function VisitorSharingControl() {
   const { sharing, message, toggle } = useContext(SharingContext);
   return <div className="my-4 rounded-2xl border border-[#e3e7ee] bg-white p-4">
     <h3 className="font-semibold">Campus activity map</h3>
-    <p className="mt-2 text-xs text-[#5f6368]">Help organisers see busy areas by sharing your approximate location on the admin heatmap. Optional, with no names or location history. Locations expire after 2 minutes without updates.</p>
+    <p className="mt-2 text-xs text-[#5f6368]">Your browser may ask for location on open so organisers can see busy areas on the admin heatmap. Approximate only, with no names or location history. Locations expire after 2 minutes without updates. Stop anytime below.</p>
     <button type="button" onClick={toggle} aria-pressed={sharing} className="mt-3 rounded-full border border-[#dadce0] px-4 py-2 text-xs font-medium">{sharing ? "Stop sharing location" : "Share my approximate location"}</button>
     <p role="status" className="mt-2 text-xs text-[#5f6368]">{message || "Sharing is off. Anonymous online counts do not require location access."}</p>
   </div>;

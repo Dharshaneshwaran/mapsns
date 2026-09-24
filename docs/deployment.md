@@ -21,7 +21,7 @@ To restore, stop the server, preserve the current storage as a separate recovery
 
 ## Live visitor activity
 
-Public pages send anonymous browser heartbeats every 20 seconds while visible. The admin panel refreshes counts and the heatmap every 10 seconds; visitors expire after 2 minutes. Admin pages are excluded. Sharing is off by default and can be enabled or stopped under More → Campus activity map, separately from navigation location permission. Locations are rounded to roughly 55-metre cells; fixes with accuracy worse than 150 metres are omitted. No names or location history are stored. HTTPS is required for geolocation outside localhost.
+Public pages send anonymous browser heartbeats every 20 seconds while visible. The admin panel refreshes counts and the heatmap every 10 seconds; visitors expire after 2 minutes. Admin pages are excluded. Location sharing starts automatically on the first open (the browser may prompt for permission) and can be stopped or re-enabled under More → Campus activity map; this is separate from navigation location permission. Locations are rounded to roughly 55-metre cells; fixes with accuracy worse than 150 metres are omitted. No names or location history are stored. HTTPS is required for geolocation outside localhost.
 
 Presence lives only in memory in one Node.js process, with periodic expiry cleanup. It resets on restart and fills again as browsers send heartbeats. Run a single Node.js process for accurate counts. Multiple workers, replicas, or serverless instances require a shared TTL store before using this feature in that configuration. The summary endpoint uses existing admin authentication. Counts estimate browser activity, not verified attendance; separate devices or private sessions may count separately.
 
