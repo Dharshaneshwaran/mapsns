@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useCallback, useState } from "react";
+import { memo, useEffect, useRef, useCallback, useState } from "react";
 import { loadGoogleMapsApi } from "@/lib/googleMaps";
 import { CAMPUS_MAP_STYLES } from "@/lib/campusMapStyle";
 import { CAMPUS_BOUNDARY, CAMPUS_CENTER } from "@/data/campusBoundary";
@@ -8,7 +8,8 @@ import { CampusLocation, WalkingRoute, WalkingState } from "@/types/campus";
 import CampusCharacterMarker from "./CampusCharacterMarker";
 import PublishedMapImages from "./PublishedMapImages";
 import { publishedPlaces } from "@/lib/publishedPlaces";
-import { remainingRoute, routePointerPosition } from "@/lib/routeDeviation";
+import { interpolateRoutePosition, remainingRoute, routePointerPosition } from "@/lib/routeDeviation";
+import type { MapImage } from "@/types/mapImage";
 import { POINTER_COLOR_BY_STYLE, type Gender, type PointerStyle } from "./SettingsDialog";
 import { createRasterMapRotation, shortestHeadingDelta } from "@/lib/rasterMapRotation";
 
@@ -17,6 +18,7 @@ import { createRasterMapRotation, shortestHeadingDelta } from "@/lib/rasterMapRo
 const configuredMapId = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID?.trim();
 const campusMapId = configuredMapId && !["DEMO_MAP_ID", "your_map_id", "your-map-id"].includes(configuredMapId)
   ? configuredMapId : undefined;
+const StableMapImages = memo(PublishedMapImages);
 
 type Props = {
   onLocationSelect: (location: CampusLocation) => void;
@@ -41,7 +43,7 @@ export default function SNSCampusMap({
   selectedLocation,
   activeRoute,
   mapTypeId,
-  walkingPosition,
+  walkingPosition: gpsPosition,
   walkingBearing,
   isWalking,
   isFollowingLocation,
@@ -76,6 +78,33 @@ export default function SNSCampusMap({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [mapInstance, setMapInstance] = useState<any>(null);
   const pointerColor = POINTER_COLOR_BY_STYLE[pointerStyle] ?? POINTER_COLOR_BY_STYLE.blue;
+  const [walkingPosition, setDisplayPosition] = useState(gpsPosition);
+  const displayPositionRef = useRef(gpsPosition);
+  const onImageClick = useCallback((image: MapImage) => {
+    const location = publishedPlaces([image]).find((item) => item.id === (image.locationId || image.id));
+    if (location) onLocationSelect(location);
+  }, [onLocationSelect]);
+
+  useEffect(() => {
+    if (!gpsPosition || !isWalking) {
+      displayPositionRef.current = gpsPosition;
+      return;
+    }
+    const points = activeRoute?.points ?? [];
+    const target = routePointerPosition(gpsPosition, points);
+    const from = displayPositionRef.current ?? target;
+    const start = performance.now();
+    let frame = 0;
+    const animate = (now: number) => {
+      const progress = Math.min(1, (now - start) / 450);
+      const next = interpolateRoutePosition(from, target, points, progress);
+      displayPositionRef.current = next;
+      setDisplayPosition(next);
+      if (progress < 1) frame = requestAnimationFrame(animate);
+    };
+    frame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(frame);
+  }, [gpsPosition, activeRoute, isWalking]);
 
   const initMap = useCallback(async () => {
     if (!mapContainerRef.current) return;
@@ -364,8 +393,8 @@ export default function SNSCampusMap({
     };
     let pointer: { id: number; x: number; y: number } | null = null;
     const pointerDown = (event: PointerEvent) => {
+      if (pointer && pointer.id !== event.pointerId) pauseFollowing();
       pointer = { id: event.pointerId, x: event.clientX, y: event.clientY };
-      if (rasterHeadingRef.current !== 0) pauseFollowing();
     };
     const pointerMove = (event: PointerEvent) => {
       if (pointer?.id === event.pointerId && Math.hypot(event.clientX - pointer.x, event.clientY - pointer.y) > 5) pauseFollowing();
@@ -376,7 +405,7 @@ export default function SNSCampusMap({
     };
     const dragListener = mapInstance.addListener("dragstart", pauseFollowing);
     container.addEventListener("pointerdown", pointerDown, { passive: true, capture: true });
-    container.addEventListener("pointermove", pointerMove, { passive: true });
+    container.addEventListener("pointermove", pointerMove, { passive: true, capture: true });
     window.addEventListener("pointerup", pointerUp);
     window.addEventListener("pointercancel", pointerUp);
     container.addEventListener("wheel", pauseFollowing, { passive: true, capture: true });
@@ -385,7 +414,7 @@ export default function SNSCampusMap({
     return () => {
       dragListener.remove();
       container.removeEventListener("pointerdown", pointerDown, true);
-      container.removeEventListener("pointermove", pointerMove);
+      container.removeEventListener("pointermove", pointerMove, true);
       window.removeEventListener("pointerup", pointerUp);
       window.removeEventListener("pointercancel", pointerUp);
       container.removeEventListener("wheel", pauseFollowing, true);
@@ -395,28 +424,35 @@ export default function SNSCampusMap({
   }, [mapInstance, isWalking, isFollowingLocation, onMapInteraction]);
 
   useEffect(() => {
-    if (!mapInstance || !isWalking || !walkingPosition || !isFollowingLocation) return;
+    if (!mapInstance || !isWalking || !isFollowingLocation) return;
     if (!Number.isFinite(walkingBearing)) return;
     const raster = mapInstance.getRenderingType() !== google.maps.RenderingType.VECTOR;
     if (raster) {
       rasterRotationRef.current?.setHeading(rasterHeadingRef.current);
-      mapInstance.panTo(walkingPosition);
     }
     const heading = raster ? rasterHeadingRef.current : mapInstance.getHeading() || 0;
     const delta = shortestHeadingDelta(heading, walkingBearing);
     const start = performance.now();
     const animate = (now: number) => {
-      const progress = Math.min(1, (now - start) / 450);
-      const nextHeading = heading + delta * progress;
+      const progress = Math.min(1, (now - start) / 600);
+      const eased = progress * progress * (3 - 2 * progress);
+      const nextHeading = heading + delta * eased;
       if (raster) {
         rasterHeadingRef.current = nextHeading;
         rasterRotationRef.current?.setHeading(nextHeading);
-      } else mapInstance.moveCamera({ center: walkingPosition, heading: nextHeading, tilt: 0 });
+      } else mapInstance.moveCamera({ heading: nextHeading, tilt: 0 });
       if (progress < 1) cameraFrameRef.current = requestAnimationFrame(animate);
+      else cameraFrameRef.current = null;
     };
     cameraFrameRef.current = requestAnimationFrame(animate);
     return () => { if (cameraFrameRef.current !== null) cancelAnimationFrame(cameraFrameRef.current); };
-  }, [mapInstance, isWalking, walkingPosition, walkingBearing, isFollowingLocation]);
+  }, [mapInstance, isWalking, walkingBearing, isFollowingLocation]);
+
+  useEffect(() => {
+    if (!mapInstance || !isWalking || !walkingPosition || !isFollowingLocation) return;
+    // Position is already interpolated; panTo would start a competing SDK animation.
+    mapInstance.setCenter(walkingPosition);
+  }, [mapInstance, isWalking, walkingPosition, isFollowingLocation]);
 
   useEffect(() => {
     if (mapInstance && isWalking) mapInstance.setZoom(20);
@@ -457,14 +493,11 @@ export default function SNSCampusMap({
   return (
     <div ref={mapViewportRef} className="campus-map-canvas relative w-full h-full overflow-hidden">
       <div ref={mapContainerRef} className="absolute inset-0" />
-      {mapInstance && <PublishedMapImages map={mapInstance} selectedLocation={selectedLocation} onClick={(image) => {
-        const location = publishedPlaces([image]).find((item) => item.id === (image.locationId || image.id));
-        if (location) onLocationSelect(location);
-      }} />}
+      {mapInstance && <StableMapImages map={mapInstance} selectedLocation={selectedLocation} onClick={onImageClick} />}
       {isWalking && walkingPosition && mapInstance && (!isWalkingMode || pointerStyle === "character") && (
         <CampusCharacterMarker
           map={mapInstance}
-          position={activeRoute ? routePointerPosition(walkingPosition, activeRoute.points) : walkingPosition}
+          position={walkingPosition}
           bearing={walkingBearing}
           isMoving={walkingState === "walking"}
           vehicle={!isWalkingMode}

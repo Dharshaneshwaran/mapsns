@@ -1,4 +1,28 @@
 type Point = { lat: number; lng: number };
+// Interpolate along the route, including bends, instead of cutting across corners.
+export function interpolateRoutePosition(from: Point, to: Point, points: Point[], fraction: number): Point {
+  const t = Math.max(0, Math.min(1, fraction));
+  const start = routeDeviation(from, points, null);
+  const end = routeDeviation(to, points, null);
+  if (points.length < 2 || start.distance > 15 || end.distance > 15) {
+    return { lat: from.lat + (to.lat - from.lat) * t, lng: from.lng + (to.lng - from.lng) * t };
+  }
+  const distance = start.progressMeters + (end.progressMeters - start.progressMeters) * t;
+  const scaleX = 111320 * Math.cos(to.lat * Math.PI / 180);
+  let covered = 0;
+  for (let i = 1; i < points.length; i++) {
+    const a = points[i - 1], b = points[i];
+    const length = Math.hypot((b.lng - a.lng) * scaleX, (b.lat - a.lat) * 111320);
+    if (length < 1) continue;
+    if (covered + length >= distance) {
+      const part = Math.max(0, Math.min(1, (distance - covered) / length));
+      return { lat: a.lat + (b.lat - a.lat) * part, lng: a.lng + (b.lng - a.lng) * part };
+    }
+    covered += length;
+  }
+  return points[points.length - 1];
+}
+
 // Visual alignment only: navigation and rerouting continue to use the GPS fix.
 export function routePointerPosition(position: Point, points: Point[]) {
   if (points.length < 2) return position;

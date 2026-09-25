@@ -16,16 +16,24 @@ export function createRasterMapRotation(container: HTMLDivElement, viewport: HTM
   let side = 0;
   let width = 0;
   let height = 0;
-  const originals = new Map<HTMLElement, { transform: string; transformOrigin: string; maxWidth: string }>();
+  let layoutFrame: number | null = null;
+  const originals = new Map<HTMLElement, { transform: string; rotate: string; transformOrigin: string; maxWidth: string }>();
   const remember = (element: HTMLElement) => {
     if (!originals.has(element)) originals.set(element, {
       transform: element.style.transform,
+      rotate: element.style.rotate,
       transformOrigin: element.style.transformOrigin,
       maxWidth: element.style.maxWidth,
     });
   };
   const restore = () => {
-    originals.forEach((style, element) => Object.assign(element.style, style));
+    originals.forEach((style, element) => {
+      // Google's drawing surface owns its transform (including pan offsets).
+      if (element === surface) {
+        element.style.rotate = style.rotate;
+        element.style.transformOrigin = style.transformOrigin;
+      } else Object.assign(element.style, style);
+    });
     originals.clear();
   };
   const layout = () => {
@@ -36,7 +44,7 @@ export function createRasterMapRotation(container: HTMLDivElement, viewport: HTM
     surface = candidate;
     remember(surface);
     surface.style.transformOrigin = "50% 50%";
-    surface.style.transform = `rotate(${-heading}deg)`;
+    surface.style.rotate = `${-heading}deg`;
     const padX = (side - width) / 2, padY = (side - height) / 2;
     for (const node of Array.from(root!.children)) {
       if (!(node instanceof HTMLElement) || node === surface || getComputedStyle(node).position !== "absolute") continue;
@@ -71,7 +79,11 @@ export function createRasterMapRotation(container: HTMLDivElement, viewport: HTM
     Object.assign(container.style, { inset: "0px", left: "0px", top: "0px", width: "", height: "" });
     resizeMap();
   };
-  const observer = new MutationObserver(layout);
+  const scheduleLayout = () => {
+    if (!active || layoutFrame !== null) return;
+    layoutFrame = requestAnimationFrame(() => { layoutFrame = null; layout(); });
+  };
+  const observer = new MutationObserver(scheduleLayout);
   observer.observe(container, { childList: true, subtree: true });
   const sizeObserver = new ResizeObserver(measure);
   sizeObserver.observe(viewport);
@@ -79,11 +91,15 @@ export function createRasterMapRotation(container: HTMLDivElement, viewport: HTM
     setHeading(value: number) {
       heading = value;
       if (!active) { active = true; measure(); }
-      else if (surface) surface.style.transform = `rotate(${-heading}deg)`;
+      else if (surface) surface.style.rotate = `${-heading}deg`;
       else layout();
     },
-    refresh: layout,
+    refresh: scheduleLayout,
     reset,
-    dispose() { observer.disconnect(); sizeObserver.disconnect(); reset(); },
+    dispose() {
+      observer.disconnect(); sizeObserver.disconnect();
+      if (layoutFrame !== null) cancelAnimationFrame(layoutFrame);
+      reset();
+    },
   };
 }

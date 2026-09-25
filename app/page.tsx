@@ -464,7 +464,7 @@ function CampusMapApp({ initialProfile }: { initialProfile: UserProfile }) {
           mapStyle={profile.mapStyle}
           onLayers={handleToggleMapStyle}
           isFollowingLocation={isFollowingLocation}
-          onRecenter={() => { setIsFollowingLocation(true); mapInstance?.moveCamera({ center: walkingPosition, zoom: 20, heading: walkingBearing, tilt: 0 }); }}
+          onRecenter={() => { setIsFollowingLocation(true); mapInstance?.setZoom(20); }}
           onOverview={handleReturnToRoutePreview}
         />
       )}
