@@ -17,9 +17,9 @@ import { CampusRouteError, requestRoute } from "@/lib/requestRoute";
 import { isRerouteDue } from "@/lib/rerouteTiming";
 import { routeDeviation } from "@/lib/routeDeviation";
 import { conferenceEvents, findEventPlace } from "@/data/majorPlaces";
+import { isWalkingMotion, WALKING_MOVEMENT_THRESHOLD_METERS } from "@/lib/walkingMotion";
 
 type Coordinate = { lat: number; lng: number };
-const WALKING_MOVEMENT_THRESHOLD_METERS = 3;
 
 const DEFAULT_PROFILE: UserProfile = {
   name: "",
@@ -281,7 +281,7 @@ function CampusMapApp({ initialProfile }: { initialProfile: UserProfile }) {
     const ahead = activeRoute.points.find(point => haversineDistance(first.lat, first.lng, point.lat, point.lng) >= 5);
     if (ahead) setWalkingBearing(getBearing(first, ahead));
     prevPositionRef.current = null;
-    movementAnchorRef.current = null;
+    movementAnchorRef.current = startPosition ?? null;
   }, [selectedLocation, walkingPosition, userPosition, activeRoute, routeLoading, places]);
 
   useEffect(() => {
@@ -333,14 +333,13 @@ function CampusMapApp({ initialProfile }: { initialProfile: UserProfile }) {
         const anchor = movementAnchorRef.current;
         const displacement = anchor ? haversineDistance(anchor.lat, anchor.lng, nextPosition.lat, nextPosition.lng) : 0;
         const speed = pos.coords.speed;
-        const hasSpeed = speed !== null && Number.isFinite(speed) && speed >= 0;
         const reliable = Number.isFinite(pos.coords.accuracy) && pos.coords.accuracy <= 25;
         if (!reliable) {
           deviationCount = 0;
           deviationSince = 0;
           return;
         }
-        const moving = reliable && (hasSpeed ? speed >= 0.5 : displacement >= Math.max(WALKING_MOVEMENT_THRESHOLD_METERS, Math.min(pos.coords.accuracy, 8)));
+        const moving = isWalkingMotion(speed, displacement, pos.coords.accuracy);
 
         if (moving) {
           const heading = pos.coords.heading;
@@ -352,11 +351,9 @@ function CampusMapApp({ initialProfile }: { initialProfile: UserProfile }) {
           // Preserve the anchor between sparse fixes so heading can be derived
           // when a device supplies neither speed nor compass heading.
           idleTimer = setTimeout(() => { setWalkingState("idle"); }, 8000);
-        } else if (!reliable || (hasSpeed && speed < 0.5)) {
-          if (idleTimer) clearTimeout(idleTimer);
-          setWalkingState("idle");
-          movementAnchorRef.current = nextPosition;
         } else if (!anchor) movementAnchorRef.current = nextPosition;
+        // Let the inactivity timer stop the walk cycle. One zero-speed fix
+        // must not freeze the sprite or discard accumulated slow movement.
 
         prevPositionRef.current = nextPosition;
         setWalkingPosition(nextPosition);

@@ -63,7 +63,7 @@ export default function CampusCharacterMarker({
     visual.style.position = "relative";
     visual.style.overflow = "hidden";
     visual.style.transformOrigin = "center center";
-    visual.style.transform = "rotate(180deg)";
+    visual.style.transform = `rotate(${currentBearingRef.current - (map.getHeading() || 0)}deg)`;
     visual.style.filter = "drop-shadow(0 3px 3px rgba(0, 0, 0, 0.28))";
     visual.className = "walking-character-visual idle";
     visualRef.current = visual;
@@ -136,7 +136,10 @@ export default function CampusCharacterMarker({
     };
     overlay.setMap(map);
     overlayRef.current = overlay;
-    return () => { headingListener.remove(); overlay.setMap(null); overlayRef.current = null; };
+    return () => {
+      headingListener.remove(); overlay.setMap(null); overlayRef.current = null;
+      containerRef.current = null; visualRef.current = null;
+    };
   }, [map, vehicle, gender, frames, idleFrame]);
 
   useEffect(() => {
@@ -146,9 +149,10 @@ export default function CampusCharacterMarker({
   }, [position]);
 
   useEffect(() => {
-    // The artwork faces south. Ignore idle GPS headings entirely.
-    if (isMoving && Number.isFinite(bearing)) targetBearingRef.current = (bearing + 180) % 360;
-  }, [bearing, isMoving]);
+    // The parent filters idle GPS headings. Also orient the sprite to the
+    // initial route before the first moving fix arrives.
+    if (Number.isFinite(bearing)) targetBearingRef.current = (bearing + 180) % 360;
+  }, [bearing]);
 
   useEffect(() => {
     if (!overlayRef.current || !visualRef.current) return;
@@ -156,25 +160,15 @@ export default function CampusCharacterMarker({
     const img = visualRef.current.querySelector("img");
     if (!img) return;
 
-    if (!isMoving) {
-      if (animFrameRef.current) {
-        cancelAnimationFrame(animFrameRef.current);
-        animFrameRef.current = null;
-      }
-      visualRef.current.className = "walking-character-visual idle";
-      img.src = idleFrame;
-      return;
-    }
-
     frameIndexRef.current = 0;
     lastFrameTimeRef.current = 0;
-    visualRef.current.className = "walking-character-visual walking";
-    img.src = frames[0];
+    visualRef.current.className = `walking-character-visual ${isMoving ? "walking" : "idle"}`;
+    img.src = isMoving ? frames[0] : idleFrame;
 
     const animate = (timestamp: number) => {
       if (lastFrameTimeRef.current === 0) lastFrameTimeRef.current = timestamp;
 
-      if (timestamp - lastFrameTimeRef.current >= FRAME_DURATION) {
+      if (isMoving && timestamp - lastFrameTimeRef.current >= FRAME_DURATION) {
         frameIndexRef.current = (frameIndexRef.current + 1) % frames.length;
         img.src = frames[frameIndexRef.current];
         lastFrameTimeRef.current = timestamp;
@@ -201,7 +195,7 @@ export default function CampusCharacterMarker({
         cancelAnimationFrame(animFrameRef.current);
       }
     };
-  }, [isMoving, map, vehicle, frames, idleFrame]);
+  }, [isMoving, map, vehicle, gender, frames, idleFrame]);
 
   useEffect(() => {
     return () => {
