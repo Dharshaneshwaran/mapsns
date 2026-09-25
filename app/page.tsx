@@ -143,11 +143,6 @@ function CampusMapApp({ initialProfile }: { initialProfile: UserProfile }) {
   const movementAnchorRef = useRef<{ lat: number; lng: number } | null>(null);
   const previewRequest = useRef<AbortController | null>(null);
   const latestFix = useRef<GeolocationPosition | null>(null);
-  const autoWalkCanceled = useRef(false);
-  const walkingPositionRef = useRef(walkingPosition);
-  const isWalkingRef = useRef(isWalking);
-  useEffect(() => { walkingPositionRef.current = walkingPosition; }, [walkingPosition]);
-  useEffect(() => { isWalkingRef.current = isWalking; }, [isWalking]);
   const [routeError, setRouteError] = useState("");
   const [routeLoading, setRouteLoading] = useState(false);
   useEffect(() => () => previewRequest.current?.abort(), []);
@@ -287,55 +282,7 @@ function CampusMapApp({ initialProfile }: { initialProfile: UserProfile }) {
     if (ahead) setWalkingBearing(getBearing(first, ahead));
     prevPositionRef.current = null;
     movementAnchorRef.current = null;
-    autoWalkCanceled.current = false;
   }, [selectedLocation, walkingPosition, userPosition, activeRoute, routeLoading, places]);
-
-  // Demo walk: start moving along the route a few seconds after navigation opens,
-  // unless the visitor has already moved on their own (GPS watch cancels it).
-  useEffect(() => {
-    if (!isWalking || !activeRoute || activeRoute.points.length < 2) return;
-    const timer = setTimeout(() => {
-      if (autoWalkCanceled.current) return;
-      const points = activeRoute.points;
-      const total = points.slice(1).reduce((sum, point, index) => sum + haversineDistance(points[index].lat, points[index].lng, point.lat, point.lng), 0);
-      if (total < 5) return;
-      const origin = walkingPositionRef.current ?? points[0];
-      let travelled = routeDeviation(origin, points, null).progressMeters;
-      if (travelled >= total - 5) travelled = 0;
-      setWalkingState("walking");
-      let last = performance.now();
-      const step = (now: number) => {
-        if (autoWalkCanceled.current || !isWalkingRef.current) return;
-        const dt = Math.min(0.5, (now - last) / 1000);
-        last = now;
-        travelled += 1.3 * dt;
-        if (travelled >= total) {
-          setWalkingPosition(points[points.length - 1]);
-          setWalkingState("idle");
-          handleArrived();
-          return;
-        }
-        // Position + bearing at travelled distance along the polyline.
-        let acc = 0;
-        for (let i = 1; i < points.length; i++) {
-          const seg = haversineDistance(points[i - 1].lat, points[i - 1].lng, points[i].lat, points[i].lng);
-          if (acc + seg >= travelled) {
-            const t = seg > 0 ? (travelled - acc) / seg : 0;
-            const from = points[i - 1];
-            const to = points[i];
-            setWalkingPosition({ lat: from.lat + (to.lat - from.lat) * t, lng: from.lng + (to.lng - from.lng) * t });
-            setWalkingBearing(getBearing(from, to));
-            break;
-          }
-          acc += seg;
-        }
-        setWalkingState("walking");
-        requestAnimationFrame(step);
-      };
-      requestAnimationFrame(step);
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, [isWalking, activeRoute, handleArrived]);
 
   useEffect(() => {
     if (!isWalking || !selectedLocation || !navigator.geolocation) return;
@@ -396,7 +343,6 @@ function CampusMapApp({ initialProfile }: { initialProfile: UserProfile }) {
         const moving = reliable && (hasSpeed ? speed >= 0.5 : displacement >= Math.max(WALKING_MOVEMENT_THRESHOLD_METERS, Math.min(pos.coords.accuracy, 8)));
 
         if (moving) {
-          autoWalkCanceled.current = true;
           const heading = pos.coords.heading;
           if (heading !== null && Number.isFinite(heading)) setWalkingBearing(heading);
           else if (anchor && displacement >= WALKING_MOVEMENT_THRESHOLD_METERS) setWalkingBearing(getBearing(anchor, nextPosition));
