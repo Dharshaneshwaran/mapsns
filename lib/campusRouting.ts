@@ -3,12 +3,22 @@ import type { Coordinate } from "@/types/campus";
 
 const meters = (a: Coordinate, b: Coordinate) => Math.hypot((a.lat - b.lat) * 111320, (a.lng - b.lng) * 109240);
 
+type Graph = {
+  nodes: Coordinate[];
+  edges: Map<number, number>[];
+  segments: [number, number][];
+};
+
 // Campus road geometry imported from OpenStreetMap; see scripts/import-campus-roads.mjs.
-// Join only shared vertices; never invent connections across unmapped ground.
-export function campusWalkingRoute(start: Coordinate, end: Coordinate) {
+// Build the graph once per process so reroutes only run Dijkstra.
+let cachedGraph: Graph | null = null;
+
+function baseGraph(): Graph {
+  if (cachedGraph) return cachedGraph;
   const nodes: Coordinate[] = [];
   const edges: Map<number, number>[] = [];
   const ids = new Map<string, number>();
+  const segments: [number, number][] = [];
   const node = (p: Coordinate) => {
     const key = `${p.lng},${p.lat}`;
     const old = ids.get(key);
@@ -21,7 +31,6 @@ export function campusWalkingRoute(start: Coordinate, end: Coordinate) {
     const distance = meters(nodes[a], nodes[b]);
     edges[a].set(b, distance); edges[b].set(a, distance);
   };
-  const segments: [number, number][] = [];
   for (const road of roads.roads) {
     for (let i = 1; i < road.length; i++) {
       const a = { lng: road[i - 1][0], lat: road[i - 1][1] };
@@ -30,6 +39,16 @@ export function campusWalkingRoute(start: Coordinate, end: Coordinate) {
       segments.push([u, v]); connect(u, v);
     }
   }
+  cachedGraph = { nodes, edges, segments };
+  return cachedGraph;
+}
+
+// Join only shared vertices; never invent connections across unmapped ground.
+export function campusWalkingRoute(start: Coordinate, end: Coordinate) {
+  const base = baseGraph();
+  const nodes = [...base.nodes];
+  const edges = base.edges.map(adjacency => new Map(adjacency));
+  const segments = base.segments;
   const snap = (p: Coordinate, limit: number) => {
     let best: { u: number; v: number; p: Coordinate; gap: number } | null = null;
     for (const [u, v] of segments) {
@@ -49,10 +68,17 @@ export function campusWalkingRoute(start: Coordinate, end: Coordinate) {
   // This is a route to a nearby path, not a verified entrance connection.
   const first = snap(start, 30), last = snap(end, 60);
   if (!first || !last) return null;
-  const source = node(first.p), target = node(last.p);
-  connect(source, first.u); connect(source, first.v);
-  connect(target, last.u); connect(target, last.v);
-  if (first.u === last.u && first.v === last.v) connect(source, target);
+  const link = (a: number, b: number) => {
+    const distance = meters(nodes[a], nodes[b]);
+    edges[a].set(b, distance); edges[b].set(a, distance);
+  };
+  const source = nodes.length;
+  nodes.push({ ...first.p }); edges.push(new Map());
+  const target = nodes.length;
+  nodes.push({ ...last.p }); edges.push(new Map());
+  link(source, first.u); link(source, first.v);
+  link(target, last.u); link(target, last.v);
+  if (first.u === last.u && first.v === last.v) link(source, target);
   const distances = nodes.map(() => Infinity), previous = nodes.map(() => -1);
   const visited = new Set<number>();
   distances[source] = 0;

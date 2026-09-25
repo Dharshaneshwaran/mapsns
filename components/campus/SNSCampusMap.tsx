@@ -238,21 +238,27 @@ export default function SNSCampusMap({
     completedRouteProgress.current = 0;
     if (!mapRef.current || !isMapLoaded) return;
 
-    if (routePolylineRef.current) {
-      const rp = routePolylineRef.current;
-      rp.shadow?.setMap(null);
-      rp.main?.setMap(null);
-      rp.border?.setMap(null);
-      routePolylineRef.current = null;
-    }
-
     if (activeRoute) {
       const google = window.google;
       if (!google) return;
+      const path = activeRoute.points.map((p) => new google.maps.LatLng(p.lat, p.lng));
+      const existing = routePolylineRef.current;
+      // While navigating, only swap the path so the line does not flicker on reroute.
+      if (existing && isWalking) {
+        existing.main.setPath(path);
+        existing.shadow.setPath(path);
+        return;
+      }
+      if (existing) {
+        existing.shadow?.setMap(null);
+        existing.main?.setMap(null);
+        existing.border?.setMap(null);
+        routePolylineRef.current = null;
+      }
 
       // Outer glow line (shadow)
       const shadowPolyline = new google.maps.Polyline({
-        path: activeRoute.points.map((p) => new google.maps.LatLng(p.lat, p.lng)),
+        path,
         geodesic: true,
         strokeColor: "#174ea6",
         strokeOpacity: 1,
@@ -264,7 +270,7 @@ export default function SNSCampusMap({
 
       // Main route line
       const polyline = new google.maps.Polyline({
-        path: activeRoute.points.map((p) => new google.maps.LatLng(p.lat, p.lng)),
+        path,
         geodesic: true,
         strokeColor: "#4285f4",
         strokeOpacity: 1,
@@ -295,6 +301,15 @@ export default function SNSCampusMap({
       activeRoute.points.forEach((p) => routeBounds.extend(new google.maps.LatLng(p.lat, p.lng)));
 
       mapRef.current.fitBounds(routeBounds, 80);
+      return;
+    }
+
+    if (routePolylineRef.current) {
+      const rp = routePolylineRef.current;
+      rp.shadow?.setMap(null);
+      rp.main?.setMap(null);
+      rp.border?.setMap(null);
+      routePolylineRef.current = null;
     }
   }, [activeRoute, isMapLoaded, isWalking]);
 
@@ -302,8 +317,12 @@ export default function SNSCampusMap({
     if (!isWalking || !walkingPosition || !activeRoute || !routePolylineRef.current) return;
     const remaining = remainingRoute(walkingPosition, activeRoute.points, completedRouteProgress.current);
     completedRouteProgress.current = remaining.progress;
-    routePolylineRef.current.main.setPath(remaining.points);
-    routePolylineRef.current.shadow.setPath(remaining.points);
+    // Start the visible line at the character so a snapped road start never leaves a gap.
+    const path = remaining.points.length
+      ? [walkingPosition, ...remaining.points]
+      : [walkingPosition];
+    routePolylineRef.current.main.setPath(path);
+    routePolylineRef.current.shadow.setPath(path);
   }, [walkingPosition, activeRoute, isWalking, isMapLoaded]);
 
   // Pause camera following only for user gestures, not programmatic camera changes.
