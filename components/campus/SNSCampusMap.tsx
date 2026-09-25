@@ -10,6 +10,13 @@ import PublishedMapImages from "./PublishedMapImages";
 import { publishedPlaces } from "@/lib/publishedPlaces";
 import { remainingRoute, routePointerPosition } from "@/lib/routeDeviation";
 import { POINTER_COLOR_BY_STYLE, type Gender, type PointerStyle } from "./SettingsDialog";
+import { createRasterMapRotation, shortestHeadingDelta } from "@/lib/rasterMapRotation";
+
+// This ID must reference the published campus style in Google Cloud.
+// Without it, preserve the existing styled raster map.
+const configuredMapId = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID?.trim();
+const campusMapId = configuredMapId && !["DEMO_MAP_ID", "your_map_id", "your-map-id"].includes(configuredMapId)
+  ? configuredMapId : undefined;
 
 type Props = {
   onLocationSelect: (location: CampusLocation) => void;
@@ -46,6 +53,9 @@ export default function SNSCampusMap({
   onMapReady,
 }: Props) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapViewportRef = useRef<HTMLDivElement>(null);
+  const rasterRotationRef = useRef<ReturnType<typeof createRasterMapRotation> | null>(null);
+  const rasterHeadingRef = useRef(0);
   const cameraFrameRef = useRef<number | null>(null);
   const completedRouteProgress = useRef(0);
   const initialMapType = useRef(mapTypeId);
@@ -82,7 +92,9 @@ export default function SNSCampusMap({
         center: CAMPUS_CENTER,
         zoom: 17,
         mapTypeId: initialMapType.current,
-        renderingType: google.maps.RenderingType.RASTER,
+        renderingType: campusMapId ? google.maps.RenderingType.VECTOR : google.maps.RenderingType.RASTER,
+        ...(campusMapId ? { mapId: campusMapId } : { styles: CAMPUS_MAP_STYLES }),
+        isFractionalZoomEnabled: false,
         tiltInteractionEnabled: false,
         tilt: 0,
         mapTypeControl: false,
@@ -94,8 +106,7 @@ export default function SNSCampusMap({
         minZoom: 15,
         maxZoom: 21,
         clickableIcons: false,
-        // Embedded campus styles require raster rendering. Vector rotation needs a cloud map style.
-        styles: CAMPUS_MAP_STYLES,
+        // Vector rotation uses the same campus style published against campusMapId.
       });
 
       map.fitBounds(bounds, 0);
@@ -142,9 +153,8 @@ export default function SNSCampusMap({
 
   useEffect(() => {
     if (!mapInstance) return;
-    // Rendering type is fixed at construction. Keep the styled raster map
-    // north-up in both browsing and navigation modes.
-    mapInstance.setOptions({ styles: CAMPUS_MAP_STYLES, heading: 0, tilt: 0 });
+    // Keep the renderer and style fixed. Return to north-up when leaving navigation.
+    if (!isWalking) mapInstance.moveCamera({ heading: 0, tilt: 0 });
   }, [mapInstance, isWalking]);
 
 
@@ -325,16 +335,38 @@ export default function SNSCampusMap({
     routePolylineRef.current.shadow.setPath(path);
   }, [walkingPosition, activeRoute, isWalking, isMapLoaded]);
 
+  useEffect(() => {
+    if (!mapInstance || !mapContainerRef.current || !mapViewportRef.current) return;
+    const rotation = createRasterMapRotation(mapContainerRef.current, mapViewportRef.current, () => {
+      google.maps.event.trigger(mapInstance, "resize");
+    });
+    rasterRotationRef.current = rotation;
+    const idle = mapInstance.addListener("idle", rotation.refresh);
+    return () => { idle.remove(); rotation.dispose(); rasterRotationRef.current = null; };
+  }, [mapInstance]);
+
+  useEffect(() => {
+    if (isWalking && isFollowingLocation) return;
+    rasterRotationRef.current?.reset();
+    rasterHeadingRef.current = 0;
+  }, [isWalking, isFollowingLocation]);
+
   // Pause camera following only for user gestures, not programmatic camera changes.
   useEffect(() => {
     const container = mapContainerRef.current;
     if (!mapInstance || !container || !isWalking || !isFollowingLocation) return;
     const pauseFollowing = () => {
       if (cameraFrameRef.current !== null) cancelAnimationFrame(cameraFrameRef.current);
+      // Restore native coordinates before Google handles a drag or zoom gesture.
+      rasterRotationRef.current?.reset();
+      rasterHeadingRef.current = 0;
       onMapInteraction();
     };
     let pointer: { id: number; x: number; y: number } | null = null;
-    const pointerDown = (event: PointerEvent) => { pointer = { id: event.pointerId, x: event.clientX, y: event.clientY }; };
+    const pointerDown = (event: PointerEvent) => {
+      pointer = { id: event.pointerId, x: event.clientX, y: event.clientY };
+      if (rasterHeadingRef.current !== 0) pauseFollowing();
+    };
     const pointerMove = (event: PointerEvent) => {
       if (pointer?.id === event.pointerId && Math.hypot(event.clientX - pointer.x, event.clientY - pointer.y) > 5) pauseFollowing();
     };
@@ -343,20 +375,20 @@ export default function SNSCampusMap({
       if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "+", "-", "="].includes(event.key)) pauseFollowing();
     };
     const dragListener = mapInstance.addListener("dragstart", pauseFollowing);
-    container.addEventListener("pointerdown", pointerDown, { passive: true });
+    container.addEventListener("pointerdown", pointerDown, { passive: true, capture: true });
     container.addEventListener("pointermove", pointerMove, { passive: true });
     window.addEventListener("pointerup", pointerUp);
     window.addEventListener("pointercancel", pointerUp);
-    container.addEventListener("wheel", pauseFollowing, { passive: true });
+    container.addEventListener("wheel", pauseFollowing, { passive: true, capture: true });
     container.addEventListener("dblclick", pauseFollowing);
     container.addEventListener("keydown", keyDown);
     return () => {
       dragListener.remove();
-      container.removeEventListener("pointerdown", pointerDown);
+      container.removeEventListener("pointerdown", pointerDown, true);
       container.removeEventListener("pointermove", pointerMove);
       window.removeEventListener("pointerup", pointerUp);
       window.removeEventListener("pointercancel", pointerUp);
-      container.removeEventListener("wheel", pauseFollowing);
+      container.removeEventListener("wheel", pauseFollowing, true);
       container.removeEventListener("dblclick", pauseFollowing);
       container.removeEventListener("keydown", keyDown);
     };
@@ -364,16 +396,22 @@ export default function SNSCampusMap({
 
   useEffect(() => {
     if (!mapInstance || !isWalking || !walkingPosition || !isFollowingLocation) return;
-    if (mapInstance.getRenderingType() !== google.maps.RenderingType.VECTOR) {
+    if (!Number.isFinite(walkingBearing)) return;
+    const raster = mapInstance.getRenderingType() !== google.maps.RenderingType.VECTOR;
+    if (raster) {
+      rasterRotationRef.current?.setHeading(rasterHeadingRef.current);
       mapInstance.panTo(walkingPosition);
-      return;
     }
-    const heading = mapInstance.getHeading() || 0;
-    const delta = ((walkingBearing - heading + 540) % 360) - 180;
+    const heading = raster ? rasterHeadingRef.current : mapInstance.getHeading() || 0;
+    const delta = shortestHeadingDelta(heading, walkingBearing);
     const start = performance.now();
     const animate = (now: number) => {
       const progress = Math.min(1, (now - start) / 450);
-      mapInstance.moveCamera({ center: walkingPosition, heading: heading + delta * progress, tilt: 0 });
+      const nextHeading = heading + delta * progress;
+      if (raster) {
+        rasterHeadingRef.current = nextHeading;
+        rasterRotationRef.current?.setHeading(nextHeading);
+      } else mapInstance.moveCamera({ center: walkingPosition, heading: nextHeading, tilt: 0 });
       if (progress < 1) cameraFrameRef.current = requestAnimationFrame(animate);
     };
     cameraFrameRef.current = requestAnimationFrame(animate);
@@ -417,7 +455,7 @@ export default function SNSCampusMap({
   }
 
   return (
-    <div className="campus-map-canvas relative w-full h-full">
+    <div ref={mapViewportRef} className="campus-map-canvas relative w-full h-full overflow-hidden">
       <div ref={mapContainerRef} className="absolute inset-0" />
       {mapInstance && <PublishedMapImages map={mapInstance} selectedLocation={selectedLocation} onClick={(image) => {
         const location = publishedPlaces([image]).find((item) => item.id === (image.locationId || image.id));

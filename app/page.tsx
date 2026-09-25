@@ -548,7 +548,7 @@ function CampusMapApp({ initialProfile }: { initialProfile: UserProfile }) {
         />
       )}
 
-      {!selectedLocation && !isWalking && !isRoutePreview && <ExplorePanel onSelect={handleLocationSelect} onOpenSettings={() => setShowSettings(true)} name={profile.name} gender={profile.gender} />}
+      {!selectedLocation && !isWalking && !isRoutePreview && <ExplorePanel onSelect={handleLocationSelect} onOpenSettings={() => setShowSettings(true)} name={profile.name} gender={profile.gender} mapStyle={profile.mapStyle} onLayers={handleToggleMapStyle} />}
 
 
       {showSettings && (
