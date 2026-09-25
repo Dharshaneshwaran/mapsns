@@ -7,10 +7,53 @@ const campusApproaches: Coordinate[] = [
   { lat: 11.1006791, lng: 77.0246707 },
   { lat: 11.1037733, lng: 77.0245577 },
 ];
-export async function requestRoute(start: Coordinate, end: Coordinate, mode: TravelMode, signal: AbortSignal, heading: number | null = null): Promise<Pick<WalkingRoute, "points" | "distanceMeters" | "durationSeconds" | "destinationGapMeters">> {
+
+type CampusRouteResult = Pick<WalkingRoute, "points" | "distanceMeters" | "durationSeconds" | "destinationGapMeters">;
+
+// Prefer the server-side campus graph so the browser only waits on a localhost round-trip.
+async function requestCampusRouteFromServer(start: Coordinate, end: Coordinate, signal: AbortSignal): Promise<CampusRouteResult | null> {
+  if (typeof window === "undefined") return null;
+  try {
+    const response = await fetch("/api/route", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ start, end }),
+      cache: "no-store",
+      signal,
+    });
+    if (!response.ok) return null;
+    const data = await response.json() as { points?: unknown; distanceMeters?: unknown; durationSeconds?: unknown; destinationGapMeters?: unknown };
+    if (!Array.isArray(data?.points) || data.points.length < 2
+      || !Number.isFinite(data.distanceMeters as number) || !Number.isFinite(data.durationSeconds as number)) return null;
+    const points = (data.points as unknown[]).filter(isCoordinate);
+    if (points.length < 2) return null;
+    return {
+      points,
+      distanceMeters: data.distanceMeters as number,
+      durationSeconds: data.durationSeconds as number,
+      destinationGapMeters: Number.isFinite(data.destinationGapMeters as number) ? data.destinationGapMeters as number : undefined,
+    };
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") throw error;
+    return null;
+  }
+}
+
+function isCoordinate(value: unknown): value is Coordinate {
+  if (!value || typeof value !== "object") return false;
+  const { lat, lng } = value as Record<string, unknown>;
+  return typeof lat === "number" && Number.isFinite(lat) && Math.abs(lat) <= 90
+    && typeof lng === "number" && Number.isFinite(lng) && Math.abs(lng) <= 180;
+}
+
+export async function requestRoute(start: Coordinate, end: Coordinate, mode: TravelMode, signal: AbortSignal, heading: number | null = null): Promise<CampusRouteResult> {
   signal.throwIfAborted();
-  const campusRoute = mode === "walking" ? campusWalkingRoute(start, end) : null;
-  if (campusRoute) return campusRoute;
+  if (mode === "walking") {
+    const fromServer = await requestCampusRouteFromServer(start, end, signal);
+    if (fromServer) return fromServer;
+    const campusRoute = campusWalkingRoute(start, end);
+    if (campusRoute) return campusRoute;
+  }
   try {
     return await requestRemoteRoute(start, end, mode, signal, heading);
   } catch (error) {

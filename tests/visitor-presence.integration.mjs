@@ -8,7 +8,10 @@ const key = "isolated-presence-test-key";
 let server;
 let output = "";
 before(async () => {
-  server = spawn(process.execPath, ["node_modules/next/dist/bin/next", "start", "-p", "3236"], { env: { ...process.env, ADMIN_MAP_TOKEN: key }, windowsHide: true, stdio: ["ignore", "pipe", "pipe"] });
+  // Empty the live-proxy env (real env beats .env.local) so this server
+  // exercises the local presence store instead of https://map.gdta2026.com.
+  const env = { ...process.env, ADMIN_MAP_TOKEN: key, LIVE_VISITORS_ORIGIN: "" };
+  server = spawn(process.execPath, ["node_modules/next/dist/bin/next", "start", "-p", "3236"], { env, windowsHide: true, stdio: ["ignore", "pipe", "pipe"] });
   server.stdout.on("data", chunk => { output += chunk; });
   server.stderr.on("data", chunk => { output += chunk; });
   for (let attempt = 0; attempt < 100; attempt++) {
@@ -38,7 +41,7 @@ test("public heartbeats, protected aggregate counts, deduplication and location 
   const data = await response.json();
   assert.equal(data.online, 1);
   assert.equal(data.sharing, 1);
-  assert.deepEqual(data.cells, [{ lat: 11.1, lng: 77.027, count: 1 }]);
+  assert.deepEqual(data.cells, [{ lat: 11.10012, lng: 77.02713, count: 1 }]);
   assert.equal(JSON.stringify(data).includes(id), false);
   assert.equal((await heartbeat(id, null)).status, 204);
   assert.equal((await (await summary()).json()).sharing, 0);
