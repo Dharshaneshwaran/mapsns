@@ -142,14 +142,9 @@ export default function SNSCampusMap({
 
   useEffect(() => {
     if (!mapInstance) return;
-    // Embedded styling is raster-only; heading rotation is vector-only.
-    if (isWalking) {
-      mapInstance.setOptions({ styles: null });
-      mapInstance.setRenderingType(google.maps.RenderingType.VECTOR);
-    } else {
-      mapInstance.setRenderingType(google.maps.RenderingType.RASTER);
-      mapInstance.setOptions({ styles: CAMPUS_MAP_STYLES, heading: 0, tilt: 0 });
-    }
+    // Rendering type is fixed at construction. Keep the styled raster map
+    // north-up in both browsing and navigation modes.
+    mapInstance.setOptions({ styles: CAMPUS_MAP_STYLES, heading: 0, tilt: 0 });
   }, [mapInstance, isWalking]);
 
 
@@ -350,6 +345,10 @@ export default function SNSCampusMap({
 
   useEffect(() => {
     if (!mapInstance || !isWalking || !walkingPosition || !isFollowingLocation) return;
+    if (mapInstance.getRenderingType() !== google.maps.RenderingType.VECTOR) {
+      mapInstance.panTo(walkingPosition);
+      return;
+    }
     const heading = mapInstance.getHeading() || 0;
     const delta = ((walkingBearing - heading + 540) % 360) - 180;
     const start = performance.now();
