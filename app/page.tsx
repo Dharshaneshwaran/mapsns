@@ -14,6 +14,7 @@ import RoutePreviewOverlay from "@/components/campus/RoutePreviewOverlay";
 import SettingsDialog, { UserProfile } from "@/components/campus/SettingsDialog";
 import ExplorePanel from "@/components/campus/ExplorePanel";
 import { CampusRouteError, requestRoute } from "@/lib/requestRoute";
+import { isRerouteDue } from "@/lib/rerouteTiming";
 import { routeDeviation } from "@/lib/routeDeviation";
 import { conferenceEvents, findEventPlace } from "@/data/majorPlaces";
 
@@ -367,7 +368,7 @@ function CampusMapApp({ initialProfile }: { initialProfile: UserProfile }) {
             if (deviationCount === 0) deviationSince = pos.timestamp;
             deviationCount += 1;
           } else { deviationCount = 0; deviationSince = 0; }
-          if (deviationCount >= 3 && pos.timestamp - deviationSince >= 3000 && !request && Date.now() - lastReroute > 10000) {
+          if (!request && isRerouteDue(travelMode, deviationCount, pos.timestamp - deviationSince, Date.now() - lastReroute)) {
             deviationCount = 0;
             void reroute(nextPosition, heading);
           }
