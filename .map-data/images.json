@@ -1,5 +1,5 @@
 {
-  "revision": "e1b60552-9ac3-4cb6-af3b-82f0e1383b1b",
+  "revision": "cd0f8a85-bd74-488a-9749-87190c2eec3c",
   "images": [
     {
       "id": "9caa12d8-dfcb-4c32-b265-9f33e5c069d6",
@@ -172,7 +172,7 @@
     },
     {
       "id": "543523b1-7bb3-4661-a751-733b680cafc4",
-      "name": "Washroom",
+      "name": "Men's Washroom",
       "src": "lucide:map-pin",
       "lat": 11.103695071434867,
       "lng": 77.02767836503537,
@@ -195,6 +195,110 @@
       "opacity": 1,
       "showInShortcuts": true,
       "locationId": "7a931b08-66c2-4835-9f86-bafcc8862bc5"
+    },
+    {
+      "id": "95f19e6d-d3d7-4edf-806f-0f4c252b5f15",
+      "name": "Bike and car parking No:2",
+      "src": "lucide:map-pin",
+      "lat": 11.100513459721027,
+      "lng": 77.02761173634843,
+      "width": 0.0001,
+      "height": 0.0001,
+      "rotation": 0,
+      "opacity": 1,
+      "showInShortcuts": true,
+      "locationId": "95f19e6d-d3d7-4edf-806f-0f4c252b5f15"
+    },
+    {
+      "id": "da12d649-0844-4d5b-ba79-7382aa3d9b09",
+      "name": "RM hall",
+      "src": "lucide:map-pin",
+      "lat": 11.104069894478389,
+      "lng": 77.02723243815079,
+      "width": 0.0001,
+      "height": 0.0001,
+      "rotation": 0,
+      "opacity": 1,
+      "showInShortcuts": true,
+      "locationId": "da12d649-0844-4d5b-ba79-7382aa3d9b09"
+    },
+    {
+      "id": "ca92240b-aada-476a-83bb-b7f628c90816",
+      "name": "Food Stall",
+      "src": "lucide:map-pin",
+      "lat": 11.103053592380212,
+      "lng": 77.02695486818693,
+      "width": 0.0001,
+      "height": 0.0001,
+      "rotation": 0,
+      "opacity": 1,
+      "showInShortcuts": true,
+      "locationId": "ca92240b-aada-476a-83bb-b7f628c90816"
+    },
+    {
+      "id": "e4a2de3a-6c59-4004-881c-8ed1e24cb80e",
+      "name": "Food Stall",
+      "src": "lucide:map-pin",
+      "lat": 11.103078596421943,
+      "lng": 77.02725125228308,
+      "width": 0.0001,
+      "height": 0.0001,
+      "rotation": 0,
+      "opacity": 1,
+      "showInShortcuts": true,
+      "locationId": "e4a2de3a-6c59-4004-881c-8ed1e24cb80e"
+    },
+    {
+      "id": "9d220a41-19f1-45a9-b5af-f0b8be79685b",
+      "name": "help desk",
+      "src": "lucide:map-pin",
+      "lat": 11.102190267874334,
+      "lng": 77.02781772334865,
+      "width": 0.0001,
+      "height": 0.0001,
+      "rotation": 0,
+      "opacity": 1,
+      "showInShortcuts": true,
+      "locationId": "9d220a41-19f1-45a9-b5af-f0b8be79685b"
+    },
+    {
+      "id": "f9755f89-7435-4fcd-ac8e-b3425370a80a",
+      "name": "Women's washroom",
+      "src": "lucide:map-pin",
+      "lat": 11.10355703798332,
+      "lng": 77.02768303718432,
+      "width": 0.0001,
+      "height": 0.0001,
+      "rotation": 0,
+      "opacity": 1,
+      "showInShortcuts": true,
+      "locationId": "f9755f89-7435-4fcd-ac8e-b3425370a80a"
+    },
+    {
+      "id": "6423275b-3744-4309-b7b8-1d8ab7839fa8",
+      "name": "Men's Washroom",
+      "src": "lucide:map-pin",
+      "lat": 11.101183813246692,
+      "lng": 77.02608758559715,
+      "width": 0.0001,
+      "height": 0.0001,
+      "rotation": 0,
+      "opacity": 1,
+      "showInShortcuts": true,
+      "locationId": "6423275b-3744-4309-b7b8-1d8ab7839fa8"
+    },
+    {
+      "id": "68f3c74e-94b6-45ae-a9ab-fe9cc550681b",
+      "name": "Women's washroom",
+      "src": "lucide:map-pin",
+      "lat": 11.101221218864223,
+      "lng": 77.0260016987165,
+      "width": 0.0001,
+      "height": 0.0001,
+      "rotation": 0,
+      "opacity": 1,
+      "showInShortcuts": true,
+      "locationId": "68f3c74e-94b6-45ae-a9ab-fe9cc550681b"
     }
   ]
 }

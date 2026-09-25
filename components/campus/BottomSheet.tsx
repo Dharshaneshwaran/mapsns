@@ -5,7 +5,8 @@ import type { CampusLocation } from "@/types/campus";
 import SlidePanel from "./SlidePanel";
 import PlaceActions from "./PlaceActions";
 import CampusAd from "./CampusAd";
-import { majorPlaceLabel } from "@/data/majorPlaces";
+import { majorPlaceLabel, normalizePlaceName } from "@/data/majorPlaces";
+import Helpline from "./Helpline";
 
 const conferenceDescriptions: Record<string, string> = {
   "Cloak room": "Head to the Alumni lounge for the conference cloak room.",
@@ -13,7 +14,8 @@ const conferenceDescriptions: Record<string, string> = {
   "Panel sessions two + three + four": "Head to DT Playhouse for Panel sessions two, three, and four. Explore fresh perspectives on Chaos & Clarity and design thinking.",
   Spine: "Explore Spine during your conference visit. Continue to DT Playhouse for Panel sessions two, three, and four.",
   Registration: "Your conference journey starts here. Head to CGC for registration and get ready to explore Chaos & Clarity.",
-  "Inauguration + Panel session one": "Join us at the Open Auditorium for the conference inauguration and Panel session one. Let the conversations on Chaos & Clarity begin.",
+  Inauguration: "Join us at the Open Auditorium for the conference inauguration. Let the conversations on Chaos & Clarity begin.",
+  "Panel session one": "Join us at RM hall for Panel session one. Let the conversations on Chaos & Clarity continue.",
   "Car parking & bike parking": "Park your car or bike here and continue to your conference stops on campus.",
 };
 type Props = { location: CampusLocation; distance: number | null; walkingTime: number | null; onClose: () => void; onStartWalking: () => void };
@@ -23,6 +25,7 @@ export default function BottomSheet({ location, distance, walkingTime, onClose, 
     <div className="my-4 flex flex-wrap gap-2"><button onClick={onStartWalking} className="google-action-button bg-teal-700 text-white"><Navigation size={16} />Directions</button><PlaceActions location={location} /></div>
     <div className="relative h-44 overflow-hidden rounded-2xl bg-zinc-50"><Image src={location.customIcon || "/place-placeholder.svg"} alt={location.name} fill sizes="380px" className="object-contain p-3" /></div>
     <p className="mt-4 text-sm leading-6 text-zinc-600">{conferenceDescriptions[majorPlaceLabel(location.name) ?? ""] || location.description || "Explore this location on the SNS campus."}</p>
+    {normalizePlaceName(location.name) === "helpdesk" && <Helpline />}
     {distance !== null && <p className="mt-3 flex items-center gap-2 text-sm text-teal-700"><MapPin size={16} />{Math.round(distance)} m away{walkingTime !== null ? " · About " + Math.max(1, Math.ceil(walkingTime / 60)) + " min walk" : ""}</p>}
     <CampusAd placement="placeCard" />
   </div></SlidePanel>;

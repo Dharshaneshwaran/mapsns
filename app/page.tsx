@@ -131,6 +131,11 @@ function CampusMapApp({ initialProfile }: { initialProfile: UserProfile }) {
   const [isRoutePreview, setIsRoutePreview] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [profile, setProfile] = useState<UserProfile>(initialProfile);
+  const handleToggleMapStyle = () => {
+    const nextProfile: UserProfile = { ...profile, mapStyle: profile.mapStyle === "roadmap" ? "satellite" : "roadmap" };
+    setProfile(nextProfile);
+    try { window.localStorage.setItem("sns-campus-profile", JSON.stringify(nextProfile)); } catch { /* Keep the selected view when storage is unavailable. */ }
+  };
 
   const watchIdRef = useRef<number | null>(null);
   const prevPositionRef = useRef<{ lat: number; lng: number } | null>(null);
@@ -444,6 +449,8 @@ function CampusMapApp({ initialProfile }: { initialProfile: UserProfile }) {
           duration={travelTime ?? 0}
           mode={travelMode}
           onExit={handleReturnToRoutePreview}
+          mapStyle={profile.mapStyle}
+          onLayers={handleToggleMapStyle}
           isFollowingLocation={isFollowingLocation}
           onRecenter={() => { setIsFollowingLocation(true); mapInstance?.moveCamera({ center: walkingPosition, zoom: 20, heading: walkingBearing, tilt: 0 }); }}
           onOverview={handleReturnToRoutePreview}
@@ -461,11 +468,7 @@ function CampusMapApp({ initialProfile }: { initialProfile: UserProfile }) {
           onStart={handleBeginNavigation}
           onClose={handleStopWalking}
           mapStyle={profile.mapStyle}
-          onLayers={() => {
-            const nextProfile: UserProfile = { ...profile, mapStyle: profile.mapStyle === "roadmap" ? "satellite" : "roadmap" };
-            setProfile(nextProfile);
-            try { window.localStorage.setItem("sns-campus-profile", JSON.stringify(nextProfile)); } catch { /* Keep the selected view when storage is unavailable. */ }
-          }}
+          onLayers={handleToggleMapStyle}
           location={selectedLocation}
         />
       )}

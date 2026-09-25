@@ -8,9 +8,9 @@
   "theme_color": "#ffffff",
   "icons": [
     {
-      "src": "/favicon.ico",
-      "sizes": "any",
-      "type": "image/x-icon"
+      "src": "/GTDTA-white.png",
+      "sizes": "1540x1021",
+      "type": "image/png"
     }
   ]
 }

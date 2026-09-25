@@ -94,7 +94,7 @@ export default function SNSCampusMap({
         minZoom: 15,
         maxZoom: 21,
         clickableIcons: false,
-        // Raster rendering supports embedded styles without a cloud map ID.
+        // Embedded campus styles require raster rendering. Vector rotation needs a cloud map style.
         styles: CAMPUS_MAP_STYLES,
       });
 

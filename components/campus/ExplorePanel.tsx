@@ -5,8 +5,8 @@ import Image from "next/image";
 import { useCampusPlaces } from "@/components/campus/useCampusPlaces";
 import type { CampusLocation } from "@/types/campus";
 import CampusAd from "./CampusAd";
+import Helpline from "./Helpline";
 import { useSavedPlaces } from "./PlaceActions";
-import { VisitorSharingControl } from "./VisitorPresence";
 
 import { conferenceEvents, findEventPlace } from "@/data/majorPlaces";
 
@@ -52,7 +52,7 @@ export default function ExplorePanel({ onSelect, onOpenSettings, name }: Props) 
           </ul>
         </div>
       )}
-      <VisitorSharingControl />
+      <Helpline />
       <div className="event-section-label"><h2>Other places</h2><span>{otherPlaces.length} places</span></div>
       <div className="campus-place-grid event-grid">
         {otherPlaces.map(place => (

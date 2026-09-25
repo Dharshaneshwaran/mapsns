@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, ArrowUpRight, CarFront, Footprints, MapPin, Navigation, Route, X } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, CarFront, Footprints, Layers, MapPin, Navigation, Route, X } from "lucide-react";
 import type { TravelMode } from "@/types/campus";
 import { useRef, useState } from "react";
 
@@ -14,9 +14,11 @@ type Props = {
   onRecenter: () => void;
   isFollowingLocation: boolean;
   onOverview: () => void;
+  mapStyle: "roadmap" | "satellite";
+  onLayers: () => void;
 };
 
-export default function NavigationOverlay({ destination, destinationGapMeters, distance, duration, mode, onExit, onRecenter, onOverview, isFollowingLocation }: Props) {
+export default function NavigationOverlay({ destination, destinationGapMeters, distance, duration, mode, onExit, onRecenter, onOverview, isFollowingLocation, mapStyle, onLayers }: Props) {
   const [collapsed, setCollapsed] = useState(false);
   const sheet = useRef<HTMLElement>(null);
   const drag = useRef<{ y: number; height: number; delta: number; pointer: number } | null>(null);
@@ -38,6 +40,7 @@ export default function NavigationOverlay({ destination, destinationGapMeters, d
     <div className="walk-experience pointer-events-none absolute inset-0 z-40">
       <button onClick={onOverview} aria-label="Route overview" className="walk-back pointer-events-auto"><ArrowLeft size={20} /></button>
       <div className="walk-map-label"><span />{mode === "walking" ? "Walking navigation" : "Vehicle navigation"}</div>
+      <button type="button" onClick={onLayers} aria-label={mapStyle === "satellite" ? "Switch to normal map" : "Switch to satellite map"} aria-pressed={mapStyle === "satellite"} className="google-round-button pointer-events-auto absolute right-4 top-4"><Layers size={20} /></button>
       <section ref={sheet} data-collapsed={collapsed} className="walk-journey pointer-events-auto" aria-label="Current journey">
         <button type="button" className="walk-sheet-grip" aria-label={collapsed ? "Expand navigation panel" : "Collapse navigation panel"} aria-expanded={!collapsed}
           onPointerDown={event => {

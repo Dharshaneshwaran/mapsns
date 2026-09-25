@@ -6,13 +6,17 @@ import "./campus-ui.css";
 import "./conference-theme.css";
 import "./laptop.css";
 
-const conferenceDisplay = localFont({ src: "../public/fonts/Anton-Regular.ttf", variable: "--font-conference", weight: "400", display: "swap" });
+const conferenceDisplay = localFont({ src: "../public/fonts/Anton-Regular.ttf", variable: "--font-conference", weight: "400", display: "swap", preload: false });
 
 export const metadata: Metadata = {
   title: "SNS Campus Navigator",
   description:
     "Interactive campus navigation for SNS College of Engineering",
   manifest: "/manifest.json",
+  icons: {
+    icon: { url: "/GTDTA-white.png", type: "image/png" },
+    apple: "/GTDTA-white.png",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
