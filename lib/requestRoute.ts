@@ -68,7 +68,9 @@ async function requestRemoteRoute(start: Coordinate, end: Coordinate, mode: Trav
   const constrainHeading = mode !== "walking" && heading !== null && Number.isFinite(heading);
   // Campus building pins may sit away from drivable roads. Report the gap.
   const snapLimit = mode === "walking" ? 30 : 100;
-  const response = await fetch(`${root}/${start.lng},${start.lat};${end.lng},${end.lat}?overview=full&geometries=geojson&alternatives=true&radiuses=${snapLimit};${snapLimit}${constrainHeading ? `&bearings=${Math.round((heading + 360) % 360)},90;` : ""}`, { signal });
+  // Avoid computing unused vehicle alternatives and bound service waits.
+  const requestSignal = AbortSignal.any([signal, AbortSignal.timeout(8000)]);
+  const response = await fetch(`${root}/${start.lng},${start.lat};${end.lng},${end.lat}?overview=full&geometries=geojson&alternatives=${mode === "walking"}&radiuses=${snapLimit};${snapLimit}${constrainHeading ? `&bearings=${Math.round((heading + 360) % 360)},90;` : ""}`, { signal: requestSignal });
   // OSRM returns routing failures such as NoSegment with HTTP 400.
   // Read that response before classifying it as a service outage.
   const data = await response.json().catch(() => null);

@@ -141,6 +141,20 @@ export default function SNSCampusMap({
   }, [mapTypeId, isMapLoaded]);
 
   useEffect(() => {
+    if (!mapInstance) return;
+    // Embedded styling is raster-only; heading rotation is vector-only.
+    if (isWalking) {
+      mapInstance.setOptions({ styles: null });
+      mapInstance.setRenderingType(google.maps.RenderingType.VECTOR);
+    } else {
+      mapInstance.setRenderingType(google.maps.RenderingType.RASTER);
+      mapInstance.setOptions({ styles: CAMPUS_MAP_STYLES, heading: 0, tilt: 0 });
+    }
+  }, [mapInstance, isWalking]);
+
+
+
+  useEffect(() => {
     if (!mapRef.current || !isMapLoaded) return;
     markersRef.current.forEach((marker) => { marker.map = null; });
     markersRef.current.clear();

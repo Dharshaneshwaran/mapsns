@@ -239,11 +239,11 @@ function CampusMapApp({ initialProfile }: { initialProfile: UserProfile }) {
       try {
         if (!navigator.geolocation) throw new Error("Your browser does not support location.");
         const cached = latestFix.current;
-        const fix = cached && Date.now() - cached.timestamp < 10000 && cached.coords.accuracy <= 25
+        const fix = cached && Date.now() - cached.timestamp < 15000 && cached.coords.accuracy <= 50
           ? cached
-          : await new Promise<GeolocationPosition>((resolve, reject) => navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 8000, maximumAge: 3000 }));
-        latestFix.current = fix;
+          : await new Promise<GeolocationPosition>((resolve, reject) => navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 8000, maximumAge: 15000 }));
         controller.signal.throwIfAborted();
+        latestFix.current = fix;
         const start = { lat: fix.coords.latitude, lng: fix.coords.longitude };
         const route = await requestRoute(start, end, mode, controller.signal);
         controller.signal.throwIfAborted();
@@ -270,6 +270,9 @@ function CampusMapApp({ initialProfile }: { initialProfile: UserProfile }) {
     setIsFollowingLocation(true);
     setWalkingState("idle");
     setLocationStatus("tracking");
+    const first = activeRoute.points[0];
+    const ahead = activeRoute.points.find(point => haversineDistance(first.lat, first.lng, point.lat, point.lng) >= 5);
+    if (ahead) setWalkingBearing(getBearing(first, ahead));
     prevPositionRef.current = null;
     movementAnchorRef.current = null;
   }, [selectedLocation, walkingPosition, userPosition, activeRoute, routeLoading, places]);
@@ -339,7 +342,9 @@ function CampusMapApp({ initialProfile }: { initialProfile: UserProfile }) {
           if (!anchor || displacement >= WALKING_MOVEMENT_THRESHOLD_METERS) movementAnchorRef.current = nextPosition;
           setWalkingState("walking");
           if (idleTimer) clearTimeout(idleTimer);
-          idleTimer = setTimeout(() => { setWalkingState("idle"); movementAnchorRef.current = null; }, 2500);
+          // Preserve the anchor between sparse fixes so heading can be derived
+          // when a device supplies neither speed nor compass heading.
+          idleTimer = setTimeout(() => { setWalkingState("idle"); }, 8000);
         } else if (!reliable || (hasSpeed && speed < 0.5)) {
           if (idleTimer) clearTimeout(idleTimer);
           setWalkingState("idle");
