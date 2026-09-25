@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { ArrowUpRight, Bookmark, Building2, MapPin, Navigation, Settings, ArrowLeft, CircleHelp, Ellipsis } from "lucide-react";
+import { ArrowUpRight, Bookmark, Building2, MapPin, Navigation, Settings, ArrowLeft, CircleHelp, Ellipsis, Layers } from "lucide-react";
 import Image from "next/image";
 import { useCampusPlaces } from "@/components/campus/useCampusPlaces";
 import type { CampusLocation } from "@/types/campus";
@@ -10,8 +10,8 @@ import { useSavedPlaces } from "./PlaceActions";
 
 import { conferenceEvents, findEventPlace } from "@/data/majorPlaces";
 
-type Props = { onSelect: (location: CampusLocation) => void; onOpenSettings: () => void; name: string; gender: "male" | "female" };
-export default function ExplorePanel({ onSelect, onOpenSettings, name }: Props) {
+type Props = { onSelect: (location: CampusLocation) => void; onOpenSettings: () => void; name: string; gender: "male" | "female"; mapStyle: "roadmap" | "satellite"; onLayers: () => void };
+export default function ExplorePanel({ onSelect, onOpenSettings, name, mapStyle, onLayers }: Props) {
   const places = useCampusPlaces();
   const saved = useSavedPlaces();
   const [tab, setTab] = useState("events");
@@ -23,7 +23,17 @@ export default function ExplorePanel({ onSelect, onOpenSettings, name }: Props) 
   const cards = tab === "saved"
     ? places.filter(place => saved.includes(place.id)).map(place => ({ title: place.name, venue: "Saved place", place, image: place.customIcon }))
     : conferenceEvents.map(event => ({ ...event, place: findEventPlace(event, places) }));
-  if (showMap) return <div className="event-map-return"><button onClick={() => setShowMap(false)}><ArrowLeft size={17} /> Back to event guide</button></div>;
+  if (showMap) return <>
+    <div className="event-map-return"><button onClick={() => setShowMap(false)}><ArrowLeft size={17} /> Back to event guide</button></div>
+    <button
+      type="button"
+      onClick={onLayers}
+      aria-label={mapStyle === "satellite" ? "Switch to normal map" : "Switch to satellite map"}
+      aria-pressed={mapStyle === "satellite"}
+      title={mapStyle === "satellite" ? "Switch to normal map" : "Switch to satellite map"}
+      className="google-round-button pointer-events-auto absolute right-4 top-20 z-40"
+    ><Layers size={20} /></button>
+  </>;
   if (showMore) return <section className="event-landing" aria-label="More">
     <div className="event-home">
       <div className="event-greeting" style={{ marginTop: "clamp(16px, 4vh, 40px)" }}>
