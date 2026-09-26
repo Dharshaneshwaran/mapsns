@@ -381,23 +381,16 @@ function CampusMapApp({ initialProfile }: { initialProfile: UserProfile }) {
           if (idleTimer) clearTimeout(idleTimer);
           // Preserve the anchor between sparse fixes so heading can be derived
           // when a device supplies neither speed nor compass heading.
-          idleTimer = setTimeout(() => { wasMoving = false; setWalkingState("idle"); }, 2000);
+          idleTimer = setTimeout(() => { wasMoving = false; setWalkingState("idle"); }, 8000);
         } else {
-          // Missing speed or one small step is inconclusive. Let the short
-          // inactivity deadline expire; do not restart it on stationary fixes.
-          if (speed !== null && Number.isFinite(speed) && speed >= 0 && speed < 0.5 && previous && stepDistance < 0.5) {
-            if (idleTimer) clearTimeout(idleTimer);
-            idleTimer = null;
-            wasMoving = false;
-            setWalkingState("idle");
-          }
+          // A single zero-speed fix must not interrupt coordinate-only walking.
+          // Stationary fixes do not extend the inactivity deadline.
           if (!anchor) movementAnchorRef.current = nextPosition;
         }
 
         prevPositionRef.current = nextPosition;
-        // Hold the marker on stationary fixes, while retaining the anchor so
-        // slow coordinate-only movement can still accumulate and resume it.
-        if (moving || !anchor) setWalkingPosition(nextPosition);
+        // Position follows every reliable fix independently of the leg animation.
+        setWalkingPosition(nextPosition);
         const currentRoute = routeRef.current;
         const arrivalPoint = currentRoute && (currentRoute.destinationGapMeters ?? 0) > 30 ? currentRoute.points[currentRoute.points.length - 1] : end;
         if (isArrivalFix(pos, haversineDistance(nextPosition.lat, nextPosition.lng, arrivalPoint.lat, arrivalPoint.lng))) { disposed = true; request?.abort(); handleArrived(); return; }

@@ -91,8 +91,7 @@ export default function SNSCampusMap({
       const frame = requestAnimationFrame(() => setDisplayPosition(gpsPosition));
       return () => cancelAnimationFrame(frame);
     }
-    // The effect cleanup cancels interpolation as soon as GPS reports a stop.
-    if (walkingState !== "walking") return;
+    // Finish smoothing each accepted fix even between detected walking steps.
     const points = activeRoute?.points ?? [];
     const target = routePointerPosition(gpsPosition, points);
     const from = displayPositionRef.current ?? target;
@@ -107,7 +106,7 @@ export default function SNSCampusMap({
     };
     frame = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(frame);
-  }, [gpsPosition, activeRoute, isWalking, walkingState]);
+  }, [gpsPosition, activeRoute, isWalking]);
 
   const initMap = useCallback(async () => {
     if (!mapContainerRef.current) return;
