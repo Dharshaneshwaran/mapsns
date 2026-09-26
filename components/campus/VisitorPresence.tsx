@@ -32,12 +32,19 @@ export function VisitorPresenceProvider({ children }: { children: React.ReactNod
     const preference = readSharingPreference();
     if (preference !== "off") {
       const restore = Promise.resolve().then(() => {
+        if (!window.isSecureContext || !navigator.geolocation) {
+          setSharing(false);
+          setMessage("Location sharing requires a secure connection and browser location support.");
+          return;
+        }
         setSharing(true);
         writeSharingPreference(true);
         setMessage(preference === "on" ? "Sharing your approximate area while this page is open." : "Allow location to show your approximate area on the campus activity map.");
       });
       void restore;
     }
+    // randomUUID is unavailable on insecure pages, including phone LAN previews.
+    if (typeof crypto.randomUUID !== "function") return;
     let id = crypto.randomUUID() as string;
     try {
       const stored = localStorage.getItem("campus-visitor-id");
@@ -73,7 +80,7 @@ export function VisitorPresenceProvider({ children }: { children: React.ReactNod
   }, [pathname]);
 
   useEffect(() => {
-    if (!sharing || pathname.startsWith("/admin")) return;
+    if (!sharing || pathname.startsWith("/admin") || !window.isSecureContext || !navigator.geolocation) return;
     let watch: number | undefined;
     let active = true;
     const stopWatch = () => {
