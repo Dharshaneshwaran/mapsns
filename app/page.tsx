@@ -18,7 +18,7 @@ import { isRerouteDue } from "@/lib/rerouteTiming";
 import { routeDeviation } from "@/lib/routeDeviation";
 import { conferenceEvents, findEventPlace } from "@/data/majorPlaces";
 import { isWalkingMotion, WALKING_MOVEMENT_THRESHOLD_METERS } from "@/lib/walkingMotion";
-import { gpsErrorMessage, isUsableGpsFix } from "@/lib/gps";
+import { gpsErrorMessage, isUsableGpsFix, isArrivalFix } from "@/lib/gps";
 
 type Coordinate = { lat: number; lng: number };
 
@@ -374,16 +374,21 @@ function CampusMapApp({ initialProfile }: { initialProfile: UserProfile }) {
           if (idleTimer) clearTimeout(idleTimer);
           // Preserve the anchor between sparse fixes so heading can be derived
           // when a device supplies neither speed nor compass heading.
-          idleTimer = setTimeout(() => { setWalkingState("idle"); }, 8000);
-        } else if (!anchor) movementAnchorRef.current = nextPosition;
-        // Let the inactivity timer stop the walk cycle. One zero-speed fix
-        // must not freeze the sprite or discard accumulated slow movement.
+          idleTimer = setTimeout(() => { setWalkingState("idle"); }, 2000);
+        } else {
+          if (idleTimer) clearTimeout(idleTimer);
+          idleTimer = null;
+          setWalkingState("idle");
+          if (!anchor) movementAnchorRef.current = nextPosition;
+        }
 
         prevPositionRef.current = nextPosition;
-        setWalkingPosition(nextPosition);
+        // Hold the marker on stationary fixes, while retaining the anchor so
+        // slow coordinate-only movement can still accumulate and resume it.
+        if (moving || !anchor) setWalkingPosition(nextPosition);
         const currentRoute = routeRef.current;
         const arrivalPoint = currentRoute && (currentRoute.destinationGapMeters ?? 0) > 30 ? currentRoute.points[currentRoute.points.length - 1] : end;
-        if (pos.coords.accuracy <= 15 && haversineDistance(nextPosition.lat, nextPosition.lng, arrivalPoint.lat, arrivalPoint.lng) <= 5) { disposed = true; request?.abort(); handleArrived(); return; }
+        if (isArrivalFix(pos, haversineDistance(nextPosition.lat, nextPosition.lng, arrivalPoint.lat, arrivalPoint.lng))) { disposed = true; request?.abort(); handleArrived(); return; }
         const heading = pos.coords.heading !== null && Number.isFinite(pos.coords.heading) ? pos.coords.heading : anchor && displacement >= 3 ? getBearing(anchor, nextPosition) : null;
         const route = routeRef.current;
         if (route) {

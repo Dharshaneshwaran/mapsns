@@ -88,8 +88,11 @@ export default function SNSCampusMap({
   useEffect(() => {
     if (!gpsPosition || !isWalking) {
       displayPositionRef.current = gpsPosition;
-      return;
+      const frame = requestAnimationFrame(() => setDisplayPosition(gpsPosition));
+      return () => cancelAnimationFrame(frame);
     }
+    // The effect cleanup cancels interpolation as soon as GPS reports a stop.
+    if (walkingState !== "walking") return;
     const points = activeRoute?.points ?? [];
     const target = routePointerPosition(gpsPosition, points);
     const from = displayPositionRef.current ?? target;
@@ -104,7 +107,7 @@ export default function SNSCampusMap({
     };
     frame = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(frame);
-  }, [gpsPosition, activeRoute, isWalking]);
+  }, [gpsPosition, activeRoute, isWalking, walkingState]);
 
   const initMap = useCallback(async () => {
     if (!mapContainerRef.current) return;

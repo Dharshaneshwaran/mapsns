@@ -6,6 +6,11 @@ export function isUsableGpsFix(fix: GeolocationPosition, maxAccuracy = 25, now =
     && Number.isFinite(fix.timestamp) && now - fix.timestamp >= 0 && now - fix.timestamp <= 15000;
 }
 
+export function isArrivalFix(fix: GeolocationPosition, distanceMeters: number, now = Date.now()): boolean {
+  return isUsableGpsFix(fix, 15, now)
+    && Number.isFinite(distanceMeters) && distanceMeters >= 0 && distanceMeters <= 7;
+}
+
 export function gpsErrorMessage(error: unknown): string {
   const code = typeof error === "object" && error !== null && "code" in error ? error.code : undefined;
   if (code === 1) return "Location permission was denied. Allow location access in your browser settings and retry.";
