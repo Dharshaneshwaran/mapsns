@@ -15,11 +15,11 @@ import { majorPlaceLabel } from "@/data/majorPlaces";
 const journeyMessages: Record<string, string> = {
   "Cloak room": "The conference cloak room is at the Alumni lounge.",
   "Certificate corner": "Head to iHub for your conference certificate!",
-  "Panel sessions two + three + four": "Head to DT Playhouse for Panel sessions two, three, and four. Fresh ideas and new perspectives await!",
+  "Panel 1 + 2 + 3": "Head to DT Playhouse: Panel 1 on the First Floor, Panel 2 on the Second Floor, and Panel 3 on the Ground Floor.",
   Spine: "Enjoy your next campus stop!",
   Registration: "Your conference journey begins here!",
   Inauguration: "Head to the Open Auditorium for the conference inauguration!",
-  "Panel session one": "Head to RM hall for Panel session one!",
+  "Panel 4": "Head to RM Hall, AI Campus, 1st Floor for Panel 4!",
   "Car parking & bike parking": "Park your vehicle and head to your next stop!",
 };
 

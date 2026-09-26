@@ -105,7 +105,7 @@ export default function ExplorePanel({ onSelect, onOpenSettings, name, mapStyle,
       <div className="campus-place-grid event-grid">
         {cards.map((card, index) => <button key={`${card.title}-${index}`} className="campus-place-tile event-tile" onClick={() => card.place && onSelect(card.place)} disabled={!card.place}>
           <span className="campus-place-art">
-            {(card.place?.customIcon || card.image) ? <Image src={(card.place?.customIcon || card.image)!} alt="" width={160} height={100} style={{ width: "auto" }} unoptimized /> : <Building2 size={48} strokeWidth={1.2} />}
+            {(card.image || card.place?.customIcon) ? <Image src={(card.image || card.place?.customIcon)!} alt="" width={160} height={100} style={{ width: "auto" }} unoptimized /> : <Building2 size={48} strokeWidth={1.2} />}
             {card.place && <ArrowUpRight className="campus-tile-arrow" size={15} aria-hidden="true" />}
           </span>
           <span className="campus-place-name">{card.title}</span>
