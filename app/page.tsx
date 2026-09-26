@@ -18,6 +18,7 @@ import { isRerouteDue } from "@/lib/rerouteTiming";
 import { routeDeviation } from "@/lib/routeDeviation";
 import { conferenceEvents, findEventPlace } from "@/data/majorPlaces";
 import { isWalkingMotion, WALKING_MOVEMENT_THRESHOLD_METERS } from "@/lib/walkingMotion";
+import { gpsErrorMessage, isUsableGpsFix } from "@/lib/gps";
 
 type Coordinate = { lat: number; lng: number };
 
@@ -144,6 +145,7 @@ function CampusMapApp({ initialProfile }: { initialProfile: UserProfile }) {
   const previewRequest = useRef<AbortController | null>(null);
   const latestFix = useRef<GeolocationPosition | null>(null);
   const [routeError, setRouteError] = useState("");
+  const [gpsMessage, setGpsMessage] = useState("");
   const [routeLoading, setRouteLoading] = useState(false);
   useEffect(() => () => previewRequest.current?.abort(), []);
   const routeRef = useRef(activeRoute);
@@ -166,6 +168,7 @@ function CampusMapApp({ initialProfile }: { initialProfile: UserProfile }) {
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
       (pos) => {
+        if (!isUsableGpsFix(pos, 50)) return;
         latestFix.current = pos;
         setUserPosition({ lat: pos.coords.latitude, lng: pos.coords.longitude });
       },
@@ -244,12 +247,14 @@ function CampusMapApp({ initialProfile }: { initialProfile: UserProfile }) {
     void (async () => {
       const timeout = setTimeout(() => controller.abort(), 20000);
       try {
+        if (!window.isSecureContext) throw new Error("Location requires a secure connection. Open this site using HTTPS.");
         if (!navigator.geolocation) throw new Error("Your browser does not support location.");
         const cached = latestFix.current;
-        const fix = cached && Date.now() - cached.timestamp < 15000 && cached.coords.accuracy <= 50
+        const fix = cached && isUsableGpsFix(cached)
           ? cached
-          : await new Promise<GeolocationPosition>((resolve, reject) => navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 8000, maximumAge: 15000 }));
+          : await new Promise<GeolocationPosition>((resolve, reject) => navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }));
         controller.signal.throwIfAborted();
+        if (!isUsableGpsFix(fix)) throw new Error("GPS location is too old or inaccurate. Move to an open area and retry.");
         latestFix.current = fix;
         const start = { lat: fix.coords.latitude, lng: fix.coords.longitude };
         const route = await requestRoute(start, end, mode, controller.signal);
@@ -258,7 +263,7 @@ function CampusMapApp({ initialProfile }: { initialProfile: UserProfile }) {
         setActiveRoute({ ...route, id: `route-${selectedLocation.id}`, name: `Route to ${selectedLocation.name}`, from: "current", to: selectedLocation.id, isPrototype: false });
         setIsWalking(false); setIsRoutePreview(true); setWalkingState("idle"); setRerouteMessage("");
       } catch (error) {
-        if (previewRequest.current === controller) setRouteError(controller.signal.aborted ? "Route request timed out. Please retry." : error instanceof Error ? error.message : "Enable location permission and try again.");
+        if (previewRequest.current === controller) setRouteError(controller.signal.aborted ? "Route request timed out. Please retry." : gpsErrorMessage(error));
       } finally {
         clearTimeout(timeout);
         if (previewRequest.current === controller) setRouteLoading(false);
@@ -276,7 +281,8 @@ function CampusMapApp({ initialProfile }: { initialProfile: UserProfile }) {
     setIsWalking(true);
     setIsFollowingLocation(true);
     setWalkingState("idle");
-    setLocationStatus("tracking");
+    setLocationStatus("requesting");
+    setGpsMessage("Waiting for an accurate GPS signal...");
     const first = activeRoute.points[0];
     const ahead = activeRoute.points.find(point => haversineDistance(first.lat, first.lng, point.lat, point.lng) >= 5);
     if (ahead) setWalkingBearing(getBearing(first, ahead));
@@ -296,6 +302,17 @@ function CampusMapApp({ initialProfile }: { initialProfile: UserProfile }) {
     let lastFixTimestamp = 0;
     let request: AbortController | null = null;
     let disposed = false;
+    let lastReliableFixAt = Date.now();
+    let lastGpsActivityAt = Date.now();
+    let restartWatch = () => {};
+    const signalTimer = setInterval(() => {
+      if (disposed) return;
+      if (Date.now() - lastReliableFixAt >= 15000) {
+        setWalkingState("idle");
+        setGpsMessage("GPS signal lost. Showing your last location; waiting for a fresh signal.");
+      }
+      if (Date.now() - lastGpsActivityAt >= 20000) restartWatch();
+    }, 5000);
     const reroute = async (start: Coordinate, heading: number | null) => {
       lastReroute = Date.now();
       const controller = new AbortController();
@@ -323,22 +340,29 @@ function CampusMapApp({ initialProfile }: { initialProfile: UserProfile }) {
       }
       finally { clearTimeout(timeout); request = null; }
     };
-    watchIdRef.current = navigator.geolocation.watchPosition(
+    const startWatch = () => navigator.geolocation.watchPosition(
       (pos) => {
+        lastGpsActivityAt = Date.now();
         if (disposed || pos.timestamp <= lastFixTimestamp) return;
         lastFixTimestamp = pos.timestamp;
-        latestFix.current = pos;
         const nextPosition = { lat: pos.coords.latitude, lng: pos.coords.longitude };
 
         const anchor = movementAnchorRef.current;
         const displacement = anchor ? haversineDistance(anchor.lat, anchor.lng, nextPosition.lat, nextPosition.lng) : 0;
         const speed = pos.coords.speed;
-        const reliable = Number.isFinite(pos.coords.accuracy) && pos.coords.accuracy <= 25;
+        const reliable = isUsableGpsFix(pos);
         if (!reliable) {
+          setGpsMessage("GPS signal is weak. Showing your last accurate location.");
+          setWalkingState("idle");
           deviationCount = 0;
           deviationSince = 0;
           return;
         }
+        latestFix.current = pos;
+        lastReliableFixAt = Date.now();
+        setUserPosition(nextPosition);
+        setLocationStatus("tracking");
+        setGpsMessage("");
         const moving = isWalkingMotion(speed, displacement, pos.coords.accuracy);
 
         if (moving) {
@@ -377,12 +401,36 @@ function CampusMapApp({ initialProfile }: { initialProfile: UserProfile }) {
           }
         } else deviationCount = 0;
       },
-      (error) => console.error("GPS watch error:", error),
-      { enableHighAccuracy: true, maximumAge: 0 }
+      (error) => {
+        if (disposed) return;
+        setWalkingState("idle");
+        deviationCount = 0;
+        deviationSince = 0;
+        setGpsMessage(gpsErrorMessage(error));
+        if (error.code === 1) {
+          disposed = true;
+          request?.abort();
+          setIsWalking(false);
+          setIsRoutePreview(false);
+          setRouteError(gpsErrorMessage(error));
+        }
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
     );
+    restartWatch = () => {
+      if (disposed) return;
+      if (watchIdRef.current !== null) navigator.geolocation.clearWatch(watchIdRef.current);
+      lastGpsActivityAt = Date.now();
+      watchIdRef.current = startWatch();
+    };
+    restartWatch();
+    const resumeGps = () => { if (!document.hidden) restartWatch(); };
+    document.addEventListener("visibilitychange", resumeGps);
 
     return () => {
       disposed = true;
+      clearInterval(signalTimer);
+      document.removeEventListener("visibilitychange", resumeGps);
       request?.abort();
       if (idleTimer) clearTimeout(idleTimer);
       if (watchIdRef.current !== null) {
@@ -449,6 +497,7 @@ function CampusMapApp({ initialProfile }: { initialProfile: UserProfile }) {
 
       {(routeLoading || routeError) && <div role="status" className="absolute left-3 right-3 top-20 z-[70] rounded-xl bg-white p-4 text-sm shadow-lg sm:left-auto sm:max-w-sm">{routeLoading ? "Finding a mapped route…" : routeError}{routeError && <button className="ml-3 font-semibold text-teal-700" onClick={() => handlePrepareRoute(travelMode)}>Retry</button>}</div>}
       {/* Google Maps-style active navigation UI */}
+      {isWalking && gpsMessage && <p role="status" className="absolute left-4 right-4 bottom-40 z-[70] rounded-xl bg-white px-4 py-3 text-sm text-amber-800 shadow-lg sm:right-auto sm:max-w-md">{gpsMessage}</p>}
       {isWalking && rerouteMessage && <p role="status" className="absolute left-4 right-4 top-28 z-50 rounded-xl bg-white px-4 py-3 text-sm text-teal-800 shadow-lg sm:right-auto sm:max-w-md">{rerouteMessage}</p>}
       {isWalking && selectedLocation && walkingPosition && (
         <NavigationOverlay
