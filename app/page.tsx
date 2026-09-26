@@ -295,6 +295,7 @@ function CampusMapApp({ initialProfile }: { initialProfile: UserProfile }) {
 
     const end = selectedLocation.position;
     let idleTimer: ReturnType<typeof setTimeout> | null = null;
+    let wasMoving = false;
     let lastReroute = 0;
     let deviationCount = 0;
     let deviationSince = 0;
@@ -352,6 +353,9 @@ function CampusMapApp({ initialProfile }: { initialProfile: UserProfile }) {
         const speed = pos.coords.speed;
         const reliable = isUsableGpsFix(pos);
         if (!reliable) {
+          wasMoving = false;
+          prevPositionRef.current = null;
+          if (idleTimer) clearTimeout(idleTimer);
           setGpsMessage("GPS signal is weak. Showing your last accurate location.");
           setWalkingState("idle");
           deviationCount = 0;
@@ -363,9 +367,12 @@ function CampusMapApp({ initialProfile }: { initialProfile: UserProfile }) {
         setUserPosition(nextPosition);
         setLocationStatus("tracking");
         setGpsMessage("");
-        const moving = isWalkingMotion(speed, displacement, pos.coords.accuracy);
+        const previous = prevPositionRef.current;
+        const stepDistance = previous ? haversineDistance(previous.lat, previous.lng, nextPosition.lat, nextPosition.lng) : 0;
+        const moving = isWalkingMotion(speed, displacement, pos.coords.accuracy, wasMoving, stepDistance);
 
         if (moving) {
+          wasMoving = true;
           const heading = pos.coords.heading;
           if (heading !== null && Number.isFinite(heading)) setWalkingBearing(heading);
           else if (anchor && displacement >= WALKING_MOVEMENT_THRESHOLD_METERS) setWalkingBearing(getBearing(anchor, nextPosition));
@@ -374,11 +381,16 @@ function CampusMapApp({ initialProfile }: { initialProfile: UserProfile }) {
           if (idleTimer) clearTimeout(idleTimer);
           // Preserve the anchor between sparse fixes so heading can be derived
           // when a device supplies neither speed nor compass heading.
-          idleTimer = setTimeout(() => { setWalkingState("idle"); }, 2000);
+          idleTimer = setTimeout(() => { wasMoving = false; setWalkingState("idle"); }, 2000);
         } else {
-          if (idleTimer) clearTimeout(idleTimer);
-          idleTimer = null;
-          setWalkingState("idle");
+          // Missing speed or one small step is inconclusive. Let the short
+          // inactivity deadline expire; do not restart it on stationary fixes.
+          if (speed !== null && Number.isFinite(speed) && speed >= 0 && speed < 0.5 && previous && stepDistance < 0.5) {
+            if (idleTimer) clearTimeout(idleTimer);
+            idleTimer = null;
+            wasMoving = false;
+            setWalkingState("idle");
+          }
           if (!anchor) movementAnchorRef.current = nextPosition;
         }
 
@@ -408,6 +420,9 @@ function CampusMapApp({ initialProfile }: { initialProfile: UserProfile }) {
       },
       (error) => {
         if (disposed) return;
+        wasMoving = false;
+        prevPositionRef.current = null;
+        if (idleTimer) clearTimeout(idleTimer);
         setWalkingState("idle");
         deviationCount = 0;
         deviationSince = 0;
